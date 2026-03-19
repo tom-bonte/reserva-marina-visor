@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor Reserva Interior - Professional Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Authentication & Firestore Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; }
+        
+        /* Drag & Drop Core */
+        .draggable-item { 
+            cursor: grab; 
+            -webkit-user-drag: element; 
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+        .draggable-item:active { cursor: grabbing; }
+        
+        /* The base class for ALL boats */
+        .boat-block { transition: opacity 0.2s ease; }
+        .boat-block * { pointer-events: none; }
+        
+        .dropzone { height: 100%; min-height: 42px; user-select: none; -webkit-user-select: none; transition: background-color 0.1s ease; }
+        
+        .pending-swap-ghost {
+            opacity: 0.45 !important;
+            filter: grayscale(100%);
+            border: 2px dashed #94a3b8 !important;
+        }
+
+        /* Layout Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Tab States */
+        .tab-active { background-color: white; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 0.5rem; }
+        .tab-inactive { color: #64748b; }
+        .tab-inactive:hover { color: #334155; }
+        
+        /* Calendar Styles */
+        .calendar-day-active { background-color: #2563eb; color: white; font-weight: bold; border-radius: 0.375rem; }
+        .calendar-day-inactive:hover { background-color: #f1f5f9; border-radius: 0.375rem; cursor: pointer; }
+
+        /* Mega Grid Styles */
+        .mega-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(35, 34px);
+            width: max-content;
+        }
+
+        /* Stats Table Custom Padding */
+        .stats-table th, .stats-table td { padding: 12px 8px; }
+    </style>
+</head>
+<body class="p-4 md:p-6 text-slate-800 flex flex-col h-screen overflow-hidden">
+
+    <!-- Firebase Login Modal -->
+    <div id="password-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
+            <div class="flex items-center gap-3 mb-2">
+                <svg class="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"></path></svg>
+                <h3 class="text-xl font-black text-slate-800">Acceso al Visor</h3>
+            </div>
+            <p class="text-sm text-slate-500 mb-4">Selecciona tu usuario e introduce la contraseña.</p>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Usuario / Centro</label>
+            <select id="login-user" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 font-bold text-slate-700 cursor-pointer">
+                <option value="admin">Administrador (Root)</option>
+                <option value="mangamar">Mangamar</option>
+                <option value="balky">Balky</option>
+                <option value="hormigas">Islas Hormigas</option>
+                <option value="naranjito">Naranjito</option>
+                <option value="planeta">Planeta Azul</option>
+                <option value="divers">Divers</option>
+                <option value="club">CLUB</option>
+                <option value="xlm">X La Manga</option>
+            </select>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Contraseña</label>
+            <div class="relative">
+                <input type="password" id="login-password" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2 font-mono pr-10" placeholder="••••••••" onkeypress="if(event.key === 'Enter') verifyLogin()">
+                <button type="button" onclick="togglePassword()" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none">
+                    <svg id="eye-icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </button>
+            </div>
+
+            <p id="password-error" class="text-xs text-red-500 font-bold hidden mb-4 text-center">Contraseña incorrecta.</p>
+
+            <div class="flex gap-3 mt-4">
+                <button onclick="closeLoginModal()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="verifyLogin()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal (Instrucciones de Uso) -->
+    <div id="help-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-200 transform transition-all max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 leading-tight">Instrucciones de Uso</h3>
+                    <p class="text-xs font-bold text-slate-500">¿Qué puedo hacer en el visor?</p>
+                </div>
+            </div>
+            
+            <div class="space-y-5 text-sm text-slate-600">
+                <div>
+                    <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">CENTROS DE BUCEO</span></p>
+                    <p class="mb-2">Como centro de buceo autorizado, puedes editar <b>únicamente tus propias reservas</b>. Dispones de las siguientes acciones:</p>
+                    <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <li class="flex items-start gap-2">
+                            <span class="text-lg">🕐</span>
+                            <span><strong>Mover una salida:</strong> Arrastra tu bloque de reserva a un nuevo bloque de hora. <i>Importante: Solo puedes arrastrar el bloque a otra hora dentro del mismo punto de buceo.</i></span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-lg">➕</span>
+                            <span><strong>Tomar un hueco libre:</strong> Si hay un horario que aún no tiene 2 barcos asignados (y quedan plazas), puedes hacer <b>doble clic</b> en el espacio vacío para añadir una nueva salida.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-lg">🔄</span>
+                            <span><strong>Intercambiar salidas:</strong> Arrastra tu reserva hacia un espacio que ya contenga el barco de otro centro. Ellos recibirán una notificación y, si aceptan, la base de datos se actualizará automáticamente.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-slate-800 text-white px-2 py-1 rounded text-xs">ADMINISTRADORES</span></p>
+                    <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <li class="flex items-start gap-2">
+                            <span class="text-lg">👑</span>
+                            <span><strong>Control Total:</strong> Arrastrar y mover los barcos de <i>cualquier centro</i> hacia cualquier punto u horario sin necesidad de confirmación. Añadir salidas a nombre de otros.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-lg">📥</span>
+                            <span><strong>Gestión de Datos:</strong> Importar archivos CSV para volcar la planificación anual y vaciar la base de datos por completo.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <button onclick="document.getElementById('help-modal').classList.add('hidden')" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-sm">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty Database Confirmation Modal -->
+    <div id="empty-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
+            <div class="mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-red-100 text-red-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">¿Borrar toda la base de datos?</h3>
+            <p class="text-sm text-slate-500 mb-6">Se ha descargado una copia de seguridad CSV en tu ordenador. ¿Estás completamente seguro de que quieres vaciar la base de datos en la nube de forma permanente?</p>
+            <div class="flex gap-3">
+                <button id="btn-cancel-empty" onclick="document.getElementById('empty-confirm-modal').classList.add('hidden')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button id="btn-confirm-empty" onclick="executeEmptyData()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Sí, vaciar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLEAN & MODERN WhatsApp Confirmation Modal -->
+    <div id="whatsapp-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-full bg-[#e1fbe8] flex items-center justify-center text-[#25D366] shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Confirmar <span id="wa-action-type">Acción</span></h3>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Aviso Automático de WhatsApp</p>
+                </div>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-3 font-medium">Se actualizará la nube y se enviará el siguiente mensaje para avisar al grupo:</p>
+            
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-sm text-slate-700 italic shadow-inner leading-relaxed">
+                <span id="confirm-whatsapp-msg" class="block font-medium"></span>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="cancelWhatsAppDrop()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button id="btn-confirm-wa" onclick="confirmWhatsAppAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-colors flex justify-center items-center gap-2 shadow-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> Confirmar y Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Swap Target Choice Modal -->
+    <div id="swap-choice-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Elegir Intercambio</h3>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Múltiples Opciones</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5 font-medium">Hay dos barcos en este horario. ¿Con cuál de ellos quieres proponer el intercambio?</p>
+            <div id="swap-choice-buttons" class="flex flex-col gap-3">
+                <!-- Buttons injected dynamically -->
+            </div>
+            <button onclick="document.getElementById('swap-choice-modal').classList.add('hidden')" class="w-full mt-4 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Swap Request Notifications Modal -->
+    <div id="notifications-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-100 transform transition-all max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 leading-tight">Centro de Notificaciones</h3>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Solicitudes de Intercambio</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('notifications-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div id="notifications-list" class="overflow-y-auto space-y-4 flex-1">
+                <!-- Notifications injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- New Salida Configuration Modal (Double Click) -->
+    <div id="new-salida-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 leading-tight">Añadir Salida</h3>
+                    <p id="new-salida-title" class="text-xs font-bold text-slate-500">Bajo de Dentro a las 09:00</p>
+                </div>
+            </div>
+            
+            <p id="new-salida-avail" class="text-sm font-bold text-green-600 mb-4 bg-green-50 px-3 py-2 rounded-lg border border-green-100">Plazas disponibles: 0</p>
+            
+            <div id="new-salida-center-container" class="mb-4 hidden">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Asignar a Centro (Modo Admin)</label>
+                <select id="new-salida-center" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="mangamar">Mangamar</option>
+                    <option value="balky">Balky</option>
+                    <option value="hormigas">Islas Hormigas</option>
+                    <option value="naranjito">Naranjito</option>
+                    <option value="planeta">Planeta Azul</option>
+                    <option value="divers">Divers</option>
+                    <option value="club">CLUB</option>
+                    <option value="xlm">X La Manga</option>
+                </select>
+            </div>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">¿Cuántas plazas necesitas?</label>
+            <input type="number" id="new-salida-pax" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-mono text-lg font-bold text-slate-800" placeholder="Ej: 12">
+
+            <div class="flex gap-3">
+                <button onclick="cancelNewSalida()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="confirmNewSalida()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm flex justify-center items-center gap-2">
+                    Siguiente <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
+            <div id="notification-icon" class="mx-auto w-12 h-12 rounded-full mb-4 flex items-center justify-center"></div>
+            <h3 id="notification-title" class="text-xl font-black text-slate-800 mb-2">Notificación</h3>
+            <p id="notification-message" class="text-sm text-slate-500 mb-6">Mensaje aquí.</p>
+            <button onclick="closeNotification()" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.6 2 5.2 2 2.5 0 2.5-2 5.2-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5.2-2 2.6 0 2.6 2 5.2 2 2.5 0 2.5-2 5.2-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5.2-2 2.6 0 2.6 2 5.2 2 2.5 0 2.5-2 5.2-2 1.3 0 1.9.5 2.5 1"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-black text-lg text-slate-900 leading-tight tracking-tight">CABO DE PALOS</h1>
+                <h2 class="font-bold text-blue-600 tracking-wide text-sm uppercase">Visor Reserva Interior</h2>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="flex bg-slate-100 p-1.5 rounded-xl text-xs font-bold uppercase tracking-wider overflow-x-auto">
+            <button onclick="switchView('diario')" id="tab-diario" class="px-5 py-2.5 tab-active flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> Diario
+            </button>
+            <button onclick="switchView('semanal')" id="tab-semanal" class="px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> Semanal
+            </button>
+            <button onclick="switchView('mensual')" id="tab-mensual" class="px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> Mensual
+            </button>
+            <button onclick="switchView('estadisticas')" id="tab-estadisticas" class="px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> Estadísticas
+            </button>
+        </div>
+
+        <!-- RIGHT SIDE HEADER CONTROLS (Clean Dropdown) -->
+        <div class="flex items-center gap-2 relative">
+            <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleImport(event)" />
+            
+            <!-- User Dropdown Menu Wrapper -->
+            <div class="relative" id="user-menu-wrapper">
+                
+                <div class="relative inline-block">
+                    <button onclick="toggleUserMenu()" id="user-badge-button" class="rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-opacity bg-slate-200 text-slate-600">
+                        <span class="bg-black/10 px-1.5 rounded-sm">INV</span>
+                        <span class="tracking-wide">Invitado (Lectura)</span>
+                        <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <!-- Notification Bubble (Ping) -->
+                    <span id="notif-bubble" class="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 hidden">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white"></span>
+                    </span>
+                </div>
+                
+                <!-- The Sleek Dropdown -->
+                <div id="user-dropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 flex flex-col overflow-hidden">
+                    <!-- Items dynamically injected by JS based on role -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Toolbar -->
+    <div id="global-filter-bar" class="bg-white rounded-xl shadow-sm border border-slate-200 px-5 py-3 mb-4 shrink-0 flex items-center gap-5 relative z-40 transition-all">
+        
+        <div id="toolbar-period-selectors" class="hidden items-center gap-4 border-r border-slate-200 pr-5">
+            <div id="toolbar-week" class="hidden items-center gap-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Semana</span>
+                <select id="week-selector" onchange="changeWeek(this.value)" class="bg-transparent font-bold text-sm text-slate-800 focus:outline-none cursor-pointer border-b border-slate-300 pb-0.5"></select>
+            </div>
+            <div id="toolbar-month" class="hidden items-center gap-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mes</span>
+                <select id="month-selector-main" onchange="changeMonth(this.value)" class="bg-transparent font-bold text-sm text-slate-800 focus:outline-none cursor-pointer border-b border-slate-300 pb-0.5"></select>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 relative" id="center-filter-dropdown-wrapper">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">FILTRO:</span>
+            <button onclick="toggleFilterDropdown()" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
+                <span id="filter-button-text">TODOS LOS CENTROS</span>
+                <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="filter-dropdown-panel" class="hidden absolute left-10 top-full mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-xl z-50 flex flex-col overflow-hidden">
+                <div class="p-2 border-b border-slate-100 bg-slate-50 flex justify-between gap-2">
+                    <button onclick="setAllFilters(true)" class="flex-1 text-[10px] bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold py-1.5 rounded transition-colors shadow-sm">Todos</button>
+                    <button onclick="setAllFilters(false)" class="flex-1 text-[10px] bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold py-1.5 rounded transition-colors shadow-sm">Ninguno</button>
+                </div>
+                <div class="max-h-64 overflow-y-auto p-1.5 flex flex-col" id="filter-container"></div>
+            </div>
+        </div>
+
+        <div class="text-[10px] text-slate-400 font-bold italic tracking-widest hidden md:block ml-auto uppercase">
+            PLANIFICACIÓN CONSOLIDADA 2026
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden relative z-10">
+        
+        <!-- Sidebar (Only for Diario) -->
+        <aside id="sidebar-calendario" class="w-full lg:w-72 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col shrink-0 overflow-y-auto">
+            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                Calendario
+            </h3>
+            <select id="month-selector-sidebar" onchange="changeMonth(this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-800 font-bold rounded-lg p-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"></select>
+            <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                <div class="text-[10px] font-bold text-slate-400">L</div><div class="text-[10px] font-bold text-slate-400">M</div><div class="text-[10px] font-bold text-slate-400">X</div><div class="text-[10px] font-bold text-slate-400">J</div><div class="text-[10px] font-bold text-slate-400">V</div><div class="text-[10px] font-bold text-red-400">S</div><div class="text-[10px] font-bold text-red-400">D</div>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+            <div class="mt-6"><p class="text-[10px] text-slate-400 italic leading-tight">Fines de semana y festivos en <span class="text-red-500 font-bold">rojo</span>.</p></div>
+        </aside>
+
+        <!-- View Containers -->
+        <div id="main-content-area" class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-slate-200 relative flex flex-col overflow-hidden">
+            
+            <!-- VIEW: DIARIO -->
+            <main id="view-diario" class="p-6 flex flex-col h-full overflow-hidden bg-white">
+                <div class="mb-6 shrink-0 flex justify-between items-end">
+                    <div>
+                        <h2 id="daily-date-header" class="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
+                        <p class="text-xs font-bold text-slate-400 tracking-widest mt-1 uppercase">Cupo Diario: 270 Plazas. Asignadas un total de <span id="total-pax-header" class="text-blue-600">0</span> plazas</p>
+                    </div>
+                    <div id="drag-notice" class="hidden text-xs font-bold text-slate-500 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path></svg>
+                        Doble Clic / Arrastrar Activo
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs">
+                    <!-- Unified 1-Row Header Layout -->
+                    <div class="grid grid-cols-[76px_repeat(5,1fr)] border-b-2 border-slate-200 bg-slate-50 text-[9px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                        <div class="p-3 text-slate-500 border-r border-slate-100 flex items-center justify-center">Hora</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Bajo de Dentro</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Piles II</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Piles I</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Testa</div>
+                        <div class="p-3 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Morra</div>
+                    </div>
+                    <div id="schedule-grid"></div>
+                </div>
+                <div class="grid grid-cols-[104px_repeat(5,1fr)] bg-slate-50 border-t-2 border-slate-200 text-xs font-bold text-slate-500 text-center items-center shrink-0">
+                    <div class="p-4 flex justify-start border-r border-slate-200 italic pl-6 tracking-widest text-[10px]">OCUPACIÓN:</div>
+                    <div class="p-4 border-r border-slate-200" id="cap-bajo"></div><div class="p-4 border-r border-slate-200" id="cap-piles2"></div><div class="p-4 border-r border-slate-200" id="cap-piles1"></div><div class="p-4 border-r border-slate-200" id="cap-testa"></div><div class="p-4" id="cap-morra"></div>
+                </div>
+            </main>
+
+            <!-- VIEW: MEGA (Weekly / Monthly) -->
+            <main id="view-mega" class="hidden flex-col h-full overflow-hidden bg-white">
+                <div class="p-6 shrink-0 bg-white border-b border-slate-200 shadow-sm z-30">
+                    <h2 id="mega-date-header" class="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
+                </div>
+                <div class="flex-1 overflow-auto bg-slate-50 relative" id="mega-scroll-container">
+                    <div id="mega-grid-container"></div>
+                </div>
+            </main>
+        </div>
+        
+        <!-- VIEW: ESTADÍSTICAS (Standalone Full Width) -->
+        <main id="view-estadisticas" class="hidden flex-col h-full overflow-y-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:p-8 flex-1 min-w-0 w-full">
+            
+            <!-- Stats Header Card -->
+            <div class="bg-[#181f2f] rounded-2xl p-6 md:p-8 mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl shrink-0 border border-[#2d3748]">
+                <div class="flex items-start gap-4">
+                    <div class="mt-1">
+                        <svg class="w-8 h-8 text-blue-400 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black italic tracking-tighter text-white">AUDITORÍA DE TEMPORADA</h2>
+                        <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            DISTRIBUCIÓN ANUAL RESERVA MARINA 2026
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Unit Toggle Dropdown -->
+                <div class="relative w-full md:w-64" id="unit-dropdown-wrapper">
+                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ml-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        UNIDAD DE ANÁLISIS:
+                    </div>
+                    <button onclick="document.getElementById('unit-dropdown-panel').classList.toggle('hidden')" class="w-full bg-[#1e293b] border border-slate-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex justify-between items-center hover:bg-[#334155] transition-colors shadow-inner">
+                        <span id="unit-dropdown-text">Plazas (Buceadores)</span>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    
+                    <div id="unit-dropdown-panel" class="hidden absolute left-0 top-full mt-2 w-full bg-[#1e293b] border border-slate-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
+                        <button onclick="setStatsUnit('plazas')" id="btn-toggle-plazas" class="text-left px-4 py-3 text-sm font-bold text-white hover:bg-[#334155] transition-colors flex items-center justify-between border-b border-slate-700">
+                            Plazas (Buceadores) <svg id="check-plazas" class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button onclick="setStatsUnit('barcos')" id="btn-toggle-barcos" class="text-left px-4 py-3 text-sm font-bold text-slate-300 hover:bg-[#334155] transition-colors flex items-center justify-between">
+                            Barcos (Salidas) <svg id="check-barcos" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header for Main Table -->
+            <div class="flex items-center gap-3 mb-6 mt-4">
+                <div class="w-2 h-7 bg-blue-500 rounded-full"></div>
+                <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight uppercase" id="stats-main-title">Distribución de Buceadores por Punto</h3>
+            </div>
+            
+            <!-- Safe Injection Zone for Main Table -->
+            <div id="safe-main-table-container"></div>
+
+            <!-- Header for Monthly Grid -->
+            <div class="flex items-center gap-3 mb-6 mt-6">
+                <div class="w-2 h-7 bg-emerald-500 rounded-full"></div>
+                <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight uppercase" id="stats-monthly-title">Detalle Mensual de Buceadores</h3>
+            </div>
+
+            <!-- 2-Column Monthly Breakdown Grid -->
+            <div id="stats-monthly-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+                <!-- Monthly Cards Injected by JS -->
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        /* =========================================================================
+           1. CORE DATA & INITIALIZATION
+           ========================================================================= */
+        const SITES = ['Bajo de Dentro', 'Piles II', 'Piles I', 'Testa', 'Morra'];
+        const TIMES = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00'];
+        const SITE_CAPACITY = { 'Bajo de Dentro': 70, 'Piles II': 50, 'Piles I': 50, 'Testa': 30, 'Morra': 50 };
+        
+        const CENTERS = {
+            'B': { name: 'Balky', color: 'bg-[#ef4444]', text: 'text-white' }, 
+            'H': { name: 'Islas Hormigas', color: 'bg-[#0f172a]', text: 'text-white' }, 
+            'M': { name: 'Mangamar', color: 'bg-[#22c55e]', text: 'text-white' }, 
+            'N': { name: 'Naranjito', color: 'bg-[#fbbf24]', text: 'text-slate-900' }, 
+            'P': { name: 'Planeta Azul', color: 'bg-[#3b82f6]', text: 'text-white' }, 
+            'D': { name: 'Divers', color: 'bg-[#6d28d9]', text: 'text-white' }, 
+            'C': { name: 'CLUB', color: 'bg-[#64748b]', text: 'text-white' }, 
+            'X': { name: 'X La Manga', color: 'bg-[#cbd5e1]', text: 'text-slate-800' } 
+        };
+        
+        const FESTIVOS = ['2026-03-19'];
+        const DAYS_ES = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+        const MONTHS_ES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+        const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const CENTER_NAME_TO_KEY = {};
+        Object.keys(CENTERS).forEach(key => CENTER_NAME_TO_KEY[CENTERS[key].name.toUpperCase()] = key);
+
+        const EMAIL_MAP = {
+            'admin': 'admin@visor.local', 'mangamar': 'mangamar@visor.local', 'balky': 'balky@visor.local',
+            'hormigas': 'hormigas@visor.local', 'naranjito': 'naranjito@visor.local', 'planeta': 'planeta@visor.local',
+            'divers': 'divers@visor.local', 'club': 'club@visor.local', 'xlm': 'xlm@visor.local'
+        };
+
+        const USER_CENTER_KEYS = {
+            'balky': 'B', 'hormigas': 'H', 'mangamar': 'M', 'naranjito': 'N',
+            'planeta': 'P', 'divers': 'D', 'club': 'C', 'xlm': 'X'
+        };
+
+        const BADGE_INFO = {
+            'admin': { name: 'Admin Root', color: 'bg-slate-800', text: 'text-white' },
+            'mangamar': { name: 'Mangamar', color: 'bg-[#22c55e]', text: 'text-white' },
+            'balky': { name: 'Balky', color: 'bg-[#ef4444]', text: 'text-white' },
+            'hormigas': { name: 'Islas Hormigas', color: 'bg-[#0f172a]', text: 'text-white' },
+            'naranjito': { name: 'Naranjito', color: 'bg-[#fbbf24]', text: 'text-slate-900' },
+            'planeta': { name: 'Planeta Azul', color: 'bg-[#3b82f6]', text: 'text-white' },
+            'divers': { name: 'Divers', color: 'bg-[#6d28d9]', text: 'text-white' },
+            'club': { name: 'CLUB', color: 'bg-[#64748b]', text: 'text-white' },
+            'xlm': { name: 'X La Manga', color: 'bg-[#cbd5e1]', text: 'text-slate-800' }
+        };
+
+        // Application State
+        let currentDate = new Date(2026, 2, 29); 
+        let allocations = []; 
+        let swapRequests = []; 
+        let selectedCenters = Object.keys(CENTERS);
+        let activeViewMode = 'diario';
+        let statsUnit = 'plazas'; 
+        let isGuestMode = false;
+        let currentUserKey = 'guest';
+
+        /* =========================================================================
+           2. FIREBASE SETUP
+           ========================================================================= */
+        const firebaseConfig = {
+            apiKey: "AIzaSyBe7X5AUC-PpcJSCYgMzyyUMJMPqxtTdiw",
+            authDomain: "reserva-marina-cdp.firebaseapp.com",
+            projectId: "reserva-marina-cdp",
+            storageBucket: "reserva-marina-cdp.appspot.com",
+            messagingSenderId: "242126338137",
+            appId: "1:242126338137:web:c32d20d4697545a172d948"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        /* =========================================================================
+           3. FIREBASE LISTENERS
+           ========================================================================= */
+        let unsubscribeSnapshot = null;
+        let unsubscribeSwaps = null;
+
+        function startFirestoreListener() {
+            if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+            if (unsubscribeSwaps) { unsubscribeSwaps(); unsubscribeSwaps = null; }
+
+            unsubscribeSnapshot = db.collection("reservations_monthly").onSnapshot((snapshot) => {
+                const dataFromCloud = [];
+                snapshot.forEach((doc) => {
+                    const monthData = doc.data().allocations || {};
+                    for (const customDocId in monthData) {
+                        dataFromCloud.push({ id: customDocId, ...monthData[customDocId] });
+                    }
+                });
+                allocations = dataFromCloud;
+                renderAll();
+            }, (error) => console.error("Firestore Listen Error:", error));
+
+            unsubscribeSwaps = db.collection("swaps").onSnapshot((snapshot) => {
+                const swapsFromCloud = [];
+                snapshot.forEach(doc => { swapsFromCloud.push({ id: doc.id, ...doc.data() }); });
+                swapRequests = swapsFromCloud;
+                updateNotificationsMenu();
+                renderAll(); 
+            });
+        }
+
+        /* =========================================================================
+           4. AUTHENTICATION & UI MENU
+           ========================================================================= */
+        function openLoginModal() { document.getElementById('password-modal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('password-modal').classList.add('hidden'); }
+        function openHelpModal() { document.getElementById('help-modal').classList.remove('hidden'); }
+
+        function togglePassword() {
+            const pwdInput = document.getElementById('login-password');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />`;
+            } else {
+                pwdInput.type = 'password';
+                eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+            }
+        }
+
+        function verifyLogin() {
+            const userKey = document.getElementById('login-user').value;
+            const password = document.getElementById('login-password').value;
+            const dummyEmail = EMAIL_MAP[userKey];
+
+            auth.signInWithEmailAndPassword(dummyEmail, password)
+                .then(() => {
+                    document.getElementById('password-modal').classList.add('hidden');
+                    document.getElementById('password-error').classList.add('hidden');
+                    document.getElementById('login-password').value = ''; 
+                })
+                .catch((error) => {
+                    const errorMsgEl = document.getElementById('password-error');
+                    errorMsgEl.classList.remove('hidden');
+                    errorMsgEl.textContent = 'Contraseña incorrecta. Compruébala e inténtalo de nuevo.';
+                });
+        }
+
+        function logout() { auth.signOut(); }
+        
+        function toggleUserMenu() { document.getElementById('user-dropdown').classList.toggle('hidden'); }
+        
+        document.addEventListener('click', function(event) {
+            const wrapper = document.getElementById('user-menu-wrapper');
+            const panel = document.getElementById('user-dropdown');
+            if (wrapper && !wrapper.contains(event.target) && panel) {
+                panel.classList.add('hidden');
+            }
+        });
+
+        function buildUserMenu() {
+            const menu = document.getElementById('user-dropdown');
+            let html = '';
+            
+            const myCode = USER_CENTER_KEYS[currentUserKey];
+            const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
+            
+            if (pendingForMe.length > 0 && !isGuestMode && currentUserKey !== 'admin') {
+                html += `<button onclick="openNotificationsModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center justify-between"><div class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg> Notificaciones</div> <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">${pendingForMe.length}</span></button>`;
+                html += `<div class="h-px bg-slate-100 my-1"></div>`;
+            }
+            
+            html += `<button onclick="openHelpModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Instrucciones de Uso</button>`;
+            html += `<button onclick="exportCSV(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Exportar CSV</button>`;
+            
+            if (currentUserKey === 'admin') {
+                html += `<div class="h-px bg-slate-100 my-1"></div>`;
+                html += `<button onclick="triggerImport(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar CSV</button>`;
+                html += `<button onclick="promptEmptyData(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Vaciar Datos</button>`;
+            }
+            
+            html += `<div class="h-px bg-slate-100 my-1"></div>`;
+            
+            if (isGuestMode) {
+                html += `<button onclick="openLoginModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-600 hover:bg-slate-50 transition-colors flex items-center gap-2">Iniciar sesión</button>`;
+            } else {
+                html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
+            }
+            
+            menu.innerHTML = html;
+        }
+
+        function updateNotificationsMenu() {
+            const myCode = USER_CENTER_KEYS[currentUserKey];
+            const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
+            const bubble = document.getElementById('notif-bubble');
+            
+            if (pendingForMe.length > 0 && !isGuestMode && currentUserKey !== 'admin') {
+                bubble.classList.remove('hidden');
+            } else {
+                bubble.classList.add('hidden');
+            }
+            buildUserMenu();
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                isGuestMode = false;
+                document.getElementById('password-modal').classList.add('hidden');
+                currentUserKey = Object.keys(EMAIL_MAP).find(k => EMAIL_MAP[k] === user.email) || 'admin';
+                startFirestoreListener();
+            } else {
+                isGuestMode = true;
+                currentUserKey = 'guest';
+                document.getElementById('password-modal').classList.add('hidden'); 
+                startFirestoreListener();
+            }
+            
+            const badgeInfo = BADGE_INFO[currentUserKey] || { name: 'Invitado', color: 'bg-slate-200', text: 'text-slate-600' };
+            const centerInitial = currentUserKey === 'admin' ? 'A' : (currentUserKey === 'mangamar' ? 'M' : (currentUserKey === 'guest' ? 'INV' : currentUserKey.charAt(0).toUpperCase()));
+            const btn = document.getElementById('user-badge-button');
+            
+            btn.className = `rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-all ${badgeInfo.color} ${badgeInfo.text}`;
+            const bgDarker = currentUserKey === 'guest' ? 'bg-black/10' : 'bg-black/20';
+            btn.innerHTML = `<span class="${bgDarker} px-1.5 rounded-sm">${centerInitial}</span><span class="tracking-wide">${badgeInfo.name}</span><svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+            
+            updateNotificationsMenu();
+        });
+
+
+        /* =========================================================================
+           5. UTILITIES
+           ========================================================================= */
+        function formatDateString(dateObj) {
+            return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+        }
+        function getMonday(d) {
+            d = new Date(d);
+            var day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        }
+        function getDateOfISOWeek(w, y) {
+            var simple = new Date(y, 0, 1 + (w - 1) * 7);
+            var ISOweekStart = simple;
+            if (simple.getDay() <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            return ISOweekStart;
+        }
+        function normalizeCSVDate(dateStr) {
+            let p;
+            if (dateStr.includes('/')) p = dateStr.split('/');
+            else if (dateStr.includes('-')) p = dateStr.split('-');
+            else return dateStr.replace(/[^0-9-]/g, '-'); 
+            
+            if (p.length === 3) {
+                if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+                else {
+                    let year = p[2].length === 2 ? '20' + p[2] : p[2];
+                    return `${year}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+                }
+            }
+            return dateStr.replace(/[^0-9-]/g, '-');
+        }
+        function normalizeCSVTime(timeStr) {
+            let p = timeStr.split(':');
+            if(p.length >= 2) return `${p[0].padStart(2, '0')}:${p[1].padStart(2, '0')}`;
+            return timeStr;
+        }
+
+        /* =========================================================================
+           6. UI CONTROLLERS
+           ========================================================================= */
+        function switchView(v) {
+            activeViewMode = v;
+            ['diario', 'mega', 'estadisticas'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                if(el) { el.classList.remove('flex'); el.classList.add('hidden'); }
+            });
+            ['diario', 'semanal', 'mensual', 'estadisticas'].forEach(id => {
+                document.getElementById(`tab-${id}`).className = 'px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all';
+            });
+            document.getElementById(`tab-${v}`).className = 'px-5 py-2.5 tab-active flex items-center gap-2 transition-all';
+            
+            const sidebar = document.getElementById('sidebar-calendario');
+            const globalFilter = document.getElementById('global-filter-bar');
+            const mainContentArea = document.getElementById('main-content-area');
+            const viewEstadisticas = document.getElementById('view-estadisticas');
+
+            if (v === 'estadisticas') {
+                sidebar.classList.remove('flex', 'lg:flex');
+                sidebar.classList.add('hidden');
+                globalFilter.classList.add('hidden');
+                mainContentArea.classList.add('hidden');
+                viewEstadisticas.classList.remove('hidden');
+                viewEstadisticas.classList.add('flex');
+            } else {
+                sidebar.classList.remove('hidden');
+                globalFilter.classList.remove('hidden');
+                mainContentArea.classList.remove('hidden');
+                viewEstadisticas.classList.remove('flex');
+                viewEstadisticas.classList.add('hidden');
+
+                if (v === 'diario') {
+                    sidebar.classList.add('flex', 'lg:flex');
+                    document.getElementById('toolbar-period-selectors').classList.add('hidden');
+                    document.getElementById('view-diario').classList.remove('hidden');
+                    document.getElementById('view-diario').classList.add('flex');
+                } else {
+                    sidebar.classList.remove('flex', 'lg:flex');
+                    sidebar.classList.add('hidden');
+                    document.getElementById('toolbar-period-selectors').classList.remove('hidden');
+                    document.getElementById('view-mega').classList.remove('hidden');
+                    document.getElementById('view-mega').classList.add('flex');
+                    
+                    document.getElementById('toolbar-week').classList.toggle('hidden', v !== 'semanal');
+                    document.getElementById('toolbar-month').classList.toggle('hidden', v !== 'mensual');
+                }
+            }
+            renderAll();
+        }
+
+        function setStatsUnit(unit) {
+            statsUnit = unit;
+            document.getElementById('unit-dropdown-text').textContent = unit === 'barcos' ? 'Barcos (Salidas)' : 'Plazas (Buceadores)';
+            const btnPlazas = document.getElementById('btn-toggle-plazas');
+            const btnBarcos = document.getElementById('btn-toggle-barcos');
+            if(unit === 'plazas') {
+                btnPlazas.classList.replace('text-slate-300', 'text-white');
+                btnBarcos.classList.replace('text-white', 'text-slate-300');
+                document.getElementById('check-plazas').classList.remove('hidden');
+                document.getElementById('check-barcos').classList.add('hidden');
+            } else {
+                btnBarcos.classList.replace('text-slate-300', 'text-white');
+                btnPlazas.classList.replace('text-white', 'text-slate-300');
+                document.getElementById('check-barcos').classList.remove('hidden');
+                document.getElementById('check-plazas').classList.add('hidden');
+            }
+            const titleLabel = unit === 'barcos' ? 'Barcos' : 'Buceadores';
+            document.getElementById('stats-main-title').textContent = `Distribución de ${titleLabel} por Punto`;
+            document.getElementById('stats-monthly-title').textContent = `Detalle Mensual de ${titleLabel}`;
+            document.getElementById('unit-dropdown-panel').classList.add('hidden');
+            renderStats();
+        }
+
+        document.addEventListener('click', function(event) {
+            const wrapperFilter = document.getElementById('center-filter-dropdown-wrapper');
+            const panelFilter = document.getElementById('filter-dropdown-panel');
+            if (wrapperFilter && !wrapperFilter.contains(event.target) && panelFilter) {
+                panelFilter.classList.add('hidden');
+            }
+        });
+
+        function initFilters() {
+            const c = document.getElementById('filter-container'); c.innerHTML = '';
+            Object.keys(CENTERS).forEach(k => {
+                const cn = CENTERS[k], ck = selectedCenters.includes(k);
+                const l = document.createElement('label'); l.className = 'flex items-center gap-3 p-2 hover:bg-slate-50 rounded-md transition-colors cursor-pointer';
+                l.innerHTML = `<input type="checkbox" ${ck ? 'checked' : ''} onchange="toggleCenter('${k}')" class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"><span class="w-6 h-6 rounded ${cn.color} ${cn.text} flex items-center justify-center text-[10px] font-black">${k}</span><span class="text-sm font-semibold text-slate-700">${cn.name}</span>`;
+                c.appendChild(l);
+            });
+            document.getElementById('filter-button-text').textContent = selectedCenters.length === Object.keys(CENTERS).length ? 'TODOS LOS CENTROS' : `${selectedCenters.length} SELECCIONADOS`;
+        }
+
+        function initSelectors() {
+            let mH = ''; for(let i=0; i<12; i++) mH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
+            document.getElementById('month-selector-sidebar').innerHTML = mH; document.getElementById('month-selector-main').innerHTML = mH;
+            const w = document.getElementById('week-selector'); w.innerHTML = '';
+            for(let i=1; i<=52; i++) {
+                const s = getDateOfISOWeek(i, 2026), e = new Date(s); e.setDate(s.getDate() + 6);
+                w.innerHTML += `<option value="${i}">Semana ${i} (${s.getDate()} ${MONTHS_SHORT[s.getMonth()]} - ${e.getDate()} ${MONTHS_SHORT[e.getMonth()]})</option>`;
+            }
+        }
+
+        function toggleCenter(k) { selectedCenters = selectedCenters.includes(k) ? selectedCenters.filter(x => x !== k) : [...selectedCenters, k]; initFilters(); renderAll(); }
+        function setAllFilters(s) { selectedCenters = s ? Object.keys(CENTERS) : []; initFilters(); renderAll(); }
+        function changeMonth(i) { currentDate.setMonth(parseInt(i)); currentDate.setDate(1); renderAll(); }
+        function changeWeek(n) { currentDate = getDateOfISOWeek(parseInt(n), 2026); renderAll(); }
+        function setDate(s) { const p = s.split('-'); currentDate = new Date(p[0], p[1]-1, p[2]); renderAll(); }
+        function toggleFilterDropdown() { document.getElementById('filter-dropdown-panel').classList.toggle('hidden'); }
+
+        /* =========================================================================
+           7. MODALS & NOTIFICATIONS
+           ========================================================================= */
+        function showNotification(title, message, isError = false) {
+            const iconEl = document.getElementById('notification-icon');
+            const titleEl = document.getElementById('notification-title');
+            if(isError) {
+                iconEl.className = 'mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-red-100 text-red-600';
+                iconEl.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                titleEl.className = 'text-xl font-black mb-2 text-red-600';
+            } else {
+                iconEl.className = 'mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-emerald-100 text-emerald-600';
+                iconEl.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                titleEl.className = 'text-xl font-black mb-2 text-emerald-600';
+            }
+            titleEl.textContent = title;
+            document.getElementById('notification-message').textContent = message;
+            document.getElementById('notification-modal').classList.remove('hidden');
+        }
+
+        function closeNotification() {
+            document.getElementById('notification-modal').classList.add('hidden');
+        }
+
+        /* =========================================================================
+           8. DATA OPERATIONS (IMPORT / EXPORT / EMPTY)
+           ========================================================================= */
+        function triggerImport() { document.getElementById('csv-upload').click(); }
+
+        function handleImport(e) {
+            const f = e.target.files[0]; if(!f) return;
+            const btn = document.getElementById('user-badge-button');
+            const originalBtnHtml = btn.innerHTML;
+            
+            btn.innerHTML = `<svg class="animate-spin h-3 w-3 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="tracking-wide">Cargando CSV...</span>`;
+            
+            const r = new FileReader();
+            r.onload = async (ev) => {
+                const rs = ev.target.result.split('\n'), loaded = [];
+                const safeCenterMap = {};
+                Object.keys(CENTERS).forEach(k => safeCenterMap[CENTERS[k].name.toUpperCase()] = k);
+                const slotTracker = {}; 
+
+                for(let i=1; i<rs.length; i++) {
+                    if(!rs[i].trim()) continue;
+                    let c = rs[i].split(',');
+                    if (c.length < 5) c = rs[i].split(';');
+                    if (c.length < 5) c = rs[i].split('\t');
+                    if (c.length < 5) continue;
+                    
+                    const clean = (str) => str ? str.replace(/['"\r\n]+/g, '').trim() : '';
+                    const rawDate = clean(c[0]);
+                    const centerName = clean(c[1]).toUpperCase(); 
+                    const site = clean(c[2]);
+                    const rawTime = clean(c[3]);
+                    const pax = parseInt(clean(c[4]), 10);
+
+                    const normalizedDate = normalizeCSVDate(rawDate);
+                    const normalizedTime = normalizeCSVTime(rawTime);
+                    const cKey = safeCenterMap[centerName];
+
+                    if(cKey && !isNaN(pax)) {
+                        const trackKey = `${normalizedDate}-${normalizedTime}-${site}`;
+                        if (!slotTracker[trackKey]) slotTracker[trackKey] = 1;
+                        else slotTracker[trackKey]++;
+                        const assignedSubslot = slotTracker[trackKey];
+                        loaded.push({ date: normalizedDate, center: cKey, site: site, time: normalizedTime, pax: pax, subslot: assignedSubslot });
+                    }
+                }
+                
+                if(loaded.length) { 
+                    try {
+                        const monthlyData = {};
+                        loaded.forEach(item => {
+                            const monthKey = item.date.substring(0, 7);
+                            if (!monthlyData[monthKey]) monthlyData[monthKey] = {};
+                            
+                            const safeDate = item.date.replace(/[^0-9-]/g, '');
+                            const safeTime = item.time.replace(/[^0-9]/g, '');
+                            const safeSite = item.site.replace(/[^a-zA-Z0-9]/g, '');
+                            const safeCenter = item.center.replace(/[^a-zA-Z0-9]/g, '');
+                            const customDocId = `${safeDate}_${safeTime}_${safeSite}_${safeCenter}_${item.subslot}`;
+                            
+                            monthlyData[monthKey][customDocId] = item;
+                        });
+                        
+                        const batch = db.batch();
+                        let totalMonths = Object.keys(monthlyData).length;
+                        
+                        for (const [month, dataMap] of Object.entries(monthlyData)) {
+                            const docRef = db.collection("reservations_monthly").doc(month);
+                            batch.set(docRef, { allocations: dataMap }, { merge: true });
+                        }
+                        
+                        btn.innerHTML = `<svg class="animate-spin h-3 w-3 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="tracking-wide">Guardando...</span>`;
+                        await batch.commit();
+                        showNotification('Importación Exitosa', `Se ha procesado y guardado la planificación completa (${loaded.length} reservas) en la base de datos.`); 
+                        if(loaded[0] && loaded[0].date) setDate(loaded[0].date);
+                    } catch(err) {
+                        console.error(err);
+                        showNotification('Error', 'Hubo un problema de red al guardar en la nube. Revisa la consola.', true);
+                    } finally {
+                        btn.innerHTML = originalBtnHtml;
+                    }
+                }
+                else {
+                    showNotification('Error de Formato', 'No se encontraron datos válidos. Comprueba el archivo.', true);
+                    btn.innerHTML = originalBtnHtml;
+                }
+            };
+            r.onerror = () => { btn.innerHTML = originalBtnHtml; };
+            r.readAsText(f); e.target.value = '';
+        }
+
+        function exportCSV() {
+            try {
+                let csv = "Fecha,Centro,Punto,Hora,Plazas\n";
+                allocations.filter(a => a && a.center && selectedCenters.includes(a.center)).forEach(a => {
+                    const cName = CENTERS[a.center] ? CENTERS[a.center].name : a.center;
+                    csv += `${a.date},${cName},${a.site},${a.time},${a.pax}\n`;
+                });
+                const l = document.createElement("a"); 
+                l.setAttribute("href", "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv)); 
+                l.setAttribute("download", "Export_Reservas.csv"); 
+                l.click();
+            } catch (error) { console.error("Export Error: ", error); }
+        }
+
+        function promptEmptyData() {
+            try { exportCSV(); } catch(e) { console.error("Export backup bypassed due to data format."); }
+            setTimeout(() => document.getElementById('empty-confirm-modal').classList.remove('hidden'), 800);
+        }
+
+        async function executeEmptyData() {
+            const btnConfirm = document.getElementById('btn-confirm-empty');
+            const btnCancel = document.getElementById('btn-cancel-empty');
+            
+            btnConfirm.textContent = "Borrando...";
+            btnConfirm.disabled = true;
+            btnCancel.disabled = true;
+
+            try {
+                const snapshot = await db.collection("reservations_monthly").get();
+                if (!snapshot.empty) {
+                    const deletePromises = snapshot.docs.map(doc => doc.ref.delete());
+                    await Promise.all(deletePromises);
+                }
+                
+                const swapSnapshot = await db.collection("swaps").get();
+                if (!swapSnapshot.empty) {
+                    const swapPromises = swapSnapshot.docs.map(doc => doc.ref.delete());
+                    await Promise.all(swapPromises);
+                }
+                
+                document.getElementById('empty-confirm-modal').classList.add('hidden');
+                showNotification('Base de Datos Vaciada', `Se han eliminado permanentemente todos los archivos de la nube.`);
+            } catch (error) {
+                console.error("Error deleting documents: ", error);
+                document.getElementById('empty-confirm-modal').classList.add('hidden');
+                showNotification('Error', 'Hubo un problema al vaciar los datos. Comprueba la conexión.', true);
+            } finally {
+                btnConfirm.textContent = "Sí, vaciar";
+                btnConfirm.disabled = false;
+                btnCancel.disabled = false;
+            }
+        }
+
+        /* =========================================================================
+           9. DRAG & DROP + SWAPS + DOUBLE CLICK
+           ========================================================================= */
+        let draggedItemId = null;
+        let pendingDrop = null;
+        let pendingNewSalidaWA = null; 
+        let pendingSwapIntent = null; 
+
+        function cancelWhatsAppDrop() {
+            document.getElementById('whatsapp-confirm-modal').classList.add('hidden');
+            document.getElementById('swap-choice-modal').classList.add('hidden');
+            pendingDrop = null;
+            pendingSwapIntent = null;
+            pendingNewSalidaWA = null;
+            renderAll(); 
+        }
+
+        async function confirmWhatsAppAction() {
+            document.getElementById('whatsapp-confirm-modal').classList.add('hidden');
+            
+            if (pendingDrop) {
+                const { id, item, newTime, newSite, msg } = pendingDrop;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                await executeDrop(id, item, newTime, newSite);
+                pendingDrop = null;
+            }
+            else if (pendingSwapIntent) {
+                const { initId, initItem, targetId, targetItem, msg } = pendingSwapIntent;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+
+                try {
+                    await db.collection("swaps").add({
+                        initiatorId: initId, targetId: targetId,
+                        initiatorCenter: initItem.center, targetCenter: targetItem.center,
+                        initiatorData: initItem, targetData: targetItem,
+                        status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showNotification('Solicitud Enviada', 'La propuesta de intercambio ha sido enviada al otro centro. Verás los bloques en gris hasta que acepten.');
+                } catch(e) {
+                    console.error(e);
+                    showNotification('Error', 'Hubo un fallo al solicitar el intercambio.', true);
+                }
+                pendingSwapIntent = null;
+            }
+            else if (pendingNewSalidaWA) {
+                const { data, pax, centerKey, msg } = pendingNewSalidaWA;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                await executeNewSalida(data, pax, centerKey);
+                pendingNewSalidaWA = null;
+            }
+        }
+
+        async function executeDrop(id, item, newTime, newSite) {
+            const monthKey = item.date.substring(0, 7); 
+            const safeDate = item.date.replace(/[^0-9-]/g, '');
+            const safeTime = newTime.replace(/[^0-9]/g, '');
+            const safeSite = newSite.replace(/[^a-zA-Z0-9]/g, '');
+            const safeCenter = item.center.replace(/[^a-zA-Z0-9]/g, '');
+            
+            const oldIndex = id.split('_').pop();
+            const newId = `${safeDate}_${safeTime}_${safeSite}_${safeCenter}_${oldIndex}`;
+
+            const updatedItem = { ...item, time: newTime, site: newSite };
+            delete updatedItem.id; 
+
+            try {
+                const docRef = db.collection("reservations_monthly").doc(monthKey);
+                const batch = db.batch();
+                batch.update(docRef, {
+                    [`allocations.${id}`]: firebase.firestore.FieldValue.delete(),
+                    [`allocations.${newId}`]: updatedItem
+                });
+                await batch.commit();
+            } catch(error) {
+                console.error("Error", error);
+                showNotification('Error', 'No se pudo guardar.', true);
+            }
+        }
+        
+        async function executeNewSalida(info, pax, userKeyChoice) {
+            const { date, time, site } = info;
+            const centerCode = USER_CENTER_KEYS[userKeyChoice] || USER_CENTER_KEYS[currentUserKey];
+
+            const safeDate = date.replace(/[^0-9-]/g, '');
+            const safeTime = time.replace(/[^0-9]/g, '');
+            const safeSite = site.replace(/[^a-zA-Z0-9]/g, '');
+            const safeCenter = centerCode.replace(/[^a-zA-Z0-9]/g, '');
+
+            const existingItemsInSlot = allocations.filter(a => a.date === date && a.time === time && a.site === site);
+            let newSubslot = 1;
+            if (existingItemsInSlot.length > 0) {
+                const usedSubslots = existingItemsInSlot.map(a => a.subslot || 1);
+                while(usedSubslots.includes(newSubslot)) newSubslot++;
+            }
+
+            const newId = `${safeDate}_${safeTime}_${safeSite}_${safeCenter}_${newSubslot}`;
+            const newItem = { date, time, site, center: centerCode, pax, subslot: newSubslot };
+            const monthKey = date.substring(0, 7);
+
+            try {
+                const docRef = db.collection("reservations_monthly").doc(monthKey);
+                const batch = db.batch();
+                batch.set(docRef, { [`allocations.${newId}`]: newItem }, { merge: true });
+                await batch.commit();
+            } catch(e) {
+                console.error(e);
+                showNotification('Error', 'Hubo un problema guardando en la nube.', true);
+            }
+        }
+
+        function openNotificationsModal() {
+            const myCode = USER_CENTER_KEYS[currentUserKey];
+            const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
+            const listEl = document.getElementById('notifications-list');
+            listEl.innerHTML = '';
+            
+            if (pendingForMe.length === 0) {
+                listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-6">No tienes solicitudes pendientes.</p>`;
+            } else {
+                pendingForMe.forEach(req => {
+                    const initName = CENTERS[req.initiatorCenter].name;
+                    const d = new Date(req.initiatorData.date);
+                    const dStr = `${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
+                    
+                    const html = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm">
+                        <div class="flex gap-3 mb-3">
+                            <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 text-xs">🔄</span>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800"><span class="text-blue-600">${initName}</span> te propone un cambio:</p>
+                                <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} (${req.initiatorData.time})</b> el ${dStr}.</p>
+                                <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} (${req.targetData.time})</b>.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="rejectSwap('${req.id}')" class="flex-1 px-3 py-2 bg-white border border-slate-200 hover:bg-red-50 text-red-600 text-xs font-bold rounded-lg transition-colors">Rechazar</button>
+                            <button onclick="acceptSwap('${req.id}')" class="flex-1 px-3 py-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white text-xs font-bold rounded-lg transition-colors shadow-sm">Aceptar Cambio</button>
+                        </div>
+                    </div>`;
+                    listEl.innerHTML += html;
+                });
+            }
+            document.getElementById('notifications-modal').classList.remove('hidden');
+        }
+
+        async function rejectSwap(swapId) {
+            try {
+                await db.collection("swaps").doc(swapId).delete();
+                openNotificationsModal(); 
+            } catch(e) { console.error(e); }
+        }
+
+        async function acceptSwap(swapId) {
+            const req = swapRequests.find(s => s.id === swapId);
+            if (!req) return;
+
+            document.getElementById('notifications-modal').classList.add('hidden');
+            
+            const iItem = req.initiatorData;
+            const tItem = req.targetData;
+            
+            const new_iItem = { ...iItem, time: tItem.time, site: tItem.site, subslot: tItem.subslot };
+            const new_tItem = { ...tItem, time: iItem.time, site: iItem.site, subslot: iItem.subslot };
+
+            const sDate1 = new_iItem.date.replace(/[^0-9-]/g, '');
+            const sTime1 = new_iItem.time.replace(/[^0-9]/g, '');
+            const sSite1 = new_iItem.site.replace(/[^a-zA-Z0-9]/g, '');
+            const sCenter1 = new_iItem.center.replace(/[^a-zA-Z0-9]/g, '');
+            const newId1 = `${sDate1}_${sTime1}_${sSite1}_${sCenter1}_${new_iItem.subslot}`;
+
+            const sDate2 = new_tItem.date.replace(/[^0-9-]/g, '');
+            const sTime2 = new_tItem.time.replace(/[^0-9]/g, '');
+            const sSite2 = new_tItem.site.replace(/[^a-zA-Z0-9]/g, '');
+            const sCenter2 = new_tItem.center.replace(/[^a-zA-Z0-9]/g, '');
+            const newId2 = `${sDate2}_${sTime2}_${sSite2}_${sCenter2}_${new_tItem.subslot}`;
+
+            const monthKey1 = iItem.date.substring(0, 7);
+            const monthKey2 = tItem.date.substring(0, 7); 
+
+            try {
+                const batch = db.batch();
+                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${req.initiatorId}`]: firebase.firestore.FieldValue.delete() });
+                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
+                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${newId1}`]: new_iItem });
+                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${newId2}`]: new_tItem });
+                batch.delete(db.collection("swaps").doc(swapId));
+
+                await batch.commit();
+
+                const centerName = CENTERS[tItem.center].name;
+                const d = new Date(iItem.date);
+                const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${centerName} ha aceptado el intercambio de salidas del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}. El visor ha sido actualizado con los nuevos horarios.`;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+
+            } catch(e) {
+                console.error(e);
+                showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
+            }
+        }
+        
+        async function adminInstantSwap(req) {
+            const iItem = req.initiatorData;
+            const tItem = req.targetData;
+            
+            const new_iItem = { ...iItem, time: tItem.time, site: tItem.site, subslot: tItem.subslot };
+            const new_tItem = { ...tItem, time: iItem.time, site: iItem.site, subslot: iItem.subslot };
+
+            const sDate1 = new_iItem.date.replace(/[^0-9-]/g, '');
+            const sTime1 = new_iItem.time.replace(/[^0-9]/g, '');
+            const sSite1 = new_iItem.site.replace(/[^a-zA-Z0-9]/g, '');
+            const sCenter1 = new_iItem.center.replace(/[^a-zA-Z0-9]/g, '');
+            const newId1 = `${sDate1}_${sTime1}_${sSite1}_${sCenter1}_${new_iItem.subslot}`;
+
+            const sDate2 = new_tItem.date.replace(/[^0-9-]/g, '');
+            const sTime2 = new_tItem.time.replace(/[^0-9]/g, '');
+            const sSite2 = new_tItem.site.replace(/[^a-zA-Z0-9]/g, '');
+            const sCenter2 = new_tItem.center.replace(/[^a-zA-Z0-9]/g, '');
+            const newId2 = `${sDate2}_${sTime2}_${sSite2}_${sCenter2}_${new_tItem.subslot}`;
+
+            const monthKey1 = iItem.date.substring(0, 7);
+            const monthKey2 = tItem.date.substring(0, 7); 
+
+            try {
+                const batch = db.batch();
+                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${req.initiatorId}`]: firebase.firestore.FieldValue.delete() });
+                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
+                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${newId1}`]: new_iItem });
+                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${newId2}`]: new_tItem });
+                await batch.commit();
+                showNotification('Modo Admin', 'Intercambio directo realizado.');
+            } catch(e) {
+                console.error(e);
+                showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
+            }
+        }
+
+        function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
+            const targetName = CENTERS[targetItem.center].name;
+            const initCenterName = CENTERS[initItem.center].name;
+            const d = new Date(initItem.date);
+            
+            const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${initCenterName} solicita intercambiar su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()} (${initItem.site} a las ${initItem.time}) por la salida de ${targetName} (${targetItem.site} a las ${targetItem.time}). Por favor, entren al visor para confirmarlo.`;
+            
+            pendingSwapIntent = { initId, initItem, targetId, targetItem, msg };
+            
+            document.getElementById('wa-action-type').textContent = "Solicitud de Intercambio";
+            document.getElementById('confirm-whatsapp-msg').textContent = msg;
+            document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
+        }
+
+        let pendingSwapInit = null;
+        let pendingSwapTargets = [];
+        let pendingSwapIsAdmin = false;
+
+        function showSwapChoiceModal(initId, initItem, targets, isAdmin = false) {
+            pendingSwapInit = { initId, initItem };
+            pendingSwapTargets = targets;
+            pendingSwapIsAdmin = isAdmin;
+            
+            const container = document.getElementById('swap-choice-buttons');
+            container.innerHTML = '';
+            
+            targets.forEach(target => {
+                const cInfo = CENTERS[target.center];
+                const btn = document.createElement('button');
+                btn.className = `w-full px-4 py-4 rounded-xl text-sm font-bold shadow-sm border border-slate-200 hover:shadow-md transition-all flex items-center justify-between ${cInfo.color} ${cInfo.text}`;
+                btn.innerHTML = `<span>${cInfo.name}</span> <span class="bg-black/20 px-2 py-1 rounded-md">${target.pax} Plazas</span>`;
+                btn.onclick = () => selectSwapTarget(target.id);
+                container.appendChild(btn);
+            });
+            
+            document.getElementById('swap-choice-modal').classList.remove('hidden');
+        }
+
+        async function selectSwapTarget(targetId) {
+            document.getElementById('swap-choice-modal').classList.add('hidden');
+            const targetItem = pendingSwapTargets.find(t => t.id === targetId);
+            const { initId, initItem } = pendingSwapInit;
+            
+            if (pendingSwapIsAdmin) {
+                await adminInstantSwap({ initiatorId: initId, targetId: targetId, initiatorData: initItem, targetData: targetItem });
+            } else {
+                triggerSwapConfirmation(initId, initItem, targetId, targetItem);
+            }
+        }
+
+        document.addEventListener('dragstart', (e) => {
+            if (isGuestMode) { e.preventDefault(); return; } 
+            const block = e.target.closest('.draggable-item');
+            if (!block) return;
+            draggedItemId = block.dataset.dragId;
+            try { e.dataTransfer.setData('text/plain', String(draggedItemId)); e.dataTransfer.effectAllowed = 'move'; } catch (err) { }
+            setTimeout(() => block.classList.add('opacity-50'), 0);
+        });
+
+        document.addEventListener('dragend', (e) => {
+            const block = e.target.closest('.draggable-item');
+            if (!block) return;
+            draggedItemId = null;
+            block.classList.remove('opacity-50');
+            document.querySelectorAll('.dropzone').forEach(el => el.classList.remove('bg-blue-50', 'bg-purple-50'));
+        });
+
+        document.addEventListener('dragover', (e) => {
+            if (isGuestMode || !draggedItemId) return;
+            e.preventDefault(); 
+            if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+            
+            document.querySelectorAll('.bg-blue-50, .bg-purple-50').forEach(el => {
+                if (el !== e.target.closest('.dropzone')) {
+                    el.classList.remove('bg-blue-50', 'bg-purple-50');
+                }
+            });
+
+            const dropzone = e.target.closest('.dropzone');
+            if (dropzone) {
+                const newTime = dropzone.dataset.time;
+                const newSite = dropzone.dataset.site;
+                const ds = formatDateString(currentDate);
+                
+                const initItem = allocations.find(a => String(a.id) === String(draggedItemId));
+                if (!initItem) return;
+
+                const existing = allocations.filter(a => a.date === ds && a.time === newTime && a.site === newSite && String(a.id) !== String(draggedItemId));
+                
+                if (existing.length >= 2 || (newSite !== initItem.site && existing.length > 0)) {
+                    dropzone.classList.add('bg-purple-50'); // Shows it will trigger a Swap
+                } else {
+                    dropzone.classList.add('bg-blue-50'); // Shows it will trigger a Hueco move
+                }
+            }
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            const dropzone = e.target.closest('.dropzone');
+            if (dropzone && !dropzone.contains(e.relatedTarget)) {
+                dropzone.classList.remove('bg-blue-50', 'bg-purple-50');
+            }
+        });
+
+        document.addEventListener('drop', async (e) => {
+            if (isGuestMode) return;
+            e.preventDefault();
+            
+            document.querySelectorAll('.dropzone').forEach(el => el.classList.remove('bg-blue-50', 'bg-purple-50'));
+            
+            let id = draggedItemId;
+            if (!id) return;
+
+            const dropzone = e.target.closest('.dropzone');
+            if (!dropzone) return;
+
+            const newTime = dropzone.dataset.time;
+            const newSite = dropzone.dataset.site;
+
+            const initItem = allocations.find(a => String(a.id) === String(id));
+            if (!initItem) return;
+            
+            if (initItem.time === newTime && initItem.site === newSite) return;
+
+            const existingItemsInSlot = allocations.filter(a => a.date === initItem.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
+
+            if (currentUserKey !== 'admin') {
+                let intent = 'UNKNOWN';
+                
+                if (newSite === initItem.site) {
+                    if (existingItemsInSlot.length < 2) intent = 'HUECO';
+                    else intent = 'SWAP';
+                } else {
+                    if (existingItemsInSlot.length > 0) intent = 'SWAP';
+                    else {
+                        showNotification('Acción Bloqueada', 'No puedes cambiar de punto de buceo si el horario está vacío. El cambio de punto solo está permitido si quieres intercambiar salidas (Swap) directamente con el barco de otro centro.', true);
+                        return;
+                    }
+                }
+
+                if (intent === 'HUECO') {
+                    const d = new Date(initItem.date);
+                    const centerName = CENTERS[initItem.center].name;
+                    const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} cambió su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()} en ${initItem.site} de las ${initItem.time} a las ${newTime}.`;
+                    
+                    pendingDrop = { id, item: initItem, newTime, newSite, msg };
+                    
+                    document.getElementById('wa-action-type').textContent = "Cambio de Horario";
+                    document.getElementById('confirm-whatsapp-msg').textContent = msg;
+                    document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
+                } else if (intent === 'SWAP') {
+                    if (existingItemsInSlot.length === 1) {
+                        const targetItem = existingItemsInSlot[0];
+                        if (targetItem.center === initItem.center) {
+                            showNotification('Acción Bloqueada', 'No puedes intercambiar barcos contigo mismo.', true);
+                            return;
+                        }
+                        triggerSwapConfirmation(id, initItem, targetItem.id, targetItem);
+                    } else if (existingItemsInSlot.length === 2) {
+                        const targets = existingItemsInSlot.filter(t => t.center !== initItem.center);
+                        if (targets.length === 0) {
+                            showNotification('Acción Bloqueada', 'Ambos barcos en este horario son tuyos, no puedes hacer un intercambio.', true);
+                            return;
+                        } else if (targets.length === 1) {
+                            triggerSwapConfirmation(id, initItem, targets[0].id, targets[0]);
+                        } else {
+                            showSwapChoiceModal(id, initItem, targets);
+                        }
+                    }
+                }
+            } else {
+                // Admin Drop Logic
+                if ((newSite !== initItem.site && existingItemsInSlot.length > 0) || existingItemsInSlot.length >= 2) {
+                    if (existingItemsInSlot.length === 1) {
+                        await adminInstantSwap({ initiatorId: id, targetId: existingItemsInSlot[0].id, initiatorData: initItem, targetData: existingItemsInSlot[0] });
+                    } else {
+                        showSwapChoiceModal(id, initItem, existingItemsInSlot, true);
+                    }
+                } else {
+                    await executeDrop(id, initItem, newTime, newSite);
+                }
+            }
+        });
+
+        function handleSlotDoubleClick(time, site) {
+            if (isGuestMode) return;
+
+            const ds = formatDateString(currentDate);
+            const existingItemsInSlot = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
+            if (existingItemsInSlot.length >= 2) {
+                showNotification('Horario Completo', 'Ya hay 2 barcos asignados en este horario.', true);
+                return;
+            }
+
+            const itemsInSiteToday = allocations.filter(a => a.date === ds && a.site === site);
+            const currentPax = itemsInSiteToday.reduce((sum, a) => sum + a.pax, 0);
+            const remainingCapacity = SITE_CAPACITY[site] - currentPax;
+
+            if (remainingCapacity <= 0) {
+                showNotification('Cupo Lleno', 'No quedan plazas disponibles para este punto de buceo hoy.', true);
+                return;
+            }
+
+            pendingNewSalida = { date: ds, time, site, maxPax: remainingCapacity };
+            document.getElementById('new-salida-title').textContent = `${site} a las ${time}`;
+            document.getElementById('new-salida-avail').textContent = `Plazas disponibles en el punto: ${remainingCapacity}`;
+            
+            const paxInput = document.getElementById('new-salida-pax');
+            paxInput.value = '';
+            paxInput.max = remainingCapacity;
+            
+            if (currentUserKey === 'admin') {
+                document.getElementById('new-salida-center-container').classList.remove('hidden');
+            } else {
+                document.getElementById('new-salida-center-container').classList.add('hidden');
+            }
+
+            document.getElementById('new-salida-modal').classList.remove('hidden');
+        }
+
+        function cancelNewSalida() {
+            document.getElementById('new-salida-modal').classList.add('hidden');
+            pendingNewSalida = null;
+        }
+
+        function confirmNewSalida() {
+            const paxInput = document.getElementById('new-salida-pax');
+            let pax = parseInt(paxInput.value, 10);
+            
+            if (!pax || isNaN(pax) || pax <= 0) {
+                showNotification('Error', 'Introduce un número válido.', true);
+                return;
+            }
+
+            if (pax > pendingNewSalida.maxPax) {
+                showNotification('Excede el cupo', `Solo quedan ${pendingNewSalida.maxPax} plazas disponibles.`, true);
+                return;
+            }
+
+            document.getElementById('new-salida-modal').classList.add('hidden');
+            
+            if (currentUserKey === 'admin') {
+                const adminCenterChoice = document.getElementById('new-salida-center').value;
+                executeNewSalida(pendingNewSalida, pax, adminCenterChoice);
+            } else {
+                const { date, time, site } = pendingNewSalida;
+                const dObj = new Date(date);
+                const centerCode = USER_CENTER_KEYS[currentUserKey];
+                const centerName = CENTERS[centerCode]?.name || currentUserKey;
+                
+                const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} ha añadido una nueva salida el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toLowerCase()} en ${site} a las ${time} para ${pax} plazas.`;
+                
+                pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: currentUserKey, msg: msg };
+
+                document.getElementById('wa-action-type').textContent = "Nueva Salida";
+                document.getElementById('confirm-whatsapp-msg').textContent = msg;
+                document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
+            }
+        }
+
+        /* =========================================================================
+           10. RENDER LOGIC: DIARIO & MEGA & STATS
+           ========================================================================= */
+        function renderDaily() {
+            if(activeViewMode !== 'diario') return;
+            const ds = formatDateString(currentDate);
+            document.getElementById('daily-date-header').textContent = `${DAYS_ES[currentDate.getDay()]}, ${currentDate.getDate()} DE ${MONTHS_ES[currentDate.getMonth()]} DE ${currentDate.getFullYear()}`;
+            const grid = document.getElementById('schedule-grid'); grid.innerHTML = '';
+            const t = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0 };
+            let totalFilteredPax = 0;
+
+            if (isGuestMode) { document.getElementById('drag-notice').classList.add('hidden'); } 
+            else { document.getElementById('drag-notice').classList.remove('hidden'); }
+
+            TIMES.forEach(time => {
+                if (time === '13:30') {
+                    grid.innerHTML += `<div class="grid grid-cols-[76px_repeat(5,1fr)] border-b border-slate-200 bg-red-50/60 min-h-[40px]"><div class="flex items-center justify-center border-r border-slate-200 font-black text-red-400 text-[10px] col-span-1">13:30</div><div class="col-span-5 flex items-center justify-center text-red-500 font-black italic text-[10px] tracking-[0.5em] opacity-80 uppercase">Descanso</div></div>`;
+                    return;
+                }
+
+                let rowHtml = '';
+
+                SITES.forEach(site => {
+                    const siteItems = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
+                    let cellHtml = '';
+
+                    siteItems.forEach(item => {
+                        t[site] += item.pax;
+
+                        if (selectedCenters.includes(item.center)) {
+                            totalFilteredPax += item.pax;
+                            const c = CENTERS[item.center];
+                            
+                            const isPending = swapRequests.some(s => String(s.initiatorId) === String(item.id) || String(s.targetId) === String(item.id));
+                            const ghostClass = isPending ? 'pending-swap-ghost' : '';
+                            
+                            const canDragBlock = !isPending && !isGuestMode && (currentUserKey === 'admin' || item.center === USER_CENTER_KEYS[currentUserKey]);
+                            const dragAttrs = canDragBlock ? `draggable="true"` : `draggable="false"`;
+                            const interactClass = canDragBlock ? `draggable-item cursor-grab active:cursor-grabbing hover:opacity-90` : `opacity-90`;
+
+                            cellHtml += `<div ${dragAttrs} data-drag-id="${item.id}" class="boat-block select-none w-full rounded-[4px] px-2 py-1.5 mb-0.5 mt-0.5 mx-0.5 flex-1 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${interactClass}">
+                                <div class="truncate flex items-center gap-1.5 pointer-events-none">
+                                    <span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span>
+                                    <span>${c.name} ${isPending ? '🔄' : ''}</span>
+                                </div>
+                                <span class="bg-black/20 px-1.5 py-0.5 rounded-sm pointer-events-none">${item.pax}</span>
+                            </div>`;
+                        }
+                    });
+
+                    rowHtml += `<div class="border-r border-slate-100 p-1 flex flex-col dropzone transition-colors h-full min-h-[44px]" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${cellHtml}</div>`;
+                });
+
+                grid.innerHTML += `<div class="grid grid-cols-[76px_repeat(5,1fr)] border-b border-slate-200 bg-white min-h-[44px]">
+                        <div class="flex items-center justify-center border-r border-slate-200 font-black italic text-slate-500 text-sm bg-slate-50/20 py-2">${time}</div>
+                        ${rowHtml}
+                    </div>`;
+            });
+            
+            document.getElementById('total-pax-header').textContent = totalFilteredPax;
+            SITES.forEach(s => {
+                const el = document.getElementById({'Bajo de Dentro':'cap-bajo', 'Piles II':'cap-piles2', 'Piles I':'cap-piles1', 'Testa':'cap-testa', 'Morra':'cap-morra'}[s]);
+                el.innerHTML = `<div class="flex flex-col items-center"><span class="${t[s] > SITE_CAPACITY[s] ? 'text-red-600' : 'text-green-600'} font-black text-lg leading-none">${t[s]}</span><div class="w-8 border-t border-slate-300 my-0.5"></div><span class="text-slate-500 font-bold leading-none">${SITE_CAPACITY[s]} ${t[s] > SITE_CAPACITY[s] ? '❌' : '✅'}</span></div>`;
+            });
+        }
+
+        function renderMega() {
+            if(activeViewMode !== 'semanal' && activeViewMode !== 'mensual') return;
+            const isW = activeViewMode === 'semanal';
+            const start = isW ? getMonday(currentDate) : new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const num = isW ? 7 : new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+            document.getElementById('mega-date-header').textContent = isW ? `Semana ${getWeekNumber(currentDate)} - ${currentDate.getFullYear()}` : `${MONTHS_ES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            
+            const anchor = `<svg class="w-3 h-3 inline mr-1 text-blue-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>`;
+            let h = `<div class="mega-grid text-[10px] text-center">`;
+            h += `<div class="sticky top-0 left-0 bg-slate-100 border-r-2 border-b-2 border-slate-300 z-50 flex items-center justify-center font-bold text-slate-500 h-[72px]" style="grid-row: span 2;">FECHA</div>`;
+            SITES.forEach(s => h += `<div class="sticky top-0 z-40 bg-white text-blue-700 border-r-2 border-b-2 border-slate-200 h-10 flex items-center justify-center font-black uppercase tracking-widest" style="grid-column: span 7;">${anchor} ${s}</div>`);
+            SITES.forEach(() => TIMES.forEach(tm => h += `<div class="sticky top-[40px] z-30 border-r border-b-2 border-slate-300 h-8 flex items-center justify-center font-bold ${tm === '13:30' ? 'bg-red-50 text-red-400' : 'bg-slate-50 text-slate-500'}">${tm}</div>`));
+            for (let i = 0; i < num; i++) {
+                const d = new Date(start); d.setDate(start.getDate() + i); const ds = formatDateString(d);
+                const isD = d.getDay() === 0 || d.getDay() === 6 || FESTIVOS.includes(ds);
+                h += `<div class="sticky left-0 bg-white border-r-2 border-b border-slate-200 flex flex-col justify-center items-center z-10 py-1 shadow-sm cursor-pointer hover:bg-blue-50" onclick="setDate('${ds}'); switchView('diario');">
+                    <span class="font-bold text-[8px] ${isD ? 'text-red-400' : 'text-slate-400'}">${DAYS_ES[d.getDay()].substring(0,3)}</span>
+                    <span class="text-xs font-black ${isD ? 'text-red-600' : 'text-slate-800'}">${d.getDate()}</span>
+                </div>`;
+                SITES.forEach(s => TIMES.forEach(tm => {
+                    const its = allocations.filter(a => a.date === ds && a.site === s && a.time === tm && selectedCenters.includes(a.center));
+                    h += `<div class="border-r border-b border-slate-200 ${tm === '13:30' ? 'bg-red-50/20' : 'bg-white'} p-[2px] flex flex-col gap-[2px] min-h-[44px]">`;
+                    its.forEach(it => { 
+                        const c = CENTERS[it.center]; 
+                        const isPending = swapRequests.some(s => String(s.initiatorId) === String(it.id) || String(s.targetId) === String(it.id));
+                        const ghostClass = isPending ? 'opacity-40 grayscale border border-slate-400' : '';
+                        h += `<span class="${c.color} ${c.text} ${ghostClass} w-full py-[2px] rounded-[3px] font-bold text-[8px] leading-none shadow-sm">${it.center}${it.pax}</span>`; 
+                    });
+                    h += `</div>`;
+                }));
+            }
+            h += `</div>`; document.getElementById('mega-grid-container').innerHTML = h;
+        }
+
+        function renderStats() {
+            if(activeViewMode !== 'estadisticas') return;
+            
+            const anchor = `<svg class="w-3.5 h-3.5 inline mr-1.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>`;
+            const isBarcos = statsUnit === 'barcos';
+
+            const filteredAllocations = allocations.filter(a => selectedCenters.includes(a.center));
+
+            const cStats = {};
+            const gTot = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 };
+            Object.keys(CENTERS).forEach(k => {
+                cStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 };
+            });
+
+            filteredAllocations.forEach(a => {
+                const val = isBarcos ? 1 : a.pax;
+                cStats[a.center][a.site] += val;
+                cStats[a.center].total += val;
+                gTot[a.site] += val;
+                gTot.total += val;
+            });
+
+            let tableHtml = `<div class="w-full overflow-x-auto rounded-xl border border-slate-200 shadow-sm mb-12 bg-white">
+                <table class="w-full text-left min-w-[900px] stats-table">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-white">
+                            <th class="px-5 py-4 align-bottom border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 w-56" rowspan="2">Centro</th>`;
+
+            SITES.forEach(s => {
+                tableHtml += `<th class="pt-5 pb-3 px-2 text-center border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-600" colspan="2">
+                    <div class="flex items-center justify-center gap-1.5">${anchor}<span>${s}</span></div>
+                </th>`;
+            });
+
+            tableHtml += `<th class="px-5 py-4 text-center align-middle bg-[#111827] text-white text-[10px] font-black uppercase tracking-widest" rowspan="2">Total Real</th></tr><tr class="border-b border-slate-200 bg-white">`;
+
+            SITES.forEach(() => {
+                tableHtml += `<th class="py-2.5 px-1 text-center border-r border-slate-100 text-[9px] font-bold uppercase text-slate-400">Cant.</th>
+                              <th class="py-2.5 px-1 text-center border-r border-slate-100 text-[9px] font-bold uppercase text-blue-500">% P.</th>`;
+            });
+
+            tableHtml += `</tr></thead><tbody>`;
+
+            Object.keys(CENTERS).forEach(k => {
+                const c = CENTERS[k]; const s = cStats[k];
+                if(s.total === 0) return; 
+                
+                tableHtml += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors bg-white">
+                    <td class="px-5 py-4 border-r border-slate-100">
+                        <div class="flex items-center gap-4">
+                            <span class="w-7 h-7 rounded ${c.color} ${c.text} flex items-center justify-center text-[11px] font-black shadow-sm shrink-0">${k}</span>
+                            <span class="font-bold text-slate-800 text-sm whitespace-nowrap">${c.name}</span>
+                        </div>
+                    </td>`;
+                
+                SITES.forEach(site => {
+                    const count = s[site];
+                    const percent = gTot[site] > 0 ? ((count / gTot[site]) * 100).toFixed(1) : '0.0';
+                    tableHtml += `<td class="py-4 px-2 text-center text-slate-700 font-semibold text-[13px] border-r border-slate-100">${count.toLocaleString('en-US')}</td>`;
+                    tableHtml += `<td class="py-4 px-2 text-center text-blue-500 font-semibold text-[11px] border-r border-slate-100">${percent}%</td>`;
+                });
+                
+                tableHtml += `<td class="px-5 py-4 text-center font-black text-slate-900 text-[14px] tracking-wide border-l border-slate-200 bg-white">${s.total.toLocaleString('en-US')}</td></tr>`;
+            });
+
+            tableHtml += `</tbody><tfoot><tr>
+                            <td class="px-5 py-4 text-[10px] font-black uppercase tracking-widest bg-[#1f2937] text-white border-r border-slate-700">Totales Por Punto</td>`;
+
+            SITES.forEach(s => {
+                tableHtml += `<td class="py-4 px-2 text-center bg-[#111827] border-r border-slate-700 font-bold text-blue-400 text-[15px]">${gTot[s].toLocaleString('en-US')}</td>
+                              <td class="py-4 px-2 text-center bg-[#111827] border-r border-slate-700 font-medium text-slate-500 text-[11px]">100%</td>`;
+            });
+
+            const suffix = isBarcos ? 'SAL.' : 'BUC.';
+            tableHtml += `<td class="px-5 py-4 text-center bg-[#3b82f6] text-white font-bold text-lg tracking-wide italic">${gTot.total.toLocaleString('en-US')} <span class="not-italic text-[10px] font-normal tracking-widest ml-1 opacity-90">${suffix}</span></td>
+                        </tr></tfoot></table></div>`;
+
+            document.getElementById('safe-main-table-container').innerHTML = tableHtml;
+
+            const mGrid = document.getElementById('stats-monthly-grid');
+            mGrid.innerHTML = '';
+            
+            for(let m = 0; m < 12; m++) {
+                const mAlloc = filteredAllocations.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === m);
+                if (mAlloc.length === 0) continue; 
+                
+                const mStats = {};
+                Object.keys(CENTERS).forEach(k => mStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 });
+                
+                mAlloc.forEach(a => {
+                    const val = isBarcos ? 1 : a.pax;
+                    mStats[a.center][a.site] += val;
+                    mStats[a.center].total += val;
+                });
+
+                let cHtml = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-7 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                        <h4 class="font-black italic text-lg md:text-xl uppercase tracking-tight text-slate-900">${MONTHS_ES[m]} 2026</h4>
+                        <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded tracking-widest uppercase border border-emerald-100">${statsUnit}</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs min-w-[400px]">
+                            <thead>
+                                <tr class="text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 text-[9px]">
+                                    <th class="pb-2 font-bold">Centro</th>
+                                    <th class="pb-2 text-center">Bajo</th>
+                                    <th class="pb-2 text-center">Piles</th>
+                                    <th class="pb-2 text-center">Piles</th>
+                                    <th class="pb-2 text-center">Testa</th>
+                                    <th class="pb-2 text-center">Morra</th>
+                                    <th class="pb-2 text-center font-black text-slate-800 bg-slate-50 px-2 rounded-t-lg">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                Object.keys(CENTERS).forEach(k => {
+                    const st = mStats[k];
+                    if(st.total === 0) return;
+                    const c = CENTERS[k];
+                    cHtml += `<tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                        <td class="py-2.5 font-bold flex items-center gap-2 text-slate-700 text-[10px]"><span class="w-3.5 h-3.5 rounded-sm ${c.color} ${c.text} flex items-center justify-center text-[7px] font-black">${k}</span> ${c.name}</td>
+                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Bajo de Dentro'].toLocaleString('en-US')}</td>
+                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles II'].toLocaleString('en-US')}</td>
+                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles I'].toLocaleString('en-US')}</td>
+                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Testa'].toLocaleString('en-US')}</td>
+                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Morra'].toLocaleString('en-US')}</td>
+                        <td class="py-2.5 text-center font-black text-slate-900 bg-slate-50 px-2">${st.total.toLocaleString('en-US')}</td>
+                    </tr>`;
+                });
+                cHtml += `</tbody></table></div></div>`;
+                document.getElementById('stats-monthly-grid').innerHTML += cHtml;
+            }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
+            const y = currentDate.getFullYear(), m = currentDate.getMonth(), dsToday = formatDateString(currentDate);
+            document.getElementById('month-selector-sidebar').value = m;
+            document.getElementById('month-selector-main').value = m;
+            document.getElementById('week-selector').value = getWeekNumber(currentDate);
+            const first = new Date(y, m, 1).getDay(), off = first === 0 ? 6 : first - 1;
+            for (let i = 0; i < off; i++) grid.appendChild(document.createElement('div'));
+            for (let d = 1; d <= new Date(y, m+1, 0).getDate(); d++) {
+                const dt = new Date(y, m, d), ds = formatDateString(dt);
+                const isD = dt.getDay() === 0 || dt.getDay() === 6 || FESTIVOS.includes(ds);
+                const el = document.createElement('div'); el.textContent = d; el.onclick = () => setDate(ds);
+                el.className = `py-1.5 transition-colors text-xs ${ds === dsToday ? 'calendar-day-active shadow-md' : 'calendar-day-inactive ' + (isD ? 'text-red-500 font-bold' : 'text-slate-600')}`;
+                grid.appendChild(el);
+            }
+        }
+
+        function renderAll() { renderCalendar(); renderDaily(); renderMega(); renderStats(); }
+
+        /* =========================================================================
+           11. INITIALIZATION EXECUTION
+           ========================================================================= */
+        initSelectors(); 
+        initFilters(); 
+        renderAll();
+
+    </script>
+</body>
+</html>
