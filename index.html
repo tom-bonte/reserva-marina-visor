@@ -330,12 +330,22 @@
             </button>
         </div>
 
-        <!-- RIGHT SIDE HEADER CONTROLS (Clean Dropdown) -->
-        <div class="flex items-center gap-2 relative">
+        <!-- RIGHT SIDE HEADER CONTROLS (Redesigned) -->
+        <div class="flex items-center gap-3 relative">
             <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleImport(event)" />
             
-            <!-- User Dropdown Menu Wrapper -->
-            <div class="relative" id="user-menu-wrapper">
+            <!-- Constant Help Button -->
+            <button onclick="openHelpModal()" class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors shadow-sm" title="Instrucciones">
+                <span class="font-black text-lg">?</span>
+            </button>
+
+            <!-- Login Button for Guests -->
+            <button id="btn-login-header" onclick="openLoginModal()" class="px-5 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                Iniciar sesión
+            </button>
+
+            <!-- User Dropdown Menu Wrapper (Hidden for Guests) -->
+            <div class="relative hidden" id="user-menu-wrapper">
                 
                 <div class="relative inline-block">
                     <button onclick="toggleUserMenu()" id="user-badge-button" class="rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-opacity bg-slate-200 text-slate-600">
@@ -576,6 +586,29 @@
         let currentUserKey = 'guest';
 
         /* =========================================================================
+           WEBHOOK / WHATSAPP ROBOT CONFIGURATION
+           ========================================================================= */
+        // Pega aquí la URL de tu Webhook de Make.com o Zapier
+        const WHATSAPP_WEBHOOK_URL = ""; 
+
+        async function sendSilentWebhook(msg) {
+            if (!WHATSAPP_WEBHOOK_URL) {
+                console.warn("⚠️ WHATSAPP ROBOT NO CONFIGURADO: El mensaje sería ->", msg);
+                showNotification('Aviso Automático', 'Acción guardada. (Nota: El mensaje automático a WhatsApp no se envió porque falta configurar la URL del Webhook en el código).', false);
+                return;
+            }
+            try {
+                await fetch(WHATSAPP_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+            } catch(e) {
+                console.error("Error enviando webhook al robot:", e);
+            }
+        }
+
+        /* =========================================================================
            2. FIREBASE SETUP
            ========================================================================= */
         const firebaseConfig = {
@@ -683,7 +716,6 @@
                 html += `<div class="h-px bg-slate-100 my-1"></div>`;
             }
             
-            html += `<button onclick="openHelpModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Instrucciones de Uso</button>`;
             html += `<button onclick="exportCSV(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Exportar CSV</button>`;
             
             if (currentUserKey === 'admin') {
@@ -693,12 +725,7 @@
             }
             
             html += `<div class="h-px bg-slate-100 my-1"></div>`;
-            
-            if (isGuestMode) {
-                html += `<button onclick="openLoginModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-600 hover:bg-slate-50 transition-colors flex items-center gap-2">Iniciar sesión</button>`;
-            } else {
-                html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
-            }
+            html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
             
             menu.innerHTML = html;
         }
@@ -720,12 +747,16 @@
             if (user) {
                 isGuestMode = false;
                 document.getElementById('password-modal').classList.add('hidden');
+                document.getElementById('btn-login-header').classList.add('hidden');
+                document.getElementById('user-menu-wrapper').classList.remove('hidden');
                 currentUserKey = Object.keys(EMAIL_MAP).find(k => EMAIL_MAP[k] === user.email) || 'admin';
                 startFirestoreListener();
             } else {
                 isGuestMode = true;
                 currentUserKey = 'guest';
                 document.getElementById('password-modal').classList.add('hidden'); 
+                document.getElementById('btn-login-header').classList.remove('hidden');
+                document.getElementById('user-menu-wrapper').classList.add('hidden');
                 startFirestoreListener();
             }
             
@@ -1086,13 +1117,13 @@
             
             if (pendingDrop) {
                 const { id, item, newTime, newSite, msg } = pendingDrop;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                await sendSilentWebhook(msg);
                 await executeDrop(id, item, newTime, newSite);
                 pendingDrop = null;
             }
             else if (pendingSwapIntent) {
                 const { initId, initItem, targetId, targetItem, msg } = pendingSwapIntent;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                await sendSilentWebhook(msg);
 
                 try {
                     await db.collection("swaps").add({
@@ -1101,7 +1132,7 @@
                         initiatorData: initItem, targetData: targetItem,
                         status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    showNotification('Solicitud Enviada', 'La propuesta de intercambio ha sido enviada al otro centro. Verás los bloques en gris hasta que acepten.');
+                    showNotification('Solicitud Enviada', 'La propuesta de intercambio ha sido enviada y el grupo ha sido notificado.');
                 } catch(e) {
                     console.error(e);
                     showNotification('Error', 'Hubo un fallo al solicitar el intercambio.', true);
@@ -1110,7 +1141,7 @@
             }
             else if (pendingNewSalidaWA) {
                 const { data, pax, centerKey, msg } = pendingNewSalidaWA;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                await sendSilentWebhook(msg);
                 await executeNewSalida(data, pax, centerKey);
                 pendingNewSalidaWA = null;
             }
@@ -1255,8 +1286,8 @@
 
                 const centerName = CENTERS[tItem.center].name;
                 const d = new Date(iItem.date);
-                const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${centerName} ha aceptado el intercambio de salidas del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}. El visor ha sido actualizado con los nuevos horarios.`;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                const msg = `📢 *AVISO AUTOMÁTICO:* ${centerName} ha aceptado el intercambio de salidas del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}. El visor ha sido actualizado con los nuevos horarios.`;
+                await sendSilentWebhook(msg);
 
             } catch(e) {
                 console.error(e);
