@@ -185,11 +185,11 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-black text-slate-800 tracking-tight">Confirmar <span id="wa-action-type">Acción</span></h3>
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Aviso Automático de Make.com</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Aviso Automático</p>
                 </div>
             </div>
             
-            <p class="text-sm text-slate-600 mb-3 font-medium">Se actualizará la nube y Make.com enviará este mensaje automático al grupo:</p>
+            <p class="text-sm text-slate-600 mb-3 font-medium">Se actualizará la nube y se publicará este mensaje automático en el grupo de WhatsApp de la Reserva Marina:</p>
             
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-sm text-slate-700 italic shadow-inner leading-relaxed">
                 <span id="confirm-whatsapp-msg" class="block font-medium whitespace-pre-wrap"></span>
@@ -335,6 +335,10 @@
         <div class="flex items-center gap-3 relative">
             <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleImport(event)" />
             
+            <button onclick="switchView('historial')" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition-colors shadow-sm" title="Historial">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>
+
             <button onclick="openHelpModal()" class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors shadow-sm" title="Instrucciones">
                 <span class="font-black text-lg">?</span>
             </button>
@@ -350,9 +354,9 @@
                         <span class="tracking-wide">Invitado (Lectura)</span>
                         <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
-                    <span id="notif-bubble" class="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 hidden">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white"></span>
+                    <span id="notif-bubble" class="absolute -top-2 -right-2 flex h-5 w-5 hidden items-center justify-center z-50">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" style="animation-duration: 1.5s;"></span>
+                      <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 border border-white text-[10px] font-black text-white items-center justify-center shadow-md" id="notif-count">0</span>
                     </span>
                 </div>
                 
@@ -388,6 +392,18 @@
                 <div class="max-h-64 overflow-y-auto p-1.5 flex flex-col" id="filter-container"></div>
             </div>
         </div>
+
+        <div class="hidden items-center gap-2 relative ml-2" id="history-month-filter-wrapper">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-200 pl-5">MES:</span>
+            <button onclick="toggleMonthDropdown()" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
+                <span id="month-filter-button-text">TODOS LOS MESES</span>
+                <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="month-dropdown-panel" class="hidden absolute left-14 top-full mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-xl z-50 flex flex-col overflow-hidden">
+                <div class="max-h-64 overflow-y-auto p-1.5 flex flex-col gap-1" id="month-filter-container"></div>
+            </div>
+        </div>
+
         <div class="text-[10px] text-slate-400 font-bold italic tracking-widest hidden md:block ml-auto uppercase">PLANIFICACIÓN CONSOLIDADA 2026</div>
     </div>
 
@@ -469,6 +485,16 @@
             <div id="safe-main-table-container"></div>
             <div id="stats-monthly-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8"></div>
         </main>
+
+        <main id="view-historial" class="hidden flex-col h-full overflow-y-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:p-8 flex-1 min-w-0 w-full">
+            <div class="bg-slate-800 rounded-2xl p-6 md:p-8 mb-6 shadow-xl shrink-0 border border-slate-700">
+                <h2 class="text-3xl font-black italic tracking-tighter text-white">HISTORIAL DE CAMBIOS</h2>
+                <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase">Registro de Actividad en Tiempo Real</p>
+            </div>
+            <div id="history-list" class="space-y-4 pb-8">
+                <!-- Logs injected here -->
+            </div>
+        </main>
     </div>
 
     <script>
@@ -522,7 +548,9 @@
         let currentDate = new Date(2026, 2, 29); 
         let allocations = []; 
         let swapRequests = []; 
+        let historyLogs = []; // Stores the newly created history logs
         let selectedCenters = Object.keys(CENTERS);
+        let selectedHistoryMonth = 'all'; // State for custom month filter
         let activeViewMode = 'diario';
         let statsUnit = 'plazas'; 
         let isGuestMode = false;
@@ -534,28 +562,23 @@
         const WHATSAPP_WEBHOOK_URL = "https://hook.eu1.make.com/nwgnqeiosbu73mtwljk7i252atthcuwd"; 
 
         async function sendSilentWebhook(msg) {
-    if (!WHATSAPP_WEBHOOK_URL) return;
-    
-    try {
-        console.log("Attempting to send webhook to Make.com...", msg);
-        
-        const response = await fetch(WHATSAPP_WEBHOOK_URL, {
-            method: 'POST',
-            // Using text/plain prevents the browser from sending a blocking CORS preflight request
-            headers: { 'Content-Type': 'text/plain' }, 
-            body: JSON.stringify({ message: msg })
-        });
+            // Added check to prevent sending empty messages to webhook
+            if (!WHATSAPP_WEBHOOK_URL || !msg || msg.trim() === "") return;
+            
+            try {
+                const response = await fetch(WHATSAPP_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' }, 
+                    body: JSON.stringify({ message: msg })
+                });
 
-        if (!response.ok) {
-            console.error("Webhook failed with status:", response.status, response.statusText);
-        } else {
-            console.log("Webhook successfully sent to Make.com!");
+                if (!response.ok) {
+                    console.error("Webhook failed with status:", response.status, response.statusText);
+                }
+            } catch(e) {
+                console.error("Network or CORS error when sending webhook:", e);
+            }
         }
-    } catch(e) {
-        // This will now actually show you if the browser blocks the request
-        console.error("Network or CORS error when sending webhook:", e);
-    }
-}
 
         /* =========================================================================
            2. FIREBASE SETUP
@@ -578,10 +601,12 @@
            ========================================================================= */
         let unsubscribeSnapshot = null;
         let unsubscribeSwaps = null;
+        let unsubscribeHistory = null;
 
         function startFirestoreListener() {
             if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
             if (unsubscribeSwaps) { unsubscribeSwaps(); unsubscribeSwaps = null; }
+            if (unsubscribeHistory) { unsubscribeHistory(); unsubscribeHistory = null; }
 
             unsubscribeSnapshot = db.collection("reservations_monthly").onSnapshot((snapshot) => {
                 const dataFromCloud = [];
@@ -601,6 +626,18 @@
                 swapRequests = swapsFromCloud;
                 updateNotificationsMenu();
                 renderAll(); 
+            });
+
+            // New Listener for History Logging
+            unsubscribeHistory = db.collection("history_logs").onSnapshot((snapshot) => {
+                const historyFromCloud = [];
+                snapshot.forEach(doc => { historyFromCloud.push({ id: doc.id, ...doc.data() }); });
+                historyLogs = historyFromCloud;
+                
+                // If history view is currently open, refresh it in real-time
+                if (activeViewMode === 'historial') {
+                    renderHistory();
+                }
             });
         }
 
@@ -651,6 +688,18 @@
             if (wrapper && !wrapper.contains(event.target) && panel) {
                 panel.classList.add('hidden');
             }
+            
+            const wrapperFilter = document.getElementById('center-filter-dropdown-wrapper');
+            const panelFilter = document.getElementById('filter-dropdown-panel');
+            if (wrapperFilter && !wrapperFilter.contains(event.target) && panelFilter) {
+                panelFilter.classList.add('hidden');
+            }
+            
+            const wrapperMonth = document.getElementById('history-month-filter-wrapper');
+            const panelMonth = document.getElementById('month-dropdown-panel');
+            if (wrapperMonth && !wrapperMonth.contains(event.target) && panelMonth) {
+                panelMonth.classList.add('hidden');
+            }
         });
 
         function buildUserMenu() {
@@ -683,9 +732,11 @@
             const myCode = USER_CENTER_KEYS[currentUserKey];
             const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
             const bubble = document.getElementById('notif-bubble');
+            const countLabel = document.getElementById('notif-count');
             
             if (pendingForMe.length > 0 && !isGuestMode && currentUserKey !== 'admin') {
                 bubble.classList.remove('hidden');
+                if(countLabel) countLabel.innerText = pendingForMe.length;
             } else {
                 bubble.classList.add('hidden');
             }
@@ -729,7 +780,6 @@
         function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
         function getDateOfISOWeek(w, y) { var simple = new Date(y, 0, 1 + (w - 1) * 7); var ISOweekStart = simple; if (simple.getDay() <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); return ISOweekStart; }
         
-        // UNIQUE ID GENERATOR FOR IMPORT
         function generateId(date, time, site, center, subslot) {
             const sDate = date.replace(/[^0-9-]/g, '');
             const sTime = time.replace(/[^0-9]/g, '');
@@ -743,33 +793,46 @@
 
         function switchView(v) {
             activeViewMode = v;
-            ['diario', 'mega', 'estadisticas'].forEach(id => {
+            ['diario', 'mega', 'estadisticas', 'historial'].forEach(id => {
                 const el = document.getElementById(`view-${id}`);
                 if(el) { el.classList.remove('flex'); el.classList.add('hidden'); }
             });
             ['diario', 'semanal', 'mensual', 'estadisticas'].forEach(id => {
-                document.getElementById(`tab-${id}`).className = 'px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all';
+                const tab = document.getElementById(`tab-${id}`);
+                if(tab) tab.className = 'px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all';
             });
-            document.getElementById(`tab-${v}`).className = 'px-5 py-2.5 tab-active flex items-center gap-2 transition-all';
+            const activeTab = document.getElementById(`tab-${v}`);
+            if(activeTab) activeTab.className = 'px-5 py-2.5 tab-active flex items-center gap-2 transition-all';
             
             const sidebar = document.getElementById('sidebar-calendario');
             const globalFilter = document.getElementById('global-filter-bar');
             const mainContentArea = document.getElementById('main-content-area');
             const viewEstadisticas = document.getElementById('view-estadisticas');
+            const viewHistorial = document.getElementById('view-historial');
+            const historyMonthFilterWrapper = document.getElementById('history-month-filter-wrapper');
 
             if (v === 'estadisticas') {
-                sidebar.classList.remove('flex', 'lg:flex');
-                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex', 'lg:flex'); sidebar.classList.add('hidden');
                 globalFilter.classList.add('hidden');
                 mainContentArea.classList.add('hidden');
-                viewEstadisticas.classList.remove('hidden');
-                viewEstadisticas.classList.add('flex');
+                viewEstadisticas.classList.remove('hidden'); viewEstadisticas.classList.add('flex');
+                viewHistorial.classList.remove('flex'); viewHistorial.classList.add('hidden');
+                if (historyMonthFilterWrapper) { historyMonthFilterWrapper.classList.add('hidden'); historyMonthFilterWrapper.classList.remove('flex'); }
+            } else if (v === 'historial') {
+                sidebar.classList.remove('flex', 'lg:flex'); sidebar.classList.add('hidden');
+                globalFilter.classList.remove('hidden');
+                document.getElementById('toolbar-period-selectors').classList.add('hidden');
+                mainContentArea.classList.add('hidden');
+                viewEstadisticas.classList.remove('flex'); viewEstadisticas.classList.add('hidden');
+                viewHistorial.classList.remove('hidden'); viewHistorial.classList.add('flex');
+                if (historyMonthFilterWrapper) { historyMonthFilterWrapper.classList.remove('hidden'); historyMonthFilterWrapper.classList.add('flex'); }
             } else {
                 sidebar.classList.remove('hidden');
                 globalFilter.classList.remove('hidden');
                 mainContentArea.classList.remove('hidden');
-                viewEstadisticas.classList.remove('flex');
-                viewEstadisticas.classList.add('hidden');
+                viewEstadisticas.classList.remove('flex'); viewEstadisticas.classList.add('hidden');
+                viewHistorial.classList.remove('flex'); viewHistorial.classList.add('hidden');
+                if (historyMonthFilterWrapper) { historyMonthFilterWrapper.classList.add('hidden'); historyMonthFilterWrapper.classList.remove('flex'); }
 
                 if (v === 'diario') {
                     sidebar.classList.add('flex', 'lg:flex');
@@ -796,13 +859,7 @@
             renderStats();
         }
 
-        document.addEventListener('click', function(event) {
-            const wrapperFilter = document.getElementById('center-filter-dropdown-wrapper');
-            const panelFilter = document.getElementById('filter-dropdown-panel');
-            if (wrapperFilter && !wrapperFilter.contains(event.target) && panelFilter) {
-                panelFilter.classList.add('hidden');
-            }
-        });
+        // Click outside listener moved up to the central event listener
 
         function initFilters() {
             const c = document.getElementById('filter-container'); c.innerHTML = '';
@@ -818,6 +875,25 @@
         function initSelectors() {
             let mH = ''; for(let i=0; i<12; i++) mH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
             document.getElementById('month-selector-sidebar').innerHTML = mH; document.getElementById('month-selector-main').innerHTML = mH;
+            
+            // Build Custom Month Filter for History
+            const mContainer = document.getElementById('month-filter-container');
+            if (mContainer) {
+                mContainer.innerHTML = '';
+                const createOption = (val, text) => {
+                    const isSelected = selectedHistoryMonth === String(val);
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-2 transition-colors flex items-center gap-3 rounded-md hover:bg-slate-50 cursor-pointer`;
+                    btn.innerHTML = `<div class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'}">${isSelected ? '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}</div> <span class="text-sm font-semibold text-slate-700">${text}</span>`;
+                    btn.onclick = () => selectHistoryMonth(String(val), text);
+                    mContainer.appendChild(btn);
+                };
+                createOption('all', 'TODOS LOS MESES');
+                for(let i=0; i<12; i++) {
+                    createOption(i, `${MONTHS_ES[i]} 2026`);
+                }
+            }
+
             const w = document.getElementById('week-selector'); w.innerHTML = '';
             for(let i=1; i<=52; i++) {
                 const s = getDateOfISOWeek(i, 2026), e = new Date(s); e.setDate(s.getDate() + 6);
@@ -831,6 +907,142 @@
         function changeWeek(n) { currentDate = getDateOfISOWeek(parseInt(n), 2026); renderAll(); }
         function setDate(s) { const p = s.split('-'); currentDate = new Date(p[0], p[1]-1, p[2]); renderAll(); }
         function toggleFilterDropdown() { document.getElementById('filter-dropdown-panel').classList.toggle('hidden'); }
+        
+        function toggleMonthDropdown() { document.getElementById('month-dropdown-panel').classList.toggle('hidden'); }
+        function selectHistoryMonth(val, text) {
+            selectedHistoryMonth = val;
+            document.getElementById('month-filter-button-text').textContent = text;
+            document.getElementById('month-dropdown-panel').classList.add('hidden');
+            initSelectors(); // Re-render to update the checkmark location
+            renderHistory();
+        }
+
+        /* =========================================================================
+           6. HISTORY LOGGER & UI (NEW FEATURE)
+           ========================================================================= */
+        async function logHistory(actionType, details) {
+            // Rule: NOT logged if made by Admin or Guest
+            if (currentUserKey === 'admin' || isGuestMode) return; 
+
+            try {
+                await db.collection("history_logs").add({
+                    actionType,
+                    centerKey: currentUserKey, 
+                    details,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Error writing to history log:", e);
+            }
+        }
+
+        // Helper to consistently get center info whether passed a short code ('M') or a full key ('mangamar')
+        function getCenterInfoSafe(keyOrCode) {
+            if (!keyOrCode) return { name: 'Otro centro', color: 'bg-slate-200', text: 'text-slate-800' };
+            if (CENTERS[keyOrCode]) return CENTERS[keyOrCode];
+            const code = USER_CENTER_KEYS[keyOrCode];
+            if (code && CENTERS[code]) return CENTERS[code];
+            return { name: keyOrCode, color: 'bg-slate-200', text: 'text-slate-800' };
+        }
+
+        function renderHistory() {
+            if (activeViewMode !== 'historial') return;
+            
+            const listEl = document.getElementById('history-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            // Sort descending locally to avoid complex Firestore indexing rules
+            const sortedLogs = [...historyLogs].sort((a, b) => {
+                const timeA = a.timestamp ? a.timestamp.toMillis() : Date.now();
+                const timeB = b.timestamp ? b.timestamp.toMillis() : Date.now();
+                return timeB - timeA;
+            });
+
+            // Filter using selectedCenters array from the global filter AND the custom month dropdown
+            const filteredLogs = sortedLogs.filter(log => {
+                const codeKey = USER_CENTER_KEYS[log.centerKey];
+                const isCenterSelected = selectedCenters.includes(codeKey);
+                
+                let isMonthSelected = true;
+                if (selectedHistoryMonth !== 'all') {
+                    const targetDObj = new Date(log.details.date);
+                    isMonthSelected = targetDObj.getMonth() === parseInt(selectedHistoryMonth);
+                }
+                
+                return isCenterSelected && isMonthSelected;
+            });
+
+            if (filteredLogs.length === 0) {
+                listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-10">No hay registros para mostrar con los filtros seleccionados.</p>`;
+                return;
+            }
+
+            filteredLogs.forEach(log => {
+                let icon = '';
+                let text = '';
+                let headerPills = '';
+                
+                // Construct Date/Time string
+                let logDateStr = 'Ahora mismo';
+                if (log.timestamp) {
+                    const d = log.timestamp.toDate();
+                    logDateStr = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                }
+
+                // Details string creation
+                const targetDObj = new Date(log.details.date);
+                const targetDateStr = `${targetDObj.getDate()} de ${MONTHS_SHORT[targetDObj.getMonth()]}`;
+
+                if (log.actionType === 'swap') {
+                    icon = '🔀';
+                    
+                    const initInfo = getCenterInfoSafe(log.details.initCenter || log.centerKey);
+                    const targetInfo = getCenterInfoSafe(log.details.targetCenter);
+
+                    headerPills = `
+                        <span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${initInfo.color} ${initInfo.text}">${initInfo.name}</span>
+                        <span class="text-slate-400 text-xs mx-1">🤝</span>
+                        <span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${targetInfo.color} ${targetInfo.text}">${targetInfo.name}</span>
+                    `;
+
+                    const initPax = log.details.initPax ? ` de ${log.details.initPax} plazas` : '';
+                    const targetPax = log.details.targetPax ? ` de ${log.details.targetPax} plazas` : '';
+
+                    text = `Para el <b>${targetDateStr}</b>, <b>${initInfo.name}</b> intercambió su salida en <b>${log.details.initSite} (${log.details.initTime})${initPax}</b> por la salida en <b>${log.details.targetSite} (${log.details.targetTime})${targetPax}</b> de <b>${targetInfo.name}</b>.`;
+
+                } else {
+                    const cInfo = getCenterInfoSafe(log.centerKey);
+                    headerPills = `<span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${cInfo.color} ${cInfo.text}">${cInfo.name}</span>`;
+
+                    if (log.actionType === 'add') {
+                        icon = '➕';
+                        text = `Añadió una salida a <b>${log.details.site}</b> a las <b>${log.details.time}</b> el ${targetDateStr} (${log.details.pax} plazas).`;
+                    } else if (log.actionType === 'move') {
+                        icon = '➡️';
+                        text = `Movió su barco del ${targetDateStr} de <b>${log.details.oldSite} (${log.details.oldTime})</b> a <b>${log.details.newSite} (${log.details.newTime})</b>.`;
+                    }
+                }
+
+                listEl.innerHTML += `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm flex gap-4 hover:shadow-md transition-shadow">
+                        <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-lg shrink-0 shadow-sm">
+                            ${icon}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center">
+                                    ${headerPills}
+                                </div>
+                                <span class="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100 flex items-center gap-1.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${logDateStr}</span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed">${text}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
 
         /* =========================================================================
            7. NOTIFICATIONS & DATA OPS
@@ -969,6 +1181,14 @@
                     const swapPromises = swapSnapshot.docs.map(doc => doc.ref.delete());
                     await Promise.all(swapPromises);
                 }
+                
+                // Empty the new History logs too
+                const historySnapshot = await db.collection("history_logs").get();
+                if (!historySnapshot.empty) {
+                    const historyPromises = historySnapshot.docs.map(doc => doc.ref.delete());
+                    await Promise.all(historyPromises);
+                }
+
                 document.getElementById('empty-confirm-modal').classList.add('hidden');
                 showNotification('Base de Datos Vaciada', `Se han eliminado permanentemente todos los archivos de la nube.`);
             } catch (error) {
@@ -988,7 +1208,7 @@
         let pendingDrop = null;
         let pendingNewSalidaWA = null; 
         let pendingSwapIntent = null; 
-        let isProcessingDrop = false; // Lock vault
+        let isProcessingDrop = false; 
 
         function cancelWhatsAppDrop() {
             document.getElementById('whatsapp-confirm-modal').classList.add('hidden');
@@ -1009,6 +1229,16 @@
                 pendingDrop = null; 
                 await sendSilentWebhook(drop.msg);
                 await executeDrop(drop.id, drop.item, drop.newTime, drop.newSite, drop.newSubslot);
+                
+                // Log the History for a 'Move' (Hueco)
+                logHistory('move', { 
+                    date: drop.item.date, 
+                    oldTime: drop.item.time, 
+                    oldSite: drop.item.site, 
+                    newTime: drop.newTime, 
+                    newSite: drop.newSite, 
+                    pax: drop.item.pax 
+                });
             }
             else if (pendingSwapIntent) {
                 const swap = pendingSwapIntent;
@@ -1031,6 +1261,14 @@
                 pendingNewSalidaWA = null; 
                 await sendSilentWebhook(newSalida.msg);
                 await executeNewSalida(newSalida.data, newSalida.pax, newSalida.centerKey);
+                
+                // Log the History for a 'New Salida'
+                logHistory('add', { 
+                    date: newSalida.data.date, 
+                    time: newSalida.data.time, 
+                    site: newSalida.data.site, 
+                    pax: newSalida.pax 
+                });
             }
             document.getElementById('btn-confirm-wa').disabled = false;
             isProcessingDrop = false;
@@ -1194,10 +1432,26 @@
             
             try {
                 await performSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData, swapId);
-                const centerName = CENTERS[req.targetData.center].name;
+                const targetInfo = getCenterInfoSafe(req.targetData.center);
+                const initInfo = getCenterInfoSafe(req.initiatorCenter);
                 const d = new Date(req.initiatorData.date);
-                const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${centerName} ha aceptado el intercambio de salidas del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}. El visor ha sido actualizado.`;
+                
+                const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *INTERCAMBIO ACEPTADO* - ${initInfo.name} y ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, intercambiaron *${req.initiatorData.site} (${req.initiatorData.time})* por *${req.targetData.site} (${req.targetData.time})*.`;
+                
                 await sendSilentWebhook(msg);
+                
+                // Log the History for a successful 'Swap'
+                logHistory('swap', { 
+                    date: req.initiatorData.date, 
+                    initCenter: req.initiatorCenter, 
+                    initSite: req.initiatorData.site, 
+                    initTime: req.initiatorData.time,
+                    initPax: req.initiatorData.pax,
+                    targetCenter: req.targetData.center,
+                    targetSite: req.targetData.site, 
+                    targetTime: req.targetData.time,
+                    targetPax: req.targetData.pax 
+                });
             } catch(e) {
                 showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
             }
@@ -1212,10 +1466,11 @@
         }
 
         function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
-            const targetName = CENTERS[targetItem.center].name;
-            const initCenterName = CENTERS[initItem.center].name;
+            const targetInfo = getCenterInfoSafe(targetItem.center);
+            const initInfo = getCenterInfoSafe(initItem.center);
             const d = new Date(initItem.date);
-            const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${initCenterName} solicita intercambiar su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}.\n\n*De:* ${initItem.site} a las ${initItem.time}\n*A:* ${targetItem.site} a las ${targetItem.time} (con ${targetName})\n\nPor favor, entren al visor para confirmarlo.`;
+            
+            const msg = `🤖 *AVISO AUTOMÁTICO*\n🔀 *SOLICITUD DE INTERCAMBIO* - ${initInfo.name} a ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ofrece *${initItem.site} (${initItem.time})* por *${targetItem.site} (${targetItem.time})*. Entrad al visor para confirmar.`;
             
             pendingSwapIntent = { initId, initItem, targetId, targetItem, msg };
             document.getElementById('wa-action-type').textContent = "Solicitud de Intercambio";
@@ -1350,8 +1605,9 @@
 
                 if (currentUserKey !== 'admin') {
                     const d = new Date(initItem.date);
-                    const centerName = CENTERS[initItem.center].name;
-                    const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} movió su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}.\n\n*De:* ${initItem.site} a las ${initItem.time}\n*A:* ${newSite} a las ${newTime}`;
+                    const centerInfo = getCenterInfoSafe(initItem.center);
+                    
+                    const msg = `🤖 *AVISO AUTOMÁTICO*\n➡️ *CAMBIO DE HORARIO* - ${centerInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, movió su salida de *${initItem.site} (${initItem.time})* a *${newSite} (${newTime})*.`;
                     
                     pendingDrop = { id, item: initItem, newTime, newSite, msg };
                     document.getElementById('wa-action-type').textContent = "Cambio de Horario/Punto";
@@ -1445,10 +1701,9 @@
             } else {
                 const { date, time, site } = pendingNewSalida;
                 const dObj = new Date(date);
-                const centerCode = USER_CENTER_KEYS[currentUserKey];
-                const centerName = CENTERS[centerCode]?.name || currentUserKey;
+                const centerInfo = getCenterInfoSafe(currentUserKey);
                 
-                const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} ha añadido una nueva salida el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toLowerCase()}.\n\n*Punto:* ${site} a las ${time}\n*Buceadores:* ${pax} plazas`;
+                const msg = `🤖 *AVISO AUTOMÁTICO*\n➕ *NUEVA SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, añadió una salida a *${site} (${time})* de ${pax} plazas.`;
                 
                 pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: currentUserKey, msg: msg };
 
@@ -1735,7 +1990,7 @@
             }
         }
 
-        function renderAll() { renderCalendar(); renderDaily(); renderMega(); renderStats(); }
+        function renderAll() { renderCalendar(); renderDaily(); renderMega(); renderStats(); renderHistory(); }
 
         /* =========================================================================
            11. INITIALIZATION EXECUTION
