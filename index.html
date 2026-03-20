@@ -534,15 +534,28 @@
         const WHATSAPP_WEBHOOK_URL = "https://hook.eu1.make.com/nwgnqeiosbu73mtwljk7i252atthcuwd"; 
 
         async function sendSilentWebhook(msg) {
-            if (!WHATSAPP_WEBHOOK_URL) return;
-            try {
-                await fetch(WHATSAPP_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg })
-                });
-            } catch(e) {}
+    if (!WHATSAPP_WEBHOOK_URL) return;
+    
+    try {
+        console.log("Attempting to send webhook to Make.com...", msg);
+        
+        const response = await fetch(WHATSAPP_WEBHOOK_URL, {
+            method: 'POST',
+            // Using text/plain prevents the browser from sending a blocking CORS preflight request
+            headers: { 'Content-Type': 'text/plain' }, 
+            body: JSON.stringify({ message: msg })
+        });
+
+        if (!response.ok) {
+            console.error("Webhook failed with status:", response.status, response.statusText);
+        } else {
+            console.log("Webhook successfully sent to Make.com!");
         }
+    } catch(e) {
+        // This will now actually show you if the browser blocks the request
+        console.error("Network or CORS error when sending webhook:", e);
+    }
+}
 
         /* =========================================================================
            2. FIREBASE SETUP
