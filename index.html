@@ -17,19 +17,20 @@
         
         /* Drag & Drop Core */
         .draggable-item { 
-            cursor: grab; 
             -webkit-user-drag: element; 
             user-select: none; 
             -webkit-user-select: none;
         }
-        .draggable-item:active { cursor: grabbing; }
         
-        /* The base class for ALL boats */
-        .boat-block { transition: opacity 0.2s ease; }
+        .boat-block { transition: opacity 0.2s ease, outline 0.1s ease, box-shadow 0.1s ease; }
         .boat-block * { pointer-events: none; }
         
-        .dropzone { height: 100%; min-height: 42px; user-select: none; -webkit-user-select: none; transition: background-color 0.1s ease; }
+        .dropzone { height: 100%; min-height: 38px; user-select: none; -webkit-user-select: none; transition: background-color 0.1s ease; }
         
+        /* Visual cues for Drag intent */
+        .bg-blue-50 { background-color: #eff6ff !important; }
+        .bg-purple-50 { background-color: #faf5ff !important; }
+
         .pending-swap-ghost {
             opacity: 0.45 !important;
             filter: grayscale(100%);
@@ -106,7 +107,7 @@
         </div>
     </div>
 
-    <!-- Help Modal (Instrucciones de Uso) -->
+    <!-- Help Modal -->
     <div id="help-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-200 transform transition-all max-h-[90vh] overflow-y-auto">
             <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
@@ -126,15 +127,15 @@
                     <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <li class="flex items-start gap-2">
                             <span class="text-lg">🕐</span>
-                            <span><strong>Mover una salida:</strong> Arrastra tu bloque de reserva a un nuevo bloque de hora. <i>Importante: Solo puedes arrastrar el bloque a otra hora dentro del mismo punto de buceo.</i></span>
+                            <span><strong>Mover una salida (Hueco):</strong> Arrastra tu bloque a cualquier espacio. Si hay menos de 2 barcos ahí, se cuenta automáticamente como un Hueco (siempre que el punto tenga plazas suficientes).</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="text-lg">➕</span>
-                            <span><strong>Tomar un hueco libre:</strong> Si hay un horario que aún no tiene 2 barcos asignados (y quedan plazas), puedes hacer <b>doble clic</b> en el espacio vacío para añadir una nueva salida.</span>
+                            <span><strong>Añadir nueva salida:</strong> Si hay un horario libre, haz <b>doble clic</b> en el espacio vacío para añadir una nueva salida (Máximo 11 buceadores).</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="text-lg">🔄</span>
-                            <span><strong>Intercambiar salidas:</strong> Arrastra tu reserva hacia un espacio que ya contenga el barco de otro centro. Ellos recibirán una notificación y, si aceptan, la base de datos se actualizará automáticamente.</span>
+                            <span><strong>Intercambiar salidas:</strong> Si arrastras tu barco a un horario que <b>ya está completamente lleno (2 barcos)</b>, el sistema te preguntará con cuál de los 2 quieres intercambiar.</span>
                         </li>
                     </ul>
                 </div>
@@ -144,11 +145,11 @@
                     <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <li class="flex items-start gap-2">
                             <span class="text-lg">👑</span>
-                            <span><strong>Control Total:</strong> Arrastrar y mover los barcos de <i>cualquier centro</i> hacia cualquier punto u horario sin necesidad de confirmación. Añadir salidas a nombre de otros.</span>
+                            <span><strong>Control Total:</strong> Mover o intercambiar los barcos de <i>cualquier centro</i> sin necesitar confirmación.</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="text-lg">📥</span>
-                            <span><strong>Gestión de Datos:</strong> Importar archivos CSV para volcar la planificación anual y vaciar la base de datos por completo.</span>
+                            <span><strong>Gestión de Datos:</strong> Importar CSV y vaciar la base de datos.</span>
                         </li>
                     </ul>
                 </div>
@@ -160,14 +161,14 @@
         </div>
     </div>
 
-    <!-- Empty Database Confirmation Modal -->
+    <!-- Empty DB Modal -->
     <div id="empty-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
             <div class="mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-red-100 text-red-600">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </div>
             <h3 class="text-xl font-black text-slate-800 mb-2">¿Borrar toda la base de datos?</h3>
-            <p class="text-sm text-slate-500 mb-6">Se ha descargado una copia de seguridad CSV en tu ordenador. ¿Estás completamente seguro de que quieres vaciar la base de datos en la nube de forma permanente?</p>
+            <p class="text-sm text-slate-500 mb-6">Se ha descargado una copia de seguridad. ¿Estás seguro de que quieres vaciar la base de datos en la nube permanentemente?</p>
             <div class="flex gap-3">
                 <button id="btn-cancel-empty" onclick="document.getElementById('empty-confirm-modal').classList.add('hidden')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
                 <button id="btn-confirm-empty" onclick="executeEmptyData()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Sí, vaciar</button>
@@ -184,20 +185,20 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-black text-slate-800 tracking-tight">Confirmar <span id="wa-action-type">Acción</span></h3>
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Aviso Automático de WhatsApp</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Aviso Automático de Make.com</p>
                 </div>
             </div>
             
-            <p class="text-sm text-slate-600 mb-3 font-medium">Se actualizará la nube y se enviará el siguiente mensaje para avisar al grupo:</p>
+            <p class="text-sm text-slate-600 mb-3 font-medium">Se actualizará la nube y Make.com enviará este mensaje automático al grupo:</p>
             
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-sm text-slate-700 italic shadow-inner leading-relaxed">
-                <span id="confirm-whatsapp-msg" class="block font-medium"></span>
+                <span id="confirm-whatsapp-msg" class="block font-medium whitespace-pre-wrap"></span>
             </div>
             
             <div class="flex gap-3">
                 <button onclick="cancelWhatsAppDrop()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
                 <button id="btn-confirm-wa" onclick="confirmWhatsAppAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-colors flex justify-center items-center gap-2 shadow-md">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> Confirmar y Enviar
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> Confirmar
                 </button>
             </div>
         </div>
@@ -219,7 +220,7 @@
             <div id="swap-choice-buttons" class="flex flex-col gap-3">
                 <!-- Buttons injected dynamically -->
             </div>
-            <button onclick="document.getElementById('swap-choice-modal').classList.add('hidden')" class="w-full mt-4 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+            <button onclick="cancelWhatsAppDrop()" class="w-full mt-4 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
         </div>
     </div>
 
@@ -277,7 +278,7 @@
             </div>
 
             <label class="block text-xs font-bold text-slate-700 mb-1">¿Cuántas plazas necesitas?</label>
-            <input type="number" id="new-salida-pax" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-mono text-lg font-bold text-slate-800" placeholder="Ej: 12">
+            <input type="number" id="new-salida-pax" min="1" max="11" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-mono text-lg font-bold text-slate-800" placeholder="Ej: 11">
 
             <div class="flex gap-3">
                 <button onclick="cancelNewSalida()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
@@ -330,37 +331,38 @@
             </button>
         </div>
 
-        <!-- RIGHT SIDE HEADER CONTROLS (Clean Dropdown) -->
-        <div class="flex items-center gap-2 relative">
+        <!-- RIGHT SIDE HEADER CONTROLS -->
+        <div class="flex items-center gap-3 relative">
             <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleImport(event)" />
             
-            <!-- User Dropdown Menu Wrapper -->
-            <div class="relative" id="user-menu-wrapper">
-                
+            <button onclick="openHelpModal()" class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors shadow-sm" title="Instrucciones">
+                <span class="font-black text-lg">?</span>
+            </button>
+
+            <button id="btn-login-header" onclick="openLoginModal()" class="px-5 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                Iniciar sesión
+            </button>
+
+            <div class="relative hidden" id="user-menu-wrapper">
                 <div class="relative inline-block">
                     <button onclick="toggleUserMenu()" id="user-badge-button" class="rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-opacity bg-slate-200 text-slate-600">
                         <span class="bg-black/10 px-1.5 rounded-sm">INV</span>
                         <span class="tracking-wide">Invitado (Lectura)</span>
                         <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
-                    <!-- Notification Bubble (Ping) -->
                     <span id="notif-bubble" class="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 hidden">
                       <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                       <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white"></span>
                     </span>
                 </div>
                 
-                <!-- The Sleek Dropdown -->
-                <div id="user-dropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 flex flex-col overflow-hidden">
-                    <!-- Items dynamically injected by JS based on role -->
-                </div>
+                <div id="user-dropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 flex flex-col overflow-hidden"></div>
             </div>
         </div>
     </header>
 
-    <!-- Global Toolbar -->
+    <!-- Global Filter Bar -->
     <div id="global-filter-bar" class="bg-white rounded-xl shadow-sm border border-slate-200 px-5 py-3 mb-4 shrink-0 flex items-center gap-5 relative z-40 transition-all">
-        
         <div id="toolbar-period-selectors" class="hidden items-center gap-4 border-r border-slate-200 pr-5">
             <div id="toolbar-week" class="hidden items-center gap-2">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Semana</span>
@@ -386,16 +388,12 @@
                 <div class="max-h-64 overflow-y-auto p-1.5 flex flex-col" id="filter-container"></div>
             </div>
         </div>
-
-        <div class="text-[10px] text-slate-400 font-bold italic tracking-widest hidden md:block ml-auto uppercase">
-            PLANIFICACIÓN CONSOLIDADA 2026
-        </div>
+        <div class="text-[10px] text-slate-400 font-bold italic tracking-widest hidden md:block ml-auto uppercase">PLANIFICACIÓN CONSOLIDADA 2026</div>
     </div>
 
     <!-- Main Layout -->
     <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden relative z-10">
         
-        <!-- Sidebar (Only for Diario) -->
         <aside id="sidebar-calendario" class="w-full lg:w-72 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col shrink-0 overflow-y-auto">
             <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
                 <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -406,33 +404,26 @@
                 <div class="text-[10px] font-bold text-slate-400">L</div><div class="text-[10px] font-bold text-slate-400">M</div><div class="text-[10px] font-bold text-slate-400">X</div><div class="text-[10px] font-bold text-slate-400">J</div><div class="text-[10px] font-bold text-slate-400">V</div><div class="text-[10px] font-bold text-red-400">S</div><div class="text-[10px] font-bold text-red-400">D</div>
             </div>
             <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
-            <div class="mt-6"><p class="text-[10px] text-slate-400 italic leading-tight">Fines de semana y festivos en <span class="text-red-500 font-bold">rojo</span>.</p></div>
         </aside>
 
-        <!-- View Containers -->
         <div id="main-content-area" class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-slate-200 relative flex flex-col overflow-hidden">
             
-            <!-- VIEW: DIARIO -->
             <main id="view-diario" class="p-6 flex flex-col h-full overflow-hidden bg-white">
                 <div class="mb-6 shrink-0 flex justify-between items-end">
                     <div>
                         <h2 id="daily-date-header" class="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
                         <p class="text-xs font-bold text-slate-400 tracking-widest mt-1 uppercase">Cupo Diario: 270 Plazas. Asignadas un total de <span id="total-pax-header" class="text-blue-600">0</span> plazas</p>
                     </div>
-                    <div id="drag-notice" class="hidden text-xs font-bold text-slate-500 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 flex items-center gap-1.5 shadow-sm">
-                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path></svg>
-                        Doble Clic / Arrastrar Activo
-                    </div>
                 </div>
                 <div class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs">
-                    <!-- Unified 1-Row Header Layout -->
-                    <div class="grid grid-cols-[76px_repeat(5,1fr)] border-b-2 border-slate-200 bg-slate-50 text-[9px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                    <div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b-2 border-slate-200 bg-slate-50 text-[9px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                         <div class="p-3 text-slate-500 border-r border-slate-100 flex items-center justify-center">Hora</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Bajo de Dentro</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Piles II</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Piles I</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Testa</div>
-                        <div class="p-3 flex items-center justify-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg> Morra</div>
+                        <div class="p-3 text-slate-400 border-r border-slate-200 flex items-center justify-center" title="Posición">P.</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Bajo de Dentro</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Piles II</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Piles I</div>
+                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Testa</div>
+                        <div class="p-3 flex items-center justify-center gap-1">Morra</div>
                     </div>
                     <div id="schedule-grid"></div>
                 </div>
@@ -442,7 +433,6 @@
                 </div>
             </main>
 
-            <!-- VIEW: MEGA (Weekly / Monthly) -->
             <main id="view-mega" class="hidden flex-col h-full overflow-hidden bg-white">
                 <div class="p-6 shrink-0 bg-white border-b border-slate-200 shadow-sm z-30">
                     <h2 id="mega-date-header" class="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
@@ -453,66 +443,31 @@
             </main>
         </div>
         
-        <!-- VIEW: ESTADÍSTICAS (Standalone Full Width) -->
         <main id="view-estadisticas" class="hidden flex-col h-full overflow-y-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:p-8 flex-1 min-w-0 w-full">
-            
-            <!-- Stats Header Card -->
             <div class="bg-[#181f2f] rounded-2xl p-6 md:p-8 mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl shrink-0 border border-[#2d3748]">
                 <div class="flex items-start gap-4">
-                    <div class="mt-1">
-                        <svg class="w-8 h-8 text-blue-400 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
-                    </div>
                     <div>
                         <h2 class="text-3xl font-black italic tracking-tighter text-white">AUDITORÍA DE TEMPORADA</h2>
-                        <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                            DISTRIBUCIÓN ANUAL RESERVA MARINA 2026
-                        </p>
+                        <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase">DISTRIBUCIÓN ANUAL RESERVA MARINA 2026</p>
                     </div>
                 </div>
-                
-                <!-- Unit Toggle Dropdown -->
                 <div class="relative w-full md:w-64" id="unit-dropdown-wrapper">
-                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ml-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                        UNIDAD DE ANÁLISIS:
-                    </div>
-                    <button onclick="document.getElementById('unit-dropdown-panel').classList.toggle('hidden')" class="w-full bg-[#1e293b] border border-slate-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex justify-between items-center hover:bg-[#334155] transition-colors shadow-inner">
+                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ml-1">UNIDAD DE ANÁLISIS:</div>
+                    <button onclick="document.getElementById('unit-dropdown-panel').classList.toggle('hidden')" class="w-full bg-[#1e293b] border border-slate-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex justify-between items-center hover:bg-[#334155]">
                         <span id="unit-dropdown-text">Plazas (Buceadores)</span>
-                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
-                    
-                    <div id="unit-dropdown-panel" class="hidden absolute left-0 top-full mt-2 w-full bg-[#1e293b] border border-slate-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
-                        <button onclick="setStatsUnit('plazas')" id="btn-toggle-plazas" class="text-left px-4 py-3 text-sm font-bold text-white hover:bg-[#334155] transition-colors flex items-center justify-between border-b border-slate-700">
-                            Plazas (Buceadores) <svg id="check-plazas" class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <div id="unit-dropdown-panel" class="hidden absolute left-0 top-full mt-2 w-full bg-[#1e293b] border border-slate-600 rounded-lg shadow-2xl z-50 flex flex-col">
+                        <button onclick="setStatsUnit('plazas')" class="text-left px-4 py-3 text-sm font-bold text-white hover:bg-[#334155] transition-colors border-b border-slate-700 flex justify-between items-center">
+                            Plazas (Buceadores)
                         </button>
-                        <button onclick="setStatsUnit('barcos')" id="btn-toggle-barcos" class="text-left px-4 py-3 text-sm font-bold text-slate-300 hover:bg-[#334155] transition-colors flex items-center justify-between">
-                            Barcos (Salidas) <svg id="check-barcos" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <button onclick="setStatsUnit('barcos')" class="text-left px-4 py-3 text-sm font-bold text-slate-300 hover:bg-[#334155] transition-colors flex justify-between items-center">
+                            Barcos (Salidas)
                         </button>
                     </div>
                 </div>
             </div>
-
-            <!-- Header for Main Table -->
-            <div class="flex items-center gap-3 mb-6 mt-4">
-                <div class="w-2 h-7 bg-blue-500 rounded-full"></div>
-                <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight uppercase" id="stats-main-title">Distribución de Buceadores por Punto</h3>
-            </div>
-            
-            <!-- Safe Injection Zone for Main Table -->
             <div id="safe-main-table-container"></div>
-
-            <!-- Header for Monthly Grid -->
-            <div class="flex items-center gap-3 mb-6 mt-6">
-                <div class="w-2 h-7 bg-emerald-500 rounded-full"></div>
-                <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight uppercase" id="stats-monthly-title">Detalle Mensual de Buceadores</h3>
-            </div>
-
-            <!-- 2-Column Monthly Breakdown Grid -->
-            <div id="stats-monthly-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
-                <!-- Monthly Cards Injected by JS -->
-            </div>
-
+            <div id="stats-monthly-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8"></div>
         </main>
     </div>
 
@@ -539,8 +494,6 @@
         const DAYS_ES = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
         const MONTHS_ES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
         const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-        const CENTER_NAME_TO_KEY = {};
-        Object.keys(CENTERS).forEach(key => CENTER_NAME_TO_KEY[CENTERS[key].name.toUpperCase()] = key);
 
         const EMAIL_MAP = {
             'admin': 'admin@visor.local', 'mangamar': 'mangamar@visor.local', 'balky': 'balky@visor.local',
@@ -574,6 +527,22 @@
         let statsUnit = 'plazas'; 
         let isGuestMode = false;
         let currentUserKey = 'guest';
+
+        /* =========================================================================
+           WEBHOOK / WHATSAPP ROBOT CONFIGURATION
+           ========================================================================= */
+        const WHATSAPP_WEBHOOK_URL = ""; 
+
+        async function sendSilentWebhook(msg) {
+            if (!WHATSAPP_WEBHOOK_URL) return;
+            try {
+                await fetch(WHATSAPP_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+            } catch(e) {}
+        }
 
         /* =========================================================================
            2. FIREBASE SETUP
@@ -655,7 +624,7 @@
                 .catch((error) => {
                     const errorMsgEl = document.getElementById('password-error');
                     errorMsgEl.classList.remove('hidden');
-                    errorMsgEl.textContent = 'Contraseña incorrecta. Compruébala e inténtalo de nuevo.';
+                    errorMsgEl.textContent = 'Contraseña incorrecta.';
                 });
         }
 
@@ -683,7 +652,6 @@
                 html += `<div class="h-px bg-slate-100 my-1"></div>`;
             }
             
-            html += `<button onclick="openHelpModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Instrucciones de Uso</button>`;
             html += `<button onclick="exportCSV(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Exportar CSV</button>`;
             
             if (currentUserKey === 'admin') {
@@ -693,12 +661,7 @@
             }
             
             html += `<div class="h-px bg-slate-100 my-1"></div>`;
-            
-            if (isGuestMode) {
-                html += `<button onclick="openLoginModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-600 hover:bg-slate-50 transition-colors flex items-center gap-2">Iniciar sesión</button>`;
-            } else {
-                html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
-            }
+            html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
             
             menu.innerHTML = html;
         }
@@ -720,14 +683,18 @@
             if (user) {
                 isGuestMode = false;
                 document.getElementById('password-modal').classList.add('hidden');
+                document.getElementById('btn-login-header').classList.add('hidden');
+                document.getElementById('user-menu-wrapper').classList.remove('hidden');
                 currentUserKey = Object.keys(EMAIL_MAP).find(k => EMAIL_MAP[k] === user.email) || 'admin';
-                startFirestoreListener();
             } else {
                 isGuestMode = true;
                 currentUserKey = 'guest';
                 document.getElementById('password-modal').classList.add('hidden'); 
-                startFirestoreListener();
+                document.getElementById('btn-login-header').classList.remove('hidden');
+                document.getElementById('user-menu-wrapper').classList.add('hidden');
             }
+            
+            startFirestoreListener();
             
             const badgeInfo = BADGE_INFO[currentUserKey] || { name: 'Invitado', color: 'bg-slate-200', text: 'text-slate-600' };
             const centerInitial = currentUserKey === 'admin' ? 'A' : (currentUserKey === 'mangamar' ? 'M' : (currentUserKey === 'guest' ? 'INV' : currentUserKey.charAt(0).toUpperCase()));
@@ -742,53 +709,15 @@
 
 
         /* =========================================================================
-           5. UTILITIES
+           5. UTILITIES & UI CONTROLLERS
            ========================================================================= */
-        function formatDateString(dateObj) {
-            return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-        }
-        function getMonday(d) {
-            d = new Date(d);
-            var day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
-        }
-        function getWeekNumber(d) {
-            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-        }
-        function getDateOfISOWeek(w, y) {
-            var simple = new Date(y, 0, 1 + (w - 1) * 7);
-            var ISOweekStart = simple;
-            if (simple.getDay() <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-            else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-            return ISOweekStart;
-        }
-        function normalizeCSVDate(dateStr) {
-            let p;
-            if (dateStr.includes('/')) p = dateStr.split('/');
-            else if (dateStr.includes('-')) p = dateStr.split('-');
-            else return dateStr.replace(/[^0-9-]/g, '-'); 
-            
-            if (p.length === 3) {
-                if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
-                else {
-                    let year = p[2].length === 2 ? '20' + p[2] : p[2];
-                    return `${year}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
-                }
-            }
-            return dateStr.replace(/[^0-9-]/g, '-');
-        }
-        function normalizeCSVTime(timeStr) {
-            let p = timeStr.split(':');
-            if(p.length >= 2) return `${p[0].padStart(2, '0')}:${p[1].padStart(2, '0')}`;
-            return timeStr;
-        }
+        function formatDateString(dateObj) { return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`; }
+        function getMonday(d) { d = new Date(d); var day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
+        function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
+        function getDateOfISOWeek(w, y) { var simple = new Date(y, 0, 1 + (w - 1) * 7); var ISOweekStart = simple; if (simple.getDay() <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); return ISOweekStart; }
+        function normalizeCSVDate(dateStr) { let p; if (dateStr.includes('/')) p = dateStr.split('/'); else if (dateStr.includes('-')) p = dateStr.split('-'); else return dateStr.replace(/[^0-9-]/g, '-'); if (p.length === 3) { if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`; else { let year = p[2].length === 2 ? '20' + p[2] : p[2]; return `${year}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`; } } return dateStr.replace(/[^0-9-]/g, '-'); }
+        function normalizeCSVTime(timeStr) { let p = timeStr.split(':'); if(p.length >= 2) return `${p[0].padStart(2, '0')}:${p[1].padStart(2, '0')}`; return timeStr; }
 
-        /* =========================================================================
-           6. UI CONTROLLERS
-           ========================================================================= */
         function switchView(v) {
             activeViewMode = v;
             ['diario', 'mega', 'estadisticas'].forEach(id => {
@@ -841,23 +770,6 @@
         function setStatsUnit(unit) {
             statsUnit = unit;
             document.getElementById('unit-dropdown-text').textContent = unit === 'barcos' ? 'Barcos (Salidas)' : 'Plazas (Buceadores)';
-            const btnPlazas = document.getElementById('btn-toggle-plazas');
-            const btnBarcos = document.getElementById('btn-toggle-barcos');
-            if(unit === 'plazas') {
-                btnPlazas.classList.replace('text-slate-300', 'text-white');
-                btnBarcos.classList.replace('text-white', 'text-slate-300');
-                document.getElementById('check-plazas').classList.remove('hidden');
-                document.getElementById('check-barcos').classList.add('hidden');
-            } else {
-                btnBarcos.classList.replace('text-slate-300', 'text-white');
-                btnPlazas.classList.replace('text-white', 'text-slate-300');
-                document.getElementById('check-barcos').classList.remove('hidden');
-                document.getElementById('check-plazas').classList.add('hidden');
-            }
-            const titleLabel = unit === 'barcos' ? 'Barcos' : 'Buceadores';
-            document.getElementById('stats-main-title').textContent = `Distribución de ${titleLabel} por Punto`;
-            document.getElementById('stats-monthly-title').textContent = `Detalle Mensual de ${titleLabel}`;
-            document.getElementById('unit-dropdown-panel').classList.add('hidden');
             renderStats();
         }
 
@@ -898,7 +810,7 @@
         function toggleFilterDropdown() { document.getElementById('filter-dropdown-panel').classList.toggle('hidden'); }
 
         /* =========================================================================
-           7. MODALS & NOTIFICATIONS
+           7. NOTIFICATIONS & DATA OPS
            ========================================================================= */
         function showNotification(title, message, isError = false) {
             const iconEl = document.getElementById('notification-icon');
@@ -917,13 +829,8 @@
             document.getElementById('notification-modal').classList.remove('hidden');
         }
 
-        function closeNotification() {
-            document.getElementById('notification-modal').classList.add('hidden');
-        }
+        function closeNotification() { document.getElementById('notification-modal').classList.add('hidden'); }
 
-        /* =========================================================================
-           8. DATA OPERATIONS (IMPORT / EXPORT / EMPTY)
-           ========================================================================= */
         function triggerImport() { document.getElementById('csv-upload').click(); }
 
         function handleImport(e) {
@@ -938,7 +845,6 @@
                 const rs = ev.target.result.split('\n'), loaded = [];
                 const safeCenterMap = {};
                 Object.keys(CENTERS).forEach(k => safeCenterMap[CENTERS[k].name.toUpperCase()] = k);
-                const slotTracker = {}; 
 
                 for(let i=1; i<rs.length; i++) {
                     if(!rs[i].trim()) continue;
@@ -959,45 +865,32 @@
                     const cKey = safeCenterMap[centerName];
 
                     if(cKey && !isNaN(pax)) {
-                        const trackKey = `${normalizedDate}-${normalizedTime}-${site}`;
-                        if (!slotTracker[trackKey]) slotTracker[trackKey] = 1;
-                        else slotTracker[trackKey]++;
-                        const assignedSubslot = slotTracker[trackKey];
-                        loaded.push({ date: normalizedDate, center: cKey, site: site, time: normalizedTime, pax: pax, subslot: assignedSubslot });
+                        loaded.push({ date: normalizedDate, center: cKey, site: site, time: normalizedTime, pax: pax });
                     }
                 }
                 
                 if(loaded.length) { 
                     try {
                         const monthlyData = {};
-                        loaded.forEach(item => {
+                        loaded.forEach((item, index) => {
                             const monthKey = item.date.substring(0, 7);
                             if (!monthlyData[monthKey]) monthlyData[monthKey] = {};
                             
-                            const safeDate = item.date.replace(/[^0-9-]/g, '');
-                            const safeTime = item.time.replace(/[^0-9]/g, '');
-                            const safeSite = item.site.replace(/[^a-zA-Z0-9]/g, '');
-                            const safeCenter = item.center.replace(/[^a-zA-Z0-9]/g, '');
-                            const customDocId = `${safeDate}_${safeTime}_${safeSite}_${safeCenter}_${item.subslot}`;
-                            
+                            const customDocId = `import_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 8)}`;
                             monthlyData[monthKey][customDocId] = item;
                         });
                         
                         const batch = db.batch();
-                        let totalMonths = Object.keys(monthlyData).length;
-                        
                         for (const [month, dataMap] of Object.entries(monthlyData)) {
                             const docRef = db.collection("reservations_monthly").doc(month);
                             batch.set(docRef, { allocations: dataMap }, { merge: true });
                         }
                         
-                        btn.innerHTML = `<svg class="animate-spin h-3 w-3 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="tracking-wide">Guardando...</span>`;
                         await batch.commit();
-                        showNotification('Importación Exitosa', `Se ha procesado y guardado la planificación completa (${loaded.length} reservas) en la base de datos.`); 
+                        showNotification('Importación Exitosa', `Se ha procesado y guardado la planificación completa (${loaded.length} reservas).`); 
                         if(loaded[0] && loaded[0].date) setDate(loaded[0].date);
                     } catch(err) {
-                        console.error(err);
-                        showNotification('Error', 'Hubo un problema de red al guardar en la nube. Revisa la consola.', true);
+                        showNotification('Error', 'Hubo un problema de red al guardar en la nube.', true);
                     } finally {
                         btn.innerHTML = originalBtnHtml;
                     }
@@ -1007,7 +900,6 @@
                     btn.innerHTML = originalBtnHtml;
                 }
             };
-            r.onerror = () => { btn.innerHTML = originalBtnHtml; };
             r.readAsText(f); e.target.value = '';
         }
 
@@ -1022,18 +914,17 @@
                 l.setAttribute("href", "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv)); 
                 l.setAttribute("download", "Export_Reservas.csv"); 
                 l.click();
-            } catch (error) { console.error("Export Error: ", error); }
+            } catch (error) {}
         }
 
         function promptEmptyData() {
-            try { exportCSV(); } catch(e) { console.error("Export backup bypassed due to data format."); }
+            try { exportCSV(); } catch(e) {}
             setTimeout(() => document.getElementById('empty-confirm-modal').classList.remove('hidden'), 800);
         }
 
         async function executeEmptyData() {
             const btnConfirm = document.getElementById('btn-confirm-empty');
             const btnCancel = document.getElementById('btn-cancel-empty');
-            
             btnConfirm.textContent = "Borrando...";
             btnConfirm.disabled = true;
             btnCancel.disabled = true;
@@ -1044,19 +935,16 @@
                     const deletePromises = snapshot.docs.map(doc => doc.ref.delete());
                     await Promise.all(deletePromises);
                 }
-                
                 const swapSnapshot = await db.collection("swaps").get();
                 if (!swapSnapshot.empty) {
                     const swapPromises = swapSnapshot.docs.map(doc => doc.ref.delete());
                     await Promise.all(swapPromises);
                 }
-                
                 document.getElementById('empty-confirm-modal').classList.add('hidden');
                 showNotification('Base de Datos Vaciada', `Se han eliminado permanentemente todos los archivos de la nube.`);
             } catch (error) {
-                console.error("Error deleting documents: ", error);
                 document.getElementById('empty-confirm-modal').classList.add('hidden');
-                showNotification('Error', 'Hubo un problema al vaciar los datos. Comprueba la conexión.', true);
+                showNotification('Error', 'Hubo un problema al vaciar los datos.', true);
             } finally {
                 btnConfirm.textContent = "Sí, vaciar";
                 btnConfirm.disabled = false;
@@ -1065,12 +953,13 @@
         }
 
         /* =========================================================================
-           9. DRAG & DROP + SWAPS + DOUBLE CLICK
+           8. DRAG & DROP + SWAPS + DOUBLE CLICK (THE BRAIN)
            ========================================================================= */
         let draggedItemId = null;
         let pendingDrop = null;
         let pendingNewSalidaWA = null; 
         let pendingSwapIntent = null; 
+        let isProcessingDrop = false; // Lock vault
 
         function cancelWhatsAppDrop() {
             document.getElementById('whatsapp-confirm-modal').classList.add('hidden');
@@ -1078,98 +967,146 @@
             pendingDrop = null;
             pendingSwapIntent = null;
             pendingNewSalidaWA = null;
+            isProcessingDrop = false;
             renderAll(); 
         }
 
         async function confirmWhatsAppAction() {
             document.getElementById('whatsapp-confirm-modal').classList.add('hidden');
+            document.getElementById('btn-confirm-wa').disabled = true; 
             
             if (pendingDrop) {
-                const { id, item, newTime, newSite, msg } = pendingDrop;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-                await executeDrop(id, item, newTime, newSite);
-                pendingDrop = null;
+                const drop = pendingDrop;
+                pendingDrop = null; 
+                await sendSilentWebhook(drop.msg);
+                await executeDrop(drop.id, drop.item, drop.newTime, drop.newSite, drop.newSubslot);
             }
             else if (pendingSwapIntent) {
-                const { initId, initItem, targetId, targetItem, msg } = pendingSwapIntent;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-
+                const swap = pendingSwapIntent;
+                pendingSwapIntent = null; 
+                await sendSilentWebhook(swap.msg);
                 try {
                     await db.collection("swaps").add({
-                        initiatorId: initId, targetId: targetId,
-                        initiatorCenter: initItem.center, targetCenter: targetItem.center,
-                        initiatorData: initItem, targetData: targetItem,
+                        initiatorId: swap.initId, targetId: swap.targetId,
+                        initiatorCenter: swap.initItem.center, targetCenter: swap.targetItem.center,
+                        initiatorData: swap.initItem, targetData: swap.targetItem,
                         status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    showNotification('Solicitud Enviada', 'La propuesta de intercambio ha sido enviada al otro centro. Verás los bloques en gris hasta que acepten.');
+                    showNotification('Solicitud Enviada', 'La propuesta de intercambio ha sido enviada al otro centro.');
                 } catch(e) {
-                    console.error(e);
                     showNotification('Error', 'Hubo un fallo al solicitar el intercambio.', true);
                 }
-                pendingSwapIntent = null;
             }
             else if (pendingNewSalidaWA) {
-                const { data, pax, centerKey, msg } = pendingNewSalidaWA;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-                await executeNewSalida(data, pax, centerKey);
-                pendingNewSalidaWA = null;
+                const newSalida = pendingNewSalidaWA;
+                pendingNewSalidaWA = null; 
+                await sendSilentWebhook(newSalida.msg);
+                await executeNewSalida(newSalida.data, newSalida.pax, newSalida.centerKey);
             }
+            document.getElementById('btn-confirm-wa').disabled = false;
+            isProcessingDrop = false;
         }
 
+        // --- CORE DB PROCESSORS: STRICT UPDATES WITHOUT ID CHANGES ---
+        
         async function executeDrop(id, item, newTime, newSite) {
             const monthKey = item.date.substring(0, 7); 
-            const safeDate = item.date.replace(/[^0-9-]/g, '');
-            const safeTime = newTime.replace(/[^0-9]/g, '');
-            const safeSite = newSite.replace(/[^a-zA-Z0-9]/g, '');
-            const safeCenter = item.center.replace(/[^a-zA-Z0-9]/g, '');
-            
-            const oldIndex = id.split('_').pop();
-            const newId = `${safeDate}_${safeTime}_${safeSite}_${safeCenter}_${oldIndex}`;
-
-            const updatedItem = { ...item, time: newTime, site: newSite };
-            delete updatedItem.id; 
-
             try {
-                const docRef = db.collection("reservations_monthly").doc(monthKey);
-                const batch = db.batch();
-                batch.update(docRef, {
-                    [`allocations.${id}`]: firebase.firestore.FieldValue.delete(),
-                    [`allocations.${newId}`]: updatedItem
-                });
-                await batch.commit();
+                const updates = {};
+                let finalSubslot = 1;
+
+                // 1. Clean up old slot: If 1 boat remains there, force it to subslot 1 (Top)
+                const remainingOld = allocations.filter(a => a.date === item.date && a.time === item.time && a.site === item.site && String(a.id) !== String(id));
+                if (remainingOld.length === 1) {
+                    const rem = remainingOld[0];
+                    if (rem.subslot !== 1) updates[`allocations.${rem.id}`] = { ...rem, subslot: 1 };
+                }
+
+                // 2. Configure new slot: Empty = 1, One boat = 2
+                const existingNew = allocations.filter(a => a.date === item.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
+                if (existingNew.length === 1) {
+                    const exist = existingNew[0];
+                    finalSubslot = 2; // Incoming goes below
+                    if (exist.subslot !== 1) updates[`allocations.${exist.id}`] = { ...exist, subslot: 1 }; // Force existing to top
+                }
+
+                // 3. Update the dragged item itself using its EXACT original ID
+                const updatedItem = { ...item, time: newTime, site: newSite, subslot: finalSubslot };
+                updates[`allocations.${id}`] = updatedItem;
+
+                await db.collection("reservations_monthly").doc(monthKey).update(updates);
             } catch(error) {
-                console.error("Error", error);
-                showNotification('Error', 'No se pudo guardar.', true);
+                showNotification('Error', 'No se pudo guardar en la nube.', true);
             }
         }
         
-        async function executeNewSalida(info, pax, userKeyChoice) {
-            const { date, time, site } = info;
-            const centerCode = USER_CENTER_KEYS[userKeyChoice] || USER_CENTER_KEYS[currentUserKey];
-
-            const safeDate = date.replace(/[^0-9-]/g, '');
-            const safeTime = time.replace(/[^0-9]/g, '');
-            const safeSite = site.replace(/[^a-zA-Z0-9]/g, '');
-            const safeCenter = centerCode.replace(/[^a-zA-Z0-9]/g, '');
-
-            const existingItemsInSlot = allocations.filter(a => a.date === date && a.time === time && a.site === site);
-            let newSubslot = 1;
-            if (existingItemsInSlot.length > 0) {
-                const usedSubslots = existingItemsInSlot.map(a => a.subslot || 1);
-                while(usedSubslots.includes(newSubslot)) newSubslot++;
+        async function processSwap(initId, initItem, targetId, targetItem, swapDocId = null) {
+            // They explicitly take EACH OTHER'S physical subslots to trade places exactly
+            const new_iItem = { ...initItem, time: targetItem.time, site: targetItem.site, subslot: targetItem.subslot || 1 };
+            const new_tItem = { ...targetItem, time: initItem.time, site: initItem.site, subslot: initItem.subslot || 2 };
+            
+            // Absolute safeguard in case corrupt DB data had colliding subslots
+            if (new_iItem.time === new_tItem.time && new_iItem.site === new_tItem.site && new_iItem.subslot === new_tItem.subslot) {
+                new_iItem.subslot = 1;
+                new_tItem.subslot = 2;
             }
 
-            const newId = `${safeDate}_${safeTime}_${safeSite}_${safeCenter}_${newSubslot}`;
-            const newItem = { date, time, site, center: centerCode, pax, subslot: newSubslot };
-            const monthKey = date.substring(0, 7);
+            const month1 = initItem.date.substring(0, 7);
+            const month2 = targetItem.date.substring(0, 7); 
 
             try {
-                const docRef = db.collection("reservations_monthly").doc(monthKey);
                 const batch = db.batch();
-                batch.set(docRef, { [`allocations.${newId}`]: newItem }, { merge: true });
+                
+                // Update inline using original IDs. NEVER delete/re-add. Zero risk of ghost duplicates.
+                if (month1 === month2) {
+                    batch.update(db.collection("reservations_monthly").doc(month1), {
+                        [`allocations.${initId}`]: new_iItem,
+                        [`allocations.${targetId}`]: new_tItem
+                    });
+                } else {
+                    // Cross month swaps: Need to delete from origin and inject into new month
+                    batch.update(db.collection("reservations_monthly").doc(month1), { [`allocations.${initId}`]: firebase.firestore.FieldValue.delete() });
+                    batch.update(db.collection("reservations_monthly").doc(month2), { [`allocations.${targetId}`]: firebase.firestore.FieldValue.delete() });
+                    batch.set(db.collection("reservations_monthly").doc(month2), { allocations: { [initId]: new_iItem } }, { merge: true });
+                    batch.set(db.collection("reservations_monthly").doc(month1), { allocations: { [targetId]: new_tItem } }, { merge: true });
+                }
+
+                if (swapDocId) batch.delete(db.collection("swaps").doc(swapDocId));
+                
                 await batch.commit();
             } catch(e) {
                 console.error(e);
+                throw e;
+            }
+        }
+
+        async function executeNewSalida(info, pax, userKeyChoice) {
+            const { date, time, site } = info;
+            const centerCode = USER_CENTER_KEYS[userKeyChoice] || USER_CENTER_KEYS[currentUserKey];
+            const monthKey = date.substring(0, 7);
+            
+            try {
+                const updates = {};
+                let finalSubslot = 1;
+
+                const existingInSlot = allocations.filter(a => a.date === date && a.time === time && a.site === site);
+                if (existingInSlot.length === 1) {
+                    const exist = existingInSlot[0];
+                    finalSubslot = 2;
+                    if (exist.subslot !== 1) updates[`allocations.${exist.id}`] = { ...exist, subslot: 1 };
+                }
+
+                const uniqueId = `boat_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+                const newItem = { date, time, site, center: centerCode, pax, subslot: finalSubslot };
+                updates[`allocations.${uniqueId}`] = newItem;
+
+                const docRef = db.collection("reservations_monthly").doc(monthKey);
+                try {
+                    await docRef.update(updates);
+                } catch(e) {
+                    await docRef.set({ allocations: { [uniqueId]: newItem } }, { merge: true });
+                }
+            } catch(e) {
                 showNotification('Error', 'Hubo un problema guardando en la nube.', true);
             }
         }
@@ -1194,8 +1131,8 @@
                             <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 text-xs">🔄</span>
                             <div>
                                 <p class="text-sm font-bold text-slate-800"><span class="text-blue-600">${initName}</span> te propone un cambio:</p>
-                                <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} (${req.initiatorData.time})</b> el ${dStr}.</p>
-                                <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} (${req.targetData.time})</b>.</p>
+                                <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} a las ${req.initiatorData.time}</b> el ${dStr}.</p>
+                                <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} a las ${req.targetData.time}</b>.</p>
                             </div>
                         </div>
                         <div class="flex gap-2 mt-3">
@@ -1210,113 +1147,36 @@
         }
 
         async function rejectSwap(swapId) {
-            try {
-                await db.collection("swaps").doc(swapId).delete();
-                openNotificationsModal(); 
-            } catch(e) { console.error(e); }
+            try { await db.collection("swaps").doc(swapId).delete(); openNotificationsModal(); } catch(e) {}
         }
 
         async function acceptSwap(swapId) {
             const req = swapRequests.find(s => s.id === swapId);
             if (!req) return;
-
             document.getElementById('notifications-modal').classList.add('hidden');
             
-            const iItem = req.initiatorData;
-            const tItem = req.targetData;
-            
-            const new_iItem = { ...iItem, time: tItem.time, site: tItem.site, subslot: tItem.subslot };
-            const new_tItem = { ...tItem, time: iItem.time, site: iItem.site, subslot: iItem.subslot };
-
-            const sDate1 = new_iItem.date.replace(/[^0-9-]/g, '');
-            const sTime1 = new_iItem.time.replace(/[^0-9]/g, '');
-            const sSite1 = new_iItem.site.replace(/[^a-zA-Z0-9]/g, '');
-            const sCenter1 = new_iItem.center.replace(/[^a-zA-Z0-9]/g, '');
-            const newId1 = `${sDate1}_${sTime1}_${sSite1}_${sCenter1}_${new_iItem.subslot}`;
-
-            const sDate2 = new_tItem.date.replace(/[^0-9-]/g, '');
-            const sTime2 = new_tItem.time.replace(/[^0-9]/g, '');
-            const sSite2 = new_tItem.site.replace(/[^a-zA-Z0-9]/g, '');
-            const sCenter2 = new_tItem.center.replace(/[^a-zA-Z0-9]/g, '');
-            const newId2 = `${sDate2}_${sTime2}_${sSite2}_${sCenter2}_${new_tItem.subslot}`;
-
-            const monthKey1 = iItem.date.substring(0, 7);
-            const monthKey2 = tItem.date.substring(0, 7); 
-
             try {
-                const batch = db.batch();
-                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${req.initiatorId}`]: firebase.firestore.FieldValue.delete() });
-                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
-                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${newId1}`]: new_iItem });
-                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${newId2}`]: new_tItem });
-                batch.delete(db.collection("swaps").doc(swapId));
-
-                await batch.commit();
-
-                const centerName = CENTERS[tItem.center].name;
-                const d = new Date(iItem.date);
-                const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${centerName} ha aceptado el intercambio de salidas del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}. El visor ha sido actualizado con los nuevos horarios.`;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-
+                await processSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData, swapId);
+                const centerName = CENTERS[req.targetData.center].name;
+                const d = new Date(req.initiatorData.date);
+                const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${centerName} ha aceptado el intercambio de salidas del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}. El visor ha sido actualizado.`;
+                await sendSilentWebhook(msg);
             } catch(e) {
-                console.error(e);
                 showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
             }
         }
         
-        async function adminInstantSwap(req) {
-            const iItem = req.initiatorData;
-            const tItem = req.targetData;
-            
-            const new_iItem = { ...iItem, time: tItem.time, site: tItem.site, subslot: tItem.subslot };
-            const new_tItem = { ...tItem, time: iItem.time, site: iItem.site, subslot: iItem.subslot };
-
-            const sDate1 = new_iItem.date.replace(/[^0-9-]/g, '');
-            const sTime1 = new_iItem.time.replace(/[^0-9]/g, '');
-            const sSite1 = new_iItem.site.replace(/[^a-zA-Z0-9]/g, '');
-            const sCenter1 = new_iItem.center.replace(/[^a-zA-Z0-9]/g, '');
-            const newId1 = `${sDate1}_${sTime1}_${sSite1}_${sCenter1}_${new_iItem.subslot}`;
-
-            const sDate2 = new_tItem.date.replace(/[^0-9-]/g, '');
-            const sTime2 = new_tItem.time.replace(/[^0-9]/g, '');
-            const sSite2 = new_tItem.site.replace(/[^a-zA-Z0-9]/g, '');
-            const sCenter2 = new_tItem.center.replace(/[^a-zA-Z0-9]/g, '');
-            const newId2 = `${sDate2}_${sTime2}_${sSite2}_${sCenter2}_${new_tItem.subslot}`;
-
-            const monthKey1 = iItem.date.substring(0, 7);
-            const monthKey2 = tItem.date.substring(0, 7); 
-
-            try {
-                const batch = db.batch();
-                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${req.initiatorId}`]: firebase.firestore.FieldValue.delete() });
-                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
-                batch.update(db.collection("reservations_monthly").doc(monthKey1), { [`allocations.${newId1}`]: new_iItem });
-                batch.update(db.collection("reservations_monthly").doc(monthKey2), { [`allocations.${newId2}`]: new_tItem });
-                await batch.commit();
-                showNotification('Modo Admin', 'Intercambio directo realizado.');
-            } catch(e) {
-                console.error(e);
-                showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
-            }
-        }
-
         function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
             const targetName = CENTERS[targetItem.center].name;
             const initCenterName = CENTERS[initItem.center].name;
             const d = new Date(initItem.date);
-            
-            const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${initCenterName} solicita intercambiar su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()} (${initItem.site} a las ${initItem.time}) por la salida de ${targetName} (${targetItem.site} a las ${targetItem.time}). Por favor, entren al visor para confirmarlo.`;
+            const msg = `*AVISO AUTOMÁTICO:* ⚠️ ${initCenterName} solicita intercambiar su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}.\n\n*De:* ${initItem.site} a las ${initItem.time}\n*A:* ${targetItem.site} a las ${targetItem.time} (con ${targetName})\n\nPor favor, entren al visor para confirmarlo.`;
             
             pendingSwapIntent = { initId, initItem, targetId, targetItem, msg };
-            
             document.getElementById('wa-action-type').textContent = "Solicitud de Intercambio";
-            document.getElementById('confirm-whatsapp-msg').textContent = msg;
+            document.getElementById('confirm-whatsapp-msg').innerText = msg;
             document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
         }
-
-        let pendingSwapInit = null;
-        let pendingSwapTargets = [];
-        let pendingSwapIsAdmin = false;
 
         function showSwapChoiceModal(initId, initItem, targets, isAdmin = false) {
             pendingSwapInit = { initId, initItem };
@@ -1334,7 +1194,6 @@
                 btn.onclick = () => selectSwapTarget(target.id);
                 container.appendChild(btn);
             });
-            
             document.getElementById('swap-choice-modal').classList.remove('hidden');
         }
 
@@ -1342,18 +1201,28 @@
             document.getElementById('swap-choice-modal').classList.add('hidden');
             const targetItem = pendingSwapTargets.find(t => t.id === targetId);
             const { initId, initItem } = pendingSwapInit;
+            const isAdmin = pendingSwapIsAdmin;
+
+            pendingSwapInit = null;
+            pendingSwapTargets = [];
+            pendingSwapIsAdmin = false;
             
-            if (pendingSwapIsAdmin) {
-                await adminInstantSwap({ initiatorId: initId, targetId: targetId, initiatorData: initItem, targetData: targetItem });
+            if (isAdmin) {
+                try {
+                    await processSwap(initId, initItem, targetId, targetItem);
+                } catch(e) {
+                    showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
+                }
+                isProcessingDrop = false;
             } else {
                 triggerSwapConfirmation(initId, initItem, targetId, targetItem);
             }
         }
 
         document.addEventListener('dragstart', (e) => {
-            if (isGuestMode) { e.preventDefault(); return; } 
+            if (isGuestMode || isProcessingDrop) { e.preventDefault(); return; } 
             const block = e.target.closest('.draggable-item');
-            if (!block) return;
+            if (!block || block.getAttribute('draggable') !== 'true') { e.preventDefault(); return; }
             draggedItemId = block.dataset.dragId;
             try { e.dataTransfer.setData('text/plain', String(draggedItemId)); e.dataTransfer.effectAllowed = 'move'; } catch (err) { }
             setTimeout(() => block.classList.add('opacity-50'), 0);
@@ -1368,44 +1237,43 @@
         });
 
         document.addEventListener('dragover', (e) => {
-            if (isGuestMode || !draggedItemId) return;
+            if (isGuestMode || !draggedItemId || isProcessingDrop) return;
             e.preventDefault(); 
             if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
             
             document.querySelectorAll('.bg-blue-50, .bg-purple-50').forEach(el => {
-                if (el !== e.target.closest('.dropzone')) {
-                    el.classList.remove('bg-blue-50', 'bg-purple-50');
-                }
+                if (el !== e.target.closest('.dropzone')) el.classList.remove('bg-blue-50', 'bg-purple-50');
             });
 
             const dropzone = e.target.closest('.dropzone');
-            if (dropzone) {
-                const newTime = dropzone.dataset.time;
-                const newSite = dropzone.dataset.site;
-                const ds = formatDateString(currentDate);
-                
-                const initItem = allocations.find(a => String(a.id) === String(draggedItemId));
-                if (!initItem) return;
-
-                const existing = allocations.filter(a => a.date === ds && a.time === newTime && a.site === newSite && String(a.id) !== String(draggedItemId));
-                
-                if (existing.length >= 2 || (newSite !== initItem.site && existing.length > 0)) {
-                    dropzone.classList.add('bg-purple-50'); // Shows it will trigger a Swap
-                } else {
-                    dropzone.classList.add('bg-blue-50'); // Shows it will trigger a Hueco move
-                }
-            }
+            if (!dropzone) return;
+            
+            const newTime = dropzone.dataset.time;
+            const newSite = dropzone.dataset.site;
+            const ds = formatDateString(currentDate);
+            
+            const existing = allocations.filter(a => a.date === ds && a.time === newTime && a.site === newSite && String(a.id) !== String(draggedItemId));
+            
+            // Highlight intent for the entire block visually
+            document.querySelectorAll(`.dropzone[data-time="${newTime}"][data-site="${newSite}"]`).forEach(dz => {
+                if (existing.length >= 2) dz.classList.add('bg-purple-50');
+                else dz.classList.add('bg-blue-50');
+            });
         });
 
         document.addEventListener('dragleave', (e) => {
             const dropzone = e.target.closest('.dropzone');
             if (dropzone && !dropzone.contains(e.relatedTarget)) {
-                dropzone.classList.remove('bg-blue-50', 'bg-purple-50');
+                const newTime = dropzone.dataset.time;
+                const newSite = dropzone.dataset.site;
+                document.querySelectorAll(`.dropzone[data-time="${newTime}"][data-site="${newSite}"]`).forEach(dz => {
+                    dz.classList.remove('bg-blue-50', 'bg-purple-50');
+                });
             }
         });
 
         document.addEventListener('drop', async (e) => {
-            if (isGuestMode) return;
+            if (isGuestMode || isProcessingDrop) return;
             e.preventDefault();
             
             document.querySelectorAll('.dropzone').forEach(el => el.classList.remove('bg-blue-50', 'bg-purple-50'));
@@ -1424,68 +1292,77 @@
             
             if (initItem.time === newTime && initItem.site === newSite) return;
 
+            if (currentUserKey !== 'admin' && initItem.center !== USER_CENTER_KEYS[currentUserKey]) {
+                showNotification('Acción Bloqueada', 'Solo puedes mover tus propias reservas.', true);
+                return;
+            }
+
+            isProcessingDrop = true; // Lock system to prevent duplicated background actions
+
             const existingItemsInSlot = allocations.filter(a => a.date === initItem.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
 
-            if (currentUserKey !== 'admin') {
-                let intent = 'UNKNOWN';
-                
-                if (newSite === initItem.site) {
-                    if (existingItemsInSlot.length < 2) intent = 'HUECO';
-                    else intent = 'SWAP';
-                } else {
-                    if (existingItemsInSlot.length > 0) intent = 'SWAP';
-                    else {
-                        showNotification('Acción Bloqueada', 'No puedes cambiar de punto de buceo si el horario está vacío. El cambio de punto solo está permitido si quieres intercambiar salidas (Swap) directamente con el barco de otro centro.', true);
-                        return;
-                    }
+            // PRIORITY 1: Is there an empty slot? (Hueco)
+            if (existingItemsInSlot.length < 2) {
+                const itemsInNewSiteToday = allocations.filter(a => a.date === initItem.date && a.site === newSite && String(a.id) !== String(id));
+                const currentPaxNewSite = itemsInNewSiteToday.reduce((sum, a) => sum + a.pax, 0);
+                const remainingCapacity = SITE_CAPACITY[newSite] - currentPaxNewSite;
+
+                if (initItem.pax > remainingCapacity) {
+                    showNotification('Cupo Lleno', `No puedes mover la salida aquí. El punto tiene ${remainingCapacity} plazas libres y tu barco tiene ${initItem.pax}.`, true);
+                    isProcessingDrop = false;
+                    return;
                 }
 
-                if (intent === 'HUECO') {
+                if (currentUserKey !== 'admin') {
                     const d = new Date(initItem.date);
                     const centerName = CENTERS[initItem.center].name;
-                    const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} cambió su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()} en ${initItem.site} de las ${initItem.time} a las ${newTime}.`;
+                    const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} movió su salida del ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}.\n\n*De:* ${initItem.site} a las ${initItem.time}\n*A:* ${newSite} a las ${newTime}`;
                     
                     pendingDrop = { id, item: initItem, newTime, newSite, msg };
-                    
-                    document.getElementById('wa-action-type').textContent = "Cambio de Horario";
-                    document.getElementById('confirm-whatsapp-msg').textContent = msg;
+                    document.getElementById('wa-action-type').textContent = "Cambio de Horario/Punto";
+                    document.getElementById('confirm-whatsapp-msg').innerText = msg;
                     document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
-                } else if (intent === 'SWAP') {
-                    if (existingItemsInSlot.length === 1) {
-                        const targetItem = existingItemsInSlot[0];
-                        if (targetItem.center === initItem.center) {
-                            showNotification('Acción Bloqueada', 'No puedes intercambiar barcos contigo mismo.', true);
-                            return;
-                        }
-                        triggerSwapConfirmation(id, initItem, targetItem.id, targetItem);
-                    } else if (existingItemsInSlot.length === 2) {
-                        const targets = existingItemsInSlot.filter(t => t.center !== initItem.center);
-                        if (targets.length === 0) {
-                            showNotification('Acción Bloqueada', 'Ambos barcos en este horario son tuyos, no puedes hacer un intercambio.', true);
-                            return;
-                        } else if (targets.length === 1) {
-                            triggerSwapConfirmation(id, initItem, targets[0].id, targets[0]);
-                        } else {
-                            showSwapChoiceModal(id, initItem, targets);
-                        }
-                    }
-                }
-            } else {
-                // Admin Drop Logic
-                if ((newSite !== initItem.site && existingItemsInSlot.length > 0) || existingItemsInSlot.length >= 2) {
-                    if (existingItemsInSlot.length === 1) {
-                        await adminInstantSwap({ initiatorId: id, targetId: existingItemsInSlot[0].id, initiatorData: initItem, targetData: existingItemsInSlot[0] });
-                    } else {
-                        showSwapChoiceModal(id, initItem, existingItemsInSlot, true);
-                    }
                 } else {
                     await executeDrop(id, initItem, newTime, newSite);
+                    isProcessingDrop = false;
+                }
+            } 
+            // PRIORITY 2: The slot is fully packed (2 boats). Must be an Intercambio!
+            else {
+                if (currentUserKey !== 'admin') {
+                    const targets = existingItemsInSlot.filter(t => t.center !== initItem.center);
+                    if (targets.length === 0) {
+                        showNotification('Acción Bloqueada', 'Ambos barcos en este horario son tuyos. No puedes hacer un intercambio.', true);
+                        isProcessingDrop = false;
+                        return;
+                    } 
+                    if (targets.length === 1) {
+                        triggerSwapConfirmation(id, initItem, targets[0].id, targets[0]);
+                    } else {
+                        showSwapChoiceModal(id, initItem, targets);
+                    }
+                } else {
+                    // Admin Swap Selection
+                    const targetBlock = e.target.closest('.boat-block');
+                    if (targetBlock && targetBlock.dataset.dragId && targetBlock.dataset.dragId !== id) {
+                         const specificTargetItem = allocations.find(a => String(a.id) === String(targetBlock.dataset.dragId));
+                         if (specificTargetItem) {
+                             try {
+                                 await processSwap(id, initItem, specificTargetItem.id, specificTargetItem);
+                             } catch (err) {
+                                 showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
+                             }
+                             isProcessingDrop = false;
+                             return;
+                         }
+                    }
+                    showSwapChoiceModal(id, initItem, existingItemsInSlot, true);
                 }
             }
         });
 
         function handleSlotDoubleClick(time, site) {
-            if (isGuestMode) return;
+            if (isGuestMode || isProcessingDrop) return;
 
             const ds = formatDateString(currentDate);
             const existingItemsInSlot = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
@@ -1502,20 +1379,19 @@
                 showNotification('Cupo Lleno', 'No quedan plazas disponibles para este punto de buceo hoy.', true);
                 return;
             }
+            
+            const allowedMax = Math.min(11, remainingCapacity);
 
             pendingNewSalida = { date: ds, time, site, maxPax: remainingCapacity };
             document.getElementById('new-salida-title').textContent = `${site} a las ${time}`;
-            document.getElementById('new-salida-avail').textContent = `Plazas disponibles en el punto: ${remainingCapacity}`;
+            document.getElementById('new-salida-avail').textContent = `Plazas disponibles en el punto: ${remainingCapacity} (Máx por barco: ${allowedMax})`;
             
             const paxInput = document.getElementById('new-salida-pax');
             paxInput.value = '';
-            paxInput.max = remainingCapacity;
+            paxInput.max = allowedMax;
             
-            if (currentUserKey === 'admin') {
-                document.getElementById('new-salida-center-container').classList.remove('hidden');
-            } else {
-                document.getElementById('new-salida-center-container').classList.add('hidden');
-            }
+            if (currentUserKey === 'admin') document.getElementById('new-salida-center-container').classList.remove('hidden');
+            else document.getElementById('new-salida-center-container').classList.add('hidden');
 
             document.getElementById('new-salida-modal').classList.remove('hidden');
         }
@@ -1525,17 +1401,18 @@
             pendingNewSalida = null;
         }
 
-        function confirmNewSalida() {
+        async function confirmNewSalida() {
             const paxInput = document.getElementById('new-salida-pax');
             let pax = parseInt(paxInput.value, 10);
+            const allowedMax = Math.min(11, pendingNewSalida.maxPax);
             
             if (!pax || isNaN(pax) || pax <= 0) {
                 showNotification('Error', 'Introduce un número válido.', true);
                 return;
             }
 
-            if (pax > pendingNewSalida.maxPax) {
-                showNotification('Excede el cupo', `Solo quedan ${pendingNewSalida.maxPax} plazas disponibles.`, true);
+            if (pax > allowedMax) {
+                showNotification('Límite excedido', `El máximo permitido es ${allowedMax} plazas.`, true);
                 return;
             }
 
@@ -1543,19 +1420,19 @@
             
             if (currentUserKey === 'admin') {
                 const adminCenterChoice = document.getElementById('new-salida-center').value;
-                executeNewSalida(pendingNewSalida, pax, adminCenterChoice);
+                await executeNewSalida(pendingNewSalida, pax, adminCenterChoice);
             } else {
                 const { date, time, site } = pendingNewSalida;
                 const dObj = new Date(date);
                 const centerCode = USER_CENTER_KEYS[currentUserKey];
                 const centerName = CENTERS[centerCode]?.name || currentUserKey;
                 
-                const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} ha añadido una nueva salida el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toLowerCase()} en ${site} a las ${time} para ${pax} plazas.`;
+                const msg = `*AVISO AUTOMÁTICO:* ⚠️ Porque hay hueco, ${centerName} ha añadido una nueva salida el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toLowerCase()}.\n\n*Punto:* ${site} a las ${time}\n*Buceadores:* ${pax} plazas`;
                 
                 pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: currentUserKey, msg: msg };
 
                 document.getElementById('wa-action-type').textContent = "Nueva Salida";
-                document.getElementById('confirm-whatsapp-msg').textContent = msg;
+                document.getElementById('confirm-whatsapp-msg').innerText = msg;
                 document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
             }
         }
@@ -1571,52 +1448,72 @@
             const t = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0 };
             let totalFilteredPax = 0;
 
-            if (isGuestMode) { document.getElementById('drag-notice').classList.add('hidden'); } 
-            else { document.getElementById('drag-notice').classList.remove('hidden'); }
-
             TIMES.forEach(time => {
                 if (time === '13:30') {
-                    grid.innerHTML += `<div class="grid grid-cols-[76px_repeat(5,1fr)] border-b border-slate-200 bg-red-50/60 min-h-[40px]"><div class="flex items-center justify-center border-r border-slate-200 font-black text-red-400 text-[10px] col-span-1">13:30</div><div class="col-span-5 flex items-center justify-center text-red-500 font-black italic text-[10px] tracking-[0.5em] opacity-80 uppercase">Descanso</div></div>`;
+                    grid.innerHTML += `<div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b border-slate-200 bg-red-50/60 min-h-[40px]"><div class="flex items-center justify-center border-r border-slate-200 font-black text-red-400 text-[10px] col-span-2">13:30</div><div class="col-span-5 flex items-center justify-center text-red-500 font-black italic text-[10px] tracking-[0.5em] opacity-80 uppercase">Descanso</div></div>`;
                     return;
                 }
 
-                let rowHtml = '';
+                let subRow1 = '';
+                let subRow2 = '';
 
                 SITES.forEach(site => {
                     const siteItems = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
-                    let cellHtml = '';
+                    const renderedItems = siteItems.filter(item => selectedCenters.includes(item.center));
+                    
+                    let item1 = renderedItems.find(i => i.subslot === 1);
+                    let item2 = renderedItems.find(i => i.subslot === 2);
 
-                    siteItems.forEach(item => {
-                        t[site] += item.pax;
-
-                        if (selectedCenters.includes(item.center)) {
-                            totalFilteredPax += item.pax;
-                            const c = CENTERS[item.center];
-                            
-                            const isPending = swapRequests.some(s => String(s.initiatorId) === String(item.id) || String(s.targetId) === String(item.id));
-                            const ghostClass = isPending ? 'pending-swap-ghost' : '';
-                            
-                            const canDragBlock = !isPending && !isGuestMode && (currentUserKey === 'admin' || item.center === USER_CENTER_KEYS[currentUserKey]);
-                            const dragAttrs = canDragBlock ? `draggable="true"` : `draggable="false"`;
-                            const interactClass = canDragBlock ? `draggable-item cursor-grab active:cursor-grabbing hover:opacity-90` : `opacity-90`;
-
-                            cellHtml += `<div ${dragAttrs} data-drag-id="${item.id}" class="boat-block select-none w-full rounded-[4px] px-2 py-1.5 mb-0.5 mt-0.5 mx-0.5 flex-1 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${interactClass}">
-                                <div class="truncate flex items-center gap-1.5 pointer-events-none">
-                                    <span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span>
-                                    <span>${c.name} ${isPending ? '🔄' : ''}</span>
-                                </div>
-                                <span class="bg-black/20 px-1.5 py-0.5 rounded-sm pointer-events-none">${item.pax}</span>
-                            </div>`;
-                        }
+                    // Auto-heal missing subslots to prevent random shuffling
+                    const unassigned = renderedItems.filter(i => i.subslot !== 1 && i.subslot !== 2);
+                    unassigned.forEach(u => {
+                        if (!item1) item1 = u;
+                        else if (!item2) item2 = u;
                     });
 
-                    rowHtml += `<div class="border-r border-slate-100 p-1 flex flex-col dropzone transition-colors h-full min-h-[44px]" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${cellHtml}</div>`;
+                    // GOLDEN RULE 1: If 1 boat is in a time slot, it should always be at the top
+                    if (!item1 && item2) {
+                        item1 = item2;
+                        item2 = null;
+                    }
+
+                    const createBlockHTML = (item) => {
+                        t[site] += item.pax;
+                        totalFilteredPax += item.pax;
+                        const c = CENTERS[item.center];
+                        
+                        const isPending = swapRequests.some(s => String(s.initiatorId) === String(item.id) || String(s.targetId) === String(item.id));
+                        const ghostClass = isPending ? 'pending-swap-ghost' : '';
+                        
+                        const canDragBlock = !isPending && !isGuestMode && (currentUserKey === 'admin' || item.center === USER_CENTER_KEYS[currentUserKey]);
+                        const dragAttrs = canDragBlock ? `draggable="true" data-drag-id="${item.id}"` : `draggable="false" data-drag-id="${item.id}"`;
+                        const cursorClass = canDragBlock ? `cursor-grab active:cursor-grabbing hover:opacity-90 draggable-item` : `cursor-default opacity-90`;
+
+                        return `<div ${dragAttrs} class="boat-block w-full h-[34px] rounded-[4px] px-2 py-1.5 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
+                            <div class="truncate flex items-center gap-1.5 pointer-events-none">
+                                <span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span>
+                                <span>${c.name} ${isPending ? '🔄' : ''}</span>
+                            </div>
+                            <span class="bg-black/20 px-1.5 py-0.5 rounded-sm pointer-events-none">${item.pax}</span>
+                        </div>`;
+                    };
+
+                    let html1 = item1 ? createBlockHTML(item1) : '';
+                    let html2 = item2 ? createBlockHTML(item2) : '';
+
+                    subRow1 += `<div class="border-r border-b border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}">${html1}</div>`;
+                    subRow2 += `<div class="border-r border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}">${html2}</div>`;
                 });
 
-                grid.innerHTML += `<div class="grid grid-cols-[76px_repeat(5,1fr)] border-b border-slate-200 bg-white min-h-[44px]">
-                        <div class="flex items-center justify-center border-r border-slate-200 font-black italic text-slate-500 text-sm bg-slate-50/20 py-2">${time}</div>
-                        ${rowHtml}
-                    </div>`;
+                grid.innerHTML += `
+                    <div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b border-slate-200">
+                        <div class="row-span-2 flex items-center justify-center border-r border-slate-200 font-black italic text-slate-500 text-sm bg-slate-50/20">${time}</div>
+                        <div class="flex items-center justify-center border-r border-b border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">1</div>
+                        ${subRow1}
+                        <div class="flex items-center justify-center border-r border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">2</div>
+                        ${subRow2}
+                    </div>
+                `;
             });
             
             document.getElementById('total-pax-header').textContent = totalFilteredPax;
