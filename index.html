@@ -547,8 +547,25 @@
                 <h2 class="text-3xl font-black italic tracking-tighter text-white">HISTORIAL DE CAMBIOS</h2>
                 <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase">Registro de Actividad en Tiempo Real</p>
             </div>
-            <div id="history-list" class="space-y-4 pb-8">
+            <div id="history-list" class="space-y-4">
                 <!-- Logs injected here -->
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div id="history-pagination" class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 shadow-sm hidden shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-500">Mostrar:</span>
+                    <select id="history-per-page" onchange="changeHistoryItemsPerPage(this.value)" class="text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="btn-hist-prev" onclick="changeHistoryPage(-1)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">Anterior</button>
+                    <span id="hist-page-info" class="text-xs font-bold text-slate-600">Pág 1 de 1</span>
+                    <button id="btn-hist-next" onclick="changeHistoryPage(1)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">Siguiente</button>
+                </div>
             </div>
         </main>
     </div>
@@ -616,6 +633,9 @@
         let statsUnit = 'plazas'; 
         let isGuestMode = false;
         let currentUserKey = 'guest';
+        
+        let historyCurrentPage = 1;
+        let historyItemsPerPage = 20;
 
         /* =========================================================================
            WEBHOOK / WHATSAPP ROBOT CONFIGURATION
@@ -857,8 +877,8 @@
             }
         }
 
-        function toggleCenter(k) { selectedCenters = selectedCenters.includes(k) ? selectedCenters.filter(x => x !== k) : [...selectedCenters, k]; initFilters(); renderAll(); }
-        function setAllFilters(s) { selectedCenters = s ? Object.keys(CENTERS) : []; initFilters(); renderAll(); }
+        function toggleCenter(k) { selectedCenters = selectedCenters.includes(k) ? selectedCenters.filter(x => x !== k) : [...selectedCenters, k]; historyCurrentPage = 1; initFilters(); renderAll(); }
+        function setAllFilters(s) { selectedCenters = s ? Object.keys(CENTERS) : []; historyCurrentPage = 1; initFilters(); renderAll(); }
         function changeMonth(i) { currentDate.setMonth(parseInt(i)); currentDate.setDate(1); renderAll(); }
         function changeWeek(n) { currentDate = getDateOfISOWeek(parseInt(n), 2026); renderAll(); }
         function setDate(s) { const p = s.split('-'); currentDate = new Date(p[0], p[1]-1, p[2]); renderAll(); }
@@ -866,13 +886,14 @@
         function toggleMonthDropdown() { toggleVis('month-dropdown-panel'); }
         function selectHistoryMonth(val, text) {
             selectedHistoryMonth = val;
+            historyCurrentPage = 1;
             getEl('month-filter-button-text').textContent = text;
             hideEl('month-dropdown-panel');
             initSelectors(); renderHistory();
         }
 
         /* =========================================================================
-           5. HISTORY LOGGER
+           5. HISTORY LOGGER & PAGINATION
            ========================================================================= */
         async function logHistory(actionType, details) {
             if (currentUserKey === 'admin' || isGuestMode) return; 
@@ -888,9 +909,21 @@
             return (code && CENTERS[code]) ? CENTERS[code] : { name: keyOrCode, color: 'bg-slate-200', text: 'text-slate-800' };
         }
 
+        function changeHistoryPage(dir) {
+            historyCurrentPage += dir;
+            renderHistory();
+        }
+
+        function changeHistoryItemsPerPage(val) {
+            historyItemsPerPage = parseInt(val, 10);
+            historyCurrentPage = 1;
+            renderHistory();
+        }
+
         function renderHistory() {
             if (activeViewMode !== 'historial') return;
             const listEl = getEl('history-list');
+            const paginationEl = getEl('history-pagination');
             if (!listEl) return;
             listEl.innerHTML = '';
 
@@ -905,10 +938,18 @@
 
             if (filteredLogs.length === 0) {
                 listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-10">No hay registros para mostrar con los filtros seleccionados.</p>`;
+                if (paginationEl) hideEl('history-pagination');
                 return;
             }
 
-            filteredLogs.forEach(log => {
+            const totalPages = Math.ceil(filteredLogs.length / historyItemsPerPage);
+            if (historyCurrentPage > totalPages) historyCurrentPage = totalPages;
+            if (historyCurrentPage < 1) historyCurrentPage = 1;
+
+            const startIndex = (historyCurrentPage - 1) * historyItemsPerPage;
+            const paginatedLogs = filteredLogs.slice(startIndex, startIndex + historyItemsPerPage);
+
+            paginatedLogs.forEach(log => {
                 let icon = ''; let text = ''; let headerPills = '';
                 let logDateStr = 'Ahora mismo';
                 if (log.timestamp) {
@@ -943,6 +984,13 @@
                         </div>
                     </div>`;
             });
+
+            if (paginationEl) {
+                showEl('history-pagination');
+                getEl('hist-page-info').textContent = `Pág ${historyCurrentPage} de ${totalPages}`;
+                getEl('btn-hist-prev').disabled = historyCurrentPage === 1;
+                getEl('btn-hist-next').disabled = historyCurrentPage === totalPages;
+            }
         }
 
         /* =========================================================================
