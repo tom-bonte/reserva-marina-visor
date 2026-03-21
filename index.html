@@ -104,7 +104,7 @@
             <p id="password-error" class="text-xs text-red-500 font-bold hidden mb-4 text-center">Contraseña incorrecta.</p>
 
             <div class="flex gap-3 mt-4">
-                <button onclick="closeLoginModal()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="hideEl('password-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
                 <button onclick="verifyLogin()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Entrar</button>
             </div>
         </div>
@@ -141,7 +141,7 @@
             </select>
 
             <div class="flex gap-3">
-                <button onclick="closePrintModal()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="hideEl('print-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
                 <button onclick="executeExport()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm flex justify-center items-center gap-2">
                     Descargar <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
@@ -208,7 +208,7 @@
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-100">
-                <button onclick="document.getElementById('help-modal').classList.add('hidden')" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-sm">Entendido</button>
+                <button onclick="hideEl('help-modal')" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-sm">Entendido</button>
             </div>
         </div>
     </div>
@@ -222,7 +222,7 @@
             <h3 class="text-xl font-black text-slate-800 mb-2">¿Borrar toda la base de datos?</h3>
             <p class="text-sm text-slate-500 mb-6">Se ha descargado una copia de seguridad. ¿Estás seguro de que quieres vaciar la base de datos en la nube permanentemente?</p>
             <div class="flex gap-3">
-                <button id="btn-cancel-empty" onclick="document.getElementById('empty-confirm-modal').classList.add('hidden')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button id="btn-cancel-empty" onclick="hideEl('empty-confirm-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
                 <button id="btn-confirm-empty" onclick="executeEmptyData()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Sí, vaciar</button>
             </div>
         </div>
@@ -289,7 +289,7 @@
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Solicitudes de Intercambio</p>
                     </div>
                 </div>
-                <button onclick="document.getElementById('notifications-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <button onclick="hideEl('notifications-modal')" class="text-slate-400 hover:text-slate-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
@@ -300,7 +300,7 @@
         </div>
     </div>
 
-    <!-- New Salida Configuration Modal (Double Click) -->
+    <!-- New Salida Configuration Modal -->
     <div id="new-salida-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
             <div class="flex items-center gap-3 mb-4">
@@ -347,7 +347,7 @@
             <div id="notification-icon" class="mx-auto w-12 h-12 rounded-full mb-4 flex items-center justify-center"></div>
             <h3 id="notification-title" class="text-xl font-black text-slate-800 mb-2">Notificación</h3>
             <p id="notification-message" class="text-sm text-slate-500 mb-6">Mensaje aquí.</p>
-            <button onclick="closeNotification()" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Aceptar</button>
+            <button onclick="hideEl('notification-modal')" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Aceptar</button>
         </div>
     </div>
 
@@ -405,7 +405,7 @@
 
             <div class="relative hidden" id="user-menu-wrapper">
                 <div class="relative inline-block">
-                    <button onclick="toggleUserMenu()" id="user-badge-button" class="rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-opacity bg-slate-200 text-slate-600">
+                    <button onclick="toggleVis('user-dropdown')" id="user-badge-button" class="rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-opacity bg-slate-200 text-slate-600">
                         <span class="bg-black/10 px-1.5 rounded-sm">INV</span>
                         <span class="tracking-wide">Invitado (Lectura)</span>
                         <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -436,7 +436,7 @@
 
         <div class="flex items-center gap-2 relative" id="center-filter-dropdown-wrapper">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">FILTRO:</span>
-            <button onclick="toggleFilterDropdown()" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
+            <button onclick="toggleVis('filter-dropdown-panel')" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
                 <span id="filter-button-text">TODOS LOS CENTROS</span>
                 <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </button>
@@ -451,7 +451,7 @@
 
         <div class="hidden items-center gap-2 relative ml-2" id="history-month-filter-wrapper">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-200 pl-5">MES:</span>
-            <button onclick="toggleMonthDropdown()" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
+            <button onclick="toggleVis('month-dropdown-panel')" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
                 <span id="month-filter-button-text">TODOS LOS MESES</span>
                 <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </button>
@@ -525,7 +525,7 @@
                 </div>
                 <div class="relative w-full md:w-64" id="unit-dropdown-wrapper">
                     <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ml-1">UNIDAD DE ANÁLISIS:</div>
-                    <button onclick="document.getElementById('unit-dropdown-panel').classList.toggle('hidden')" class="w-full bg-[#1e293b] border border-slate-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex justify-between items-center hover:bg-[#334155]">
+                    <button onclick="toggleVis('unit-dropdown-panel')" class="w-full bg-[#1e293b] border border-slate-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex justify-between items-center hover:bg-[#334155]">
                         <span id="unit-dropdown-text">Plazas (Buceadores)</span>
                     </button>
                     <div id="unit-dropdown-panel" class="hidden absolute left-0 top-full mt-2 w-full bg-[#1e293b] border border-slate-600 rounded-lg shadow-2xl z-50 flex flex-col">
@@ -555,21 +555,27 @@
 
     <script>
         /* =========================================================================
-           1. CORE DATA & INITIALIZATION
+           1. CORE DATA, UTILITIES & INITIALIZATION
            ========================================================================= */
+        const getEl = id => document.getElementById(id);
+        const hideEl = id => getEl(id)?.classList.add('hidden');
+        const showEl = id => getEl(id)?.classList.remove('hidden');
+        const toggleVis = id => getEl(id)?.classList.toggle('hidden');
+
         const SITES = ['Bajo de Dentro', 'Piles II', 'Piles I', 'Testa', 'Morra'];
         const TIMES = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00'];
         const SITE_CAPACITY = { 'Bajo de Dentro': 70, 'Piles II': 50, 'Piles I': 50, 'Testa': 30, 'Morra': 50 };
         
+        // Merged PDF colors into the main CENTERS object
         const CENTERS = {
-            'B': { name: 'Balky', color: 'bg-[#ef4444]', text: 'text-white' }, 
-            'H': { name: 'Islas Hormigas', color: 'bg-[#0f172a]', text: 'text-white' }, 
-            'M': { name: 'Mangamar', color: 'bg-[#22c55e]', text: 'text-white' }, 
-            'N': { name: 'Naranjito', color: 'bg-[#fbbf24]', text: 'text-slate-900' }, 
-            'P': { name: 'Planeta Azul', color: 'bg-[#3b82f6]', text: 'text-white' }, 
-            'D': { name: 'Divers', color: 'bg-[#6d28d9]', text: 'text-white' }, 
-            'C': { name: 'CLUB', color: 'bg-[#64748b]', text: 'text-white' }, 
-            'X': { name: 'X La Manga', color: 'bg-[#cbd5e1]', text: 'text-slate-800' } 
+            'B': { name: 'Balky', color: 'bg-[#ef4444]', text: 'text-white', pdfBg: '#ef4444', pdfText: '#ffffff' }, 
+            'H': { name: 'Islas Hormigas', color: 'bg-[#0f172a]', text: 'text-white', pdfBg: '#000000', pdfText: '#ffffff' }, 
+            'M': { name: 'Mangamar', color: 'bg-[#22c55e]', text: 'text-white', pdfBg: '#00b050', pdfText: '#ffffff' }, 
+            'N': { name: 'Naranjito', color: 'bg-[#fbbf24]', text: 'text-slate-900', pdfBg: '#f59e0b', pdfText: '#000000' }, 
+            'P': { name: 'Planeta Azul', color: 'bg-[#3b82f6]', text: 'text-white', pdfBg: '#3b82f6', pdfText: '#ffffff' }, 
+            'D': { name: 'Divers', color: 'bg-[#6d28d9]', text: 'text-white', pdfBg: '#a855f7', pdfText: '#ffffff' }, 
+            'C': { name: 'CLUB', color: 'bg-[#64748b]', text: 'text-white', pdfBg: '#64748b', pdfText: '#ffffff' }, 
+            'X': { name: 'X La Manga', color: 'bg-[#cbd5e1]', text: 'text-slate-800', pdfBg: '#cbd5e1', pdfText: '#000000' } 
         };
         
         const FESTIVOS = ['2026-03-19'];
@@ -600,7 +606,6 @@
             'xlm': { name: 'X La Manga', color: 'bg-[#cbd5e1]', text: 'text-slate-800' }
         };
 
-        // Application State
         let currentDate = new Date(2026, 2, 29); 
         let allocations = []; 
         let swapRequests = []; 
@@ -619,24 +624,17 @@
 
         async function sendSilentWebhook(msg) {
             if (!WHATSAPP_WEBHOOK_URL || !msg || msg.trim() === "") return;
-            
             try {
-                const response = await fetch(WHATSAPP_WEBHOOK_URL, {
+                await fetch(WHATSAPP_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' }, 
                     body: JSON.stringify({ message: msg })
                 });
-
-                if (!response.ok) {
-                    console.error("Webhook failed with status:", response.status, response.statusText);
-                }
-            } catch(e) {
-                console.error("Network or CORS error when sending webhook:", e);
-            }
+            } catch(e) { console.error("Webhook Error:", e); }
         }
 
         /* =========================================================================
-           2. FIREBASE SETUP
+           2. FIREBASE SETUP & LISTENERS
            ========================================================================= */
         const firebaseConfig = {
             apiKey: "AIzaSyBe7X5AUC-PpcJSCYgMzyyUMJMPqxtTdiw",
@@ -646,17 +644,11 @@
             messagingSenderId: "242126338137",
             appId: "1:242126338137:web:c32d20d4697545a172d948"
         };
-
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        /* =========================================================================
-           3. FIREBASE LISTENERS
-           ========================================================================= */
-        let unsubscribeSnapshot = null;
-        let unsubscribeSwaps = null;
-        let unsubscribeHistory = null;
+        let unsubscribeSnapshot = null; let unsubscribeSwaps = null; let unsubscribeHistory = null;
 
         function startFirestoreListener() {
             if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
@@ -667,13 +659,11 @@
                 const dataFromCloud = [];
                 snapshot.forEach((doc) => {
                     const monthData = doc.data().allocations || {};
-                    for (const customDocId in monthData) {
-                        dataFromCloud.push({ id: customDocId, ...monthData[customDocId] });
-                    }
+                    for (const customDocId in monthData) dataFromCloud.push({ id: customDocId, ...monthData[customDocId] });
                 });
                 allocations = dataFromCloud;
                 renderAll();
-            }, (error) => console.error("Firestore Listen Error:", error));
+            });
 
             unsubscribeSwaps = db.collection("swaps").onSnapshot((snapshot) => {
                 const swapsFromCloud = [];
@@ -687,23 +677,20 @@
                 const historyFromCloud = [];
                 snapshot.forEach(doc => { historyFromCloud.push({ id: doc.id, ...doc.data() }); });
                 historyLogs = historyFromCloud;
-                
-                if (activeViewMode === 'historial') {
-                    renderHistory();
-                }
+                if (activeViewMode === 'historial') renderHistory();
             });
         }
 
         /* =========================================================================
-           4. AUTHENTICATION & UI MENU
+           3. AUTHENTICATION & UI MENU
            ========================================================================= */
-        function openLoginModal() { document.getElementById('password-modal').classList.remove('hidden'); }
-        function closeLoginModal() { document.getElementById('password-modal').classList.add('hidden'); }
-        function openHelpModal() { document.getElementById('help-modal').classList.remove('hidden'); }
+        function openLoginModal() { showEl('password-modal'); }
+        function closeLoginModal() { hideEl('password-modal'); }
+        function openHelpModal() { showEl('help-modal'); }
 
         function togglePassword() {
-            const pwdInput = document.getElementById('login-password');
-            const eyeIcon = document.getElementById('eye-icon');
+            const pwdInput = getEl('login-password');
+            const eyeIcon = getEl('eye-icon');
             if (pwdInput.type === 'password') {
                 pwdInput.type = 'text';
                 eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />`;
@@ -714,116 +701,76 @@
         }
 
         function verifyLogin() {
-            const userKey = document.getElementById('login-user').value;
-            const password = document.getElementById('login-password').value;
-            const dummyEmail = EMAIL_MAP[userKey];
-
-            auth.signInWithEmailAndPassword(dummyEmail, password)
+            const userKey = getEl('login-user').value;
+            const password = getEl('login-password').value;
+            auth.signInWithEmailAndPassword(EMAIL_MAP[userKey], password)
                 .then(() => {
-                    document.getElementById('password-modal').classList.add('hidden');
-                    document.getElementById('password-error').classList.add('hidden');
-                    document.getElementById('login-password').value = ''; 
+                    hideEl('password-modal'); hideEl('password-error'); getEl('login-password').value = ''; 
                 })
-                .catch((error) => {
-                    const errorMsgEl = document.getElementById('password-error');
-                    errorMsgEl.classList.remove('hidden');
-                    errorMsgEl.textContent = 'Contraseña incorrecta.';
-                });
+                .catch(() => showEl('password-error'));
         }
 
         function logout() { auth.signOut(); }
+        function toggleUserMenu() { toggleVis('user-dropdown'); }
         
-        function toggleUserMenu() { document.getElementById('user-dropdown').classList.toggle('hidden'); }
-        
-        document.addEventListener('click', function(event) {
-            const wrapper = document.getElementById('user-menu-wrapper');
-            const panel = document.getElementById('user-dropdown');
-            if (wrapper && !wrapper.contains(event.target) && panel) {
-                panel.classList.add('hidden');
-            }
-            
-            const wrapperFilter = document.getElementById('center-filter-dropdown-wrapper');
-            const panelFilter = document.getElementById('filter-dropdown-panel');
-            if (wrapperFilter && !wrapperFilter.contains(event.target) && panelFilter) {
-                panelFilter.classList.add('hidden');
-            }
-            
-            const wrapperMonth = document.getElementById('history-month-filter-wrapper');
-            const panelMonth = document.getElementById('month-dropdown-panel');
-            if (wrapperMonth && !wrapperMonth.contains(event.target) && panelMonth) {
-                panelMonth.classList.add('hidden');
-            }
+        document.addEventListener('click', function(e) {
+            const checks = [
+                { wrap: 'user-menu-wrapper', panel: 'user-dropdown' },
+                { wrap: 'center-filter-dropdown-wrapper', panel: 'filter-dropdown-panel' },
+                { wrap: 'history-month-filter-wrapper', panel: 'month-dropdown-panel' }
+            ];
+            checks.forEach(c => {
+                const w = getEl(c.wrap), p = getEl(c.panel);
+                if (w && !w.contains(e.target) && p) hideEl(c.panel);
+            });
         });
 
         function buildUserMenu() {
-            const menu = document.getElementById('user-dropdown');
             let html = '';
-            
             const myCode = USER_CENTER_KEYS[currentUserKey];
             const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
             
             if (pendingForMe.length > 0 && !isGuestMode && currentUserKey !== 'admin') {
-                html += `<button onclick="openNotificationsModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center justify-between"><div class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg> Notificaciones</div> <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">${pendingForMe.length}</span></button>`;
-                html += `<div class="h-px bg-slate-100 my-1"></div>`;
+                html += `<button onclick="openNotificationsModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center justify-between"><div class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg> Notificaciones</div> <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">${pendingForMe.length}</span></button><div class="h-px bg-slate-100 my-1"></div>`;
             }
-            
             if (currentUserKey === 'admin') {
                 html += `<button onclick="triggerImport(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar CSV</button>`;
-                html += `<button onclick="promptEmptyData(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Vaciar Datos</button>`;
-                html += `<div class="h-px bg-slate-100 my-1"></div>`;
+                html += `<button onclick="promptEmptyData(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Vaciar Datos</button><div class="h-px bg-slate-100 my-1"></div>`;
             }
-            
             html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
-            
-            menu.innerHTML = html;
+            getEl('user-dropdown').innerHTML = html;
         }
 
         function updateNotificationsMenu() {
             const myCode = USER_CENTER_KEYS[currentUserKey];
             const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
-            const bubble = document.getElementById('notif-bubble');
-            const countLabel = document.getElementById('notif-count');
-            
             if (pendingForMe.length > 0 && !isGuestMode && currentUserKey !== 'admin') {
-                bubble.classList.remove('hidden');
-                if(countLabel) countLabel.innerText = pendingForMe.length;
-            } else {
-                bubble.classList.add('hidden');
-            }
+                showEl('notif-bubble');
+                if(getEl('notif-count')) getEl('notif-count').innerText = pendingForMe.length;
+            } else { hideEl('notif-bubble'); }
             buildUserMenu();
         }
 
         auth.onAuthStateChanged((user) => {
-            if (user) {
-                isGuestMode = false;
-                document.getElementById('password-modal').classList.add('hidden');
-                document.getElementById('btn-login-header').classList.add('hidden');
-                document.getElementById('user-menu-wrapper').classList.remove('hidden');
-                currentUserKey = Object.keys(EMAIL_MAP).find(k => EMAIL_MAP[k] === user.email) || 'admin';
-            } else {
-                isGuestMode = true;
-                currentUserKey = 'guest';
-                document.getElementById('password-modal').classList.add('hidden'); 
-                document.getElementById('btn-login-header').classList.remove('hidden');
-                document.getElementById('user-menu-wrapper').classList.add('hidden');
-            }
+            isGuestMode = !user;
+            currentUserKey = user ? (Object.keys(EMAIL_MAP).find(k => EMAIL_MAP[k] === user.email) || 'admin') : 'guest';
+            hideEl('password-modal');
+            getEl('btn-login-header').classList.toggle('hidden', !isGuestMode);
+            getEl('user-menu-wrapper').classList.toggle('hidden', isGuestMode);
             
             startFirestoreListener();
-            
             const badgeInfo = BADGE_INFO[currentUserKey] || { name: 'Invitado', color: 'bg-slate-200', text: 'text-slate-600' };
             const centerInitial = currentUserKey === 'admin' ? 'A' : (currentUserKey === 'mangamar' ? 'M' : (currentUserKey === 'guest' ? 'INV' : currentUserKey.charAt(0).toUpperCase()));
-            const btn = document.getElementById('user-badge-button');
+            const btn = getEl('user-badge-button');
             
             btn.className = `rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-all ${badgeInfo.color} ${badgeInfo.text}`;
-            const bgDarker = currentUserKey === 'guest' ? 'bg-black/10' : 'bg-black/20';
-            btn.innerHTML = `<span class="${bgDarker} px-1.5 rounded-sm">${centerInitial}</span><span class="tracking-wide">${badgeInfo.name}</span><svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+            btn.innerHTML = `<span class="${isGuestMode ? 'bg-black/10' : 'bg-black/20'} px-1.5 rounded-sm">${centerInitial}</span><span class="tracking-wide">${badgeInfo.name}</span><svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
             
             updateNotificationsMenu();
         });
 
-
         /* =========================================================================
-           5. UTILITIES & UI CONTROLLERS
+           4. UTILITIES & UI CONTROLLERS
            ========================================================================= */
         function formatDateString(dateObj) { return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`; }
         function getMonday(d) { d = new Date(d); var day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
@@ -831,100 +778,64 @@
         function getDateOfISOWeek(w, y) { var simple = new Date(y, 0, 1 + (w - 1) * 7); var ISOweekStart = simple; if (simple.getDay() <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); return ISOweekStart; }
         
         function generateId(date, time, site, center, subslot) {
-            const sDate = date.replace(/[^0-9-]/g, '');
-            const sTime = time.replace(/[^0-9]/g, '');
-            const sSite = site.replace(/[^a-zA-Z0-9]/g, '');
-            const sCenter = center.replace(/[^a-zA-Z0-9]/g, '');
-            return `${sDate}_${sTime}_${sSite}_${sCenter}_${subslot}`;
+            return `${date.replace(/[^0-9-]/g, '')}_${time.replace(/[^0-9]/g, '')}_${site.replace(/[^a-zA-Z0-9]/g, '')}_${center.replace(/[^a-zA-Z0-9]/g, '')}_${subslot}`;
         }
-
-        function normalizeCSVDate(dateStr) { let p; if (dateStr.includes('/')) p = dateStr.split('/'); else if (dateStr.includes('-')) p = dateStr.split('-'); else return dateStr.replace(/[^0-9-]/g, '-'); if (p.length === 3) { if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`; else { let year = p[2].length === 2 ? '20' + p[2] : p[2]; return `${year}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`; } } return dateStr.replace(/[^0-9-]/g, '-'); }
+        function normalizeCSVDate(dateStr) { let p; if (dateStr.includes('/')) p = dateStr.split('/'); else if (dateStr.includes('-')) p = dateStr.split('-'); else return dateStr.replace(/[^0-9-]/g, '-'); if (p.length === 3) { if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`; else return `${p[2].length === 2 ? '20'+p[2] : p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`; } return dateStr.replace(/[^0-9-]/g, '-'); }
         function normalizeCSVTime(timeStr) { let p = timeStr.split(':'); if(p.length >= 2) return `${p[0].padStart(2, '0')}:${p[1].padStart(2, '0')}`; return timeStr; }
 
         function switchView(v) {
             activeViewMode = v;
             ['diario', 'mega', 'estadisticas', 'historial'].forEach(id => {
-                const el = document.getElementById(`view-${id}`);
-                if(el) { el.classList.remove('flex'); el.classList.add('hidden'); }
+                const el = getEl(`view-${id}`);
+                if(el) {
+                    const isActive = id === v || (id === 'mega' && (v === 'semanal' || v === 'mensual'));
+                    el.classList.toggle('flex', isActive);
+                    el.classList.toggle('hidden', !isActive);
+                }
             });
             ['diario', 'semanal', 'mensual', 'estadisticas'].forEach(id => {
-                const tab = document.getElementById(`tab-${id}`);
-                if(tab) tab.className = 'px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all';
+                const tab = getEl(`tab-${id}`);
+                if(tab) tab.className = `px-5 py-2.5 flex items-center gap-2 transition-all ${id === v ? 'tab-active' : 'tab-inactive'}`;
             });
-            const activeTab = document.getElementById(`tab-${v}`);
-            if(activeTab) activeTab.className = 'px-5 py-2.5 tab-active flex items-center gap-2 transition-all';
+
+            const sidebar = getEl('sidebar-calendario');
+            const periodSelectors = getEl('toolbar-period-selectors');
+
+            getEl('global-filter-bar').classList.toggle('hidden', v === 'estadisticas');
+            getEl('main-content-area').classList.toggle('hidden', v === 'estadisticas' || v === 'historial');
             
-            const sidebar = document.getElementById('sidebar-calendario');
-            const globalFilter = document.getElementById('global-filter-bar');
-            const mainContentArea = document.getElementById('main-content-area');
-            const viewEstadisticas = document.getElementById('view-estadisticas');
-            const viewHistorial = document.getElementById('view-historial');
-            const historyMonthFilterWrapper = document.getElementById('history-month-filter-wrapper');
+            const histWrap = getEl('history-month-filter-wrapper');
+            if (histWrap) { histWrap.classList.toggle('hidden', v !== 'historial'); histWrap.classList.toggle('flex', v === 'historial'); }
 
-            if (v === 'estadisticas') {
-                sidebar.classList.remove('flex', 'lg:flex'); sidebar.classList.add('hidden');
-                globalFilter.classList.add('hidden');
-                mainContentArea.classList.add('hidden');
-                viewEstadisticas.classList.remove('hidden'); viewEstadisticas.classList.add('flex');
-                viewHistorial.classList.remove('flex'); viewHistorial.classList.add('hidden');
-                if (historyMonthFilterWrapper) { historyMonthFilterWrapper.classList.add('hidden'); historyMonthFilterWrapper.classList.remove('flex'); }
-            } else if (v === 'historial') {
-                sidebar.classList.remove('flex', 'lg:flex'); sidebar.classList.add('hidden');
-                globalFilter.classList.remove('hidden');
-                document.getElementById('toolbar-period-selectors').classList.add('hidden');
-                mainContentArea.classList.add('hidden');
-                viewEstadisticas.classList.remove('flex'); viewEstadisticas.classList.add('hidden');
-                viewHistorial.classList.remove('hidden'); viewHistorial.classList.add('flex');
-                if (historyMonthFilterWrapper) { historyMonthFilterWrapper.classList.remove('hidden'); historyMonthFilterWrapper.classList.add('flex'); }
-            } else {
-                sidebar.classList.remove('hidden');
-                globalFilter.classList.remove('hidden');
-                mainContentArea.classList.remove('hidden');
-                viewEstadisticas.classList.remove('flex'); viewEstadisticas.classList.add('hidden');
-                viewHistorial.classList.remove('flex'); viewHistorial.classList.add('hidden');
-                if (historyMonthFilterWrapper) { historyMonthFilterWrapper.classList.add('hidden'); historyMonthFilterWrapper.classList.remove('flex'); }
+            sidebar.classList.toggle('hidden', v !== 'diario');
+            sidebar.classList.toggle('flex', v === 'diario');
+            sidebar.classList.toggle('lg:flex', v === 'diario');
+            
+            periodSelectors.classList.toggle('hidden', v === 'diario' || v === 'estadisticas' || v === 'historial');
+            getEl('toolbar-week').classList.toggle('hidden', v !== 'semanal');
+            getEl('toolbar-month').classList.toggle('hidden', v !== 'mensual');
 
-                if (v === 'diario') {
-                    sidebar.classList.add('flex', 'lg:flex');
-                    document.getElementById('toolbar-period-selectors').classList.add('hidden');
-                    document.getElementById('view-diario').classList.remove('hidden');
-                    document.getElementById('view-diario').classList.add('flex');
-                } else {
-                    sidebar.classList.remove('flex', 'lg:flex');
-                    sidebar.classList.add('hidden');
-                    document.getElementById('toolbar-period-selectors').classList.remove('hidden');
-                    document.getElementById('view-mega').classList.remove('hidden');
-                    document.getElementById('view-mega').classList.add('flex');
-                    
-                    document.getElementById('toolbar-week').classList.toggle('hidden', v !== 'semanal');
-                    document.getElementById('toolbar-month').classList.toggle('hidden', v !== 'mensual');
-                }
-            }
             renderAll();
         }
 
-        function setStatsUnit(unit) {
-            statsUnit = unit;
-            document.getElementById('unit-dropdown-text').textContent = unit === 'barcos' ? 'Barcos (Salidas)' : 'Plazas (Buceadores)';
-            renderStats();
-        }
+        function setStatsUnit(unit) { statsUnit = unit; getEl('unit-dropdown-text').textContent = unit === 'barcos' ? 'Barcos (Salidas)' : 'Plazas (Buceadores)'; renderStats(); }
 
         function initFilters() {
-            const c = document.getElementById('filter-container'); c.innerHTML = '';
+            const c = getEl('filter-container'); c.innerHTML = '';
             Object.keys(CENTERS).forEach(k => {
                 const cn = CENTERS[k], ck = selectedCenters.includes(k);
                 const l = document.createElement('label'); l.className = 'flex items-center gap-3 p-2 hover:bg-slate-50 rounded-md transition-colors cursor-pointer';
                 l.innerHTML = `<input type="checkbox" ${ck ? 'checked' : ''} onchange="toggleCenter('${k}')" class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"><span class="w-6 h-6 rounded ${cn.color} ${cn.text} flex items-center justify-center text-[10px] font-black">${k}</span><span class="text-sm font-semibold text-slate-700">${cn.name}</span>`;
                 c.appendChild(l);
             });
-            document.getElementById('filter-button-text').textContent = selectedCenters.length === Object.keys(CENTERS).length ? 'TODOS LOS CENTROS' : `${selectedCenters.length} SELECCIONADOS`;
+            getEl('filter-button-text').textContent = selectedCenters.length === Object.keys(CENTERS).length ? 'TODOS LOS CENTROS' : `${selectedCenters.length} SELECCIONADOS`;
         }
 
         function initSelectors() {
             let mH = ''; for(let i=0; i<12; i++) mH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
-            document.getElementById('month-selector-sidebar').innerHTML = mH; document.getElementById('month-selector-main').innerHTML = mH;
+            getEl('month-selector-sidebar').innerHTML = mH; getEl('month-selector-main').innerHTML = mH;
             
-            const mContainer = document.getElementById('month-filter-container');
+            const mContainer = getEl('month-filter-container');
             if (mContainer) {
                 mContainer.innerHTML = '';
                 const createOption = (val, text) => {
@@ -936,12 +847,10 @@
                     mContainer.appendChild(btn);
                 };
                 createOption('all', 'TODOS LOS MESES');
-                for(let i=0; i<12; i++) {
-                    createOption(i, `${MONTHS_ES[i]} 2026`);
-                }
+                for(let i=0; i<12; i++) createOption(i, `${MONTHS_ES[i]} 2026`);
             }
 
-            const w = document.getElementById('week-selector'); w.innerHTML = '';
+            const w = getEl('week-selector'); w.innerHTML = '';
             for(let i=1; i<=52; i++) {
                 const s = getDateOfISOWeek(i, 2026), e = new Date(s); e.setDate(s.getDate() + 6);
                 w.innerHTML += `<option value="${i}">Semana ${i} (${s.getDate()} ${MONTHS_SHORT[s.getMonth()]} - ${e.getDate()} ${MONTHS_SHORT[e.getMonth()]})</option>`;
@@ -953,65 +862,44 @@
         function changeMonth(i) { currentDate.setMonth(parseInt(i)); currentDate.setDate(1); renderAll(); }
         function changeWeek(n) { currentDate = getDateOfISOWeek(parseInt(n), 2026); renderAll(); }
         function setDate(s) { const p = s.split('-'); currentDate = new Date(p[0], p[1]-1, p[2]); renderAll(); }
-        function toggleFilterDropdown() { document.getElementById('filter-dropdown-panel').classList.toggle('hidden'); }
-        function toggleMonthDropdown() { document.getElementById('month-dropdown-panel').classList.toggle('hidden'); }
+        function toggleFilterDropdown() { toggleVis('filter-dropdown-panel'); }
+        function toggleMonthDropdown() { toggleVis('month-dropdown-panel'); }
         function selectHistoryMonth(val, text) {
             selectedHistoryMonth = val;
-            document.getElementById('month-filter-button-text').textContent = text;
-            document.getElementById('month-dropdown-panel').classList.add('hidden');
-            initSelectors(); 
-            renderHistory();
+            getEl('month-filter-button-text').textContent = text;
+            hideEl('month-dropdown-panel');
+            initSelectors(); renderHistory();
         }
 
         /* =========================================================================
-           6. HISTORY LOGGER
+           5. HISTORY LOGGER
            ========================================================================= */
         async function logHistory(actionType, details) {
             if (currentUserKey === 'admin' || isGuestMode) return; 
-
             try {
-                await db.collection("history_logs").add({
-                    actionType,
-                    centerKey: currentUserKey, 
-                    details,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (e) {
-                console.error("Error writing to history log:", e);
-            }
+                await db.collection("history_logs").add({ actionType, centerKey: currentUserKey, details, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+            } catch (e) { console.error("Error writing to history log:", e); }
         }
 
         function getCenterInfoSafe(keyOrCode) {
             if (!keyOrCode) return { name: 'Otro centro', color: 'bg-slate-200', text: 'text-slate-800' };
             if (CENTERS[keyOrCode]) return CENTERS[keyOrCode];
             const code = USER_CENTER_KEYS[keyOrCode];
-            if (code && CENTERS[code]) return CENTERS[code];
-            return { name: keyOrCode, color: 'bg-slate-200', text: 'text-slate-800' };
+            return (code && CENTERS[code]) ? CENTERS[code] : { name: keyOrCode, color: 'bg-slate-200', text: 'text-slate-800' };
         }
 
         function renderHistory() {
             if (activeViewMode !== 'historial') return;
-            
-            const listEl = document.getElementById('history-list');
+            const listEl = getEl('history-list');
             if (!listEl) return;
             listEl.innerHTML = '';
 
-            const sortedLogs = [...historyLogs].sort((a, b) => {
-                const timeA = a.timestamp ? a.timestamp.toMillis() : Date.now();
-                const timeB = b.timestamp ? b.timestamp.toMillis() : Date.now();
-                return timeB - timeA;
-            });
-
+            const sortedLogs = [...historyLogs].sort((a, b) => (b.timestamp?.toMillis() || Date.now()) - (a.timestamp?.toMillis() || Date.now()));
             const filteredLogs = sortedLogs.filter(log => {
                 const codeKey = USER_CENTER_KEYS[log.centerKey];
                 const isCenterSelected = selectedCenters.includes(codeKey);
-                
                 let isMonthSelected = true;
-                if (selectedHistoryMonth !== 'all') {
-                    const targetDObj = new Date(log.details.date);
-                    isMonthSelected = targetDObj.getMonth() === parseInt(selectedHistoryMonth);
-                }
-                
+                if (selectedHistoryMonth !== 'all') isMonthSelected = new Date(log.details.date).getMonth() === parseInt(selectedHistoryMonth);
                 return isCenterSelected && isMonthSelected;
             });
 
@@ -1022,70 +910,46 @@
 
             filteredLogs.forEach(log => {
                 let icon = ''; let text = ''; let headerPills = '';
-                
                 let logDateStr = 'Ahora mismo';
                 if (log.timestamp) {
                     const d = log.timestamp.toDate();
                     logDateStr = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
                 }
-
                 const targetDObj = new Date(log.details.date);
                 const targetDateStr = `${targetDObj.getDate()} de ${MONTHS_SHORT[targetDObj.getMonth()]}`;
 
                 if (log.actionType === 'swap') {
                     icon = '🔀';
-                    const initInfo = getCenterInfoSafe(log.details.initCenter || log.centerKey);
-                    const targetInfo = getCenterInfoSafe(log.details.targetCenter);
-
-                    headerPills = `
-                        <span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${initInfo.color} ${initInfo.text}">${initInfo.name}</span>
-                        <span class="text-slate-400 text-xs mx-1">🤝</span>
-                        <span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${targetInfo.color} ${targetInfo.text}">${targetInfo.name}</span>
-                    `;
-
-                    const initPax = log.details.initPax ? ` de ${log.details.initPax} plazas` : '';
-                    const targetPax = log.details.targetPax ? ` de ${log.details.targetPax} plazas` : '';
-
+                    const initInfo = getCenterInfoSafe(log.details.initCenter || log.centerKey), targetInfo = getCenterInfoSafe(log.details.targetCenter);
+                    headerPills = `<span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${initInfo.color} ${initInfo.text}">${initInfo.name}</span><span class="text-slate-400 text-xs mx-1">🤝</span><span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${targetInfo.color} ${targetInfo.text}">${targetInfo.name}</span>`;
+                    const initPax = log.details.initPax ? ` de ${log.details.initPax} plazas` : '', targetPax = log.details.targetPax ? ` de ${log.details.targetPax} plazas` : '';
                     text = `Para el <b>${targetDateStr}</b>, <b>${initInfo.name}</b> intercambió su salida en <b>${log.details.initSite} (${log.details.initTime})${initPax}</b> por la salida en <b>${log.details.targetSite} (${log.details.targetTime})${targetPax}</b> de <b>${targetInfo.name}</b>.`;
-
                 } else {
                     const cInfo = getCenterInfoSafe(log.centerKey);
                     headerPills = `<span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${cInfo.color} ${cInfo.text}">${cInfo.name}</span>`;
-
                     if (log.actionType === 'add') {
-                        icon = '➕';
-                        text = `Añadió una salida a <b>${log.details.site}</b> a las <b>${log.details.time}</b> el ${targetDateStr} (${log.details.pax} plazas).`;
+                        icon = '➕'; text = `Añadió una salida a <b>${log.details.site}</b> a las <b>${log.details.time}</b> el ${targetDateStr} (${log.details.pax} plazas).`;
                     } else if (log.actionType === 'move') {
-                        icon = '➡️';
-                        text = `Movió su barco del ${targetDateStr} de <b>${log.details.oldSite} (${log.details.oldTime})</b> a <b>${log.details.newSite} (${log.details.newTime})</b>.`;
+                        icon = '➡️'; text = `Movió su barco del ${targetDateStr} de <b>${log.details.oldSite} (${log.details.oldTime})</b> a <b>${log.details.newSite} (${log.details.newTime})</b>.`;
                     }
                 }
 
                 listEl.innerHTML += `
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm flex gap-4 hover:shadow-md transition-shadow">
-                        <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-lg shrink-0 shadow-sm">
-                            ${icon}
-                        </div>
+                        <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-lg shrink-0 shadow-sm">${icon}</div>
                         <div class="flex-1">
-                            <div class="flex justify-between items-center mb-2">
-                                <div class="flex items-center">
-                                    ${headerPills}
-                                </div>
-                                <span class="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100 flex items-center gap-1.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${logDateStr}</span>
-                            </div>
+                            <div class="flex justify-between items-center mb-2"><div class="flex items-center">${headerPills}</div><span class="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100 flex items-center gap-1.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${logDateStr}</span></div>
                             <p class="text-sm text-slate-600 leading-relaxed">${text}</p>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
         /* =========================================================================
-           7. NOTIFICATIONS & DATA OPS
+           6. NOTIFICATIONS & DATA OPS
            ========================================================================= */
         function showNotification(title, message, isError = false) {
-            const iconEl = document.getElementById('notification-icon');
-            const titleEl = document.getElementById('notification-title');
+            const iconEl = getEl('notification-icon'), titleEl = getEl('notification-title');
             if(isError) {
                 iconEl.className = 'mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-red-100 text-red-600';
                 iconEl.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
@@ -1095,199 +959,120 @@
                 iconEl.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
                 titleEl.className = 'text-xl font-black mb-2 text-emerald-600';
             }
-            titleEl.textContent = title;
-            document.getElementById('notification-message').textContent = message;
-            document.getElementById('notification-modal').classList.remove('hidden');
+            titleEl.textContent = title; getEl('notification-message').textContent = message; showEl('notification-modal');
         }
 
-        function closeNotification() { document.getElementById('notification-modal').classList.add('hidden'); }
-
-        function triggerImport() { document.getElementById('csv-upload').click(); }
+        function closeNotification() { hideEl('notification-modal'); }
+        function triggerImport() { getEl('csv-upload').click(); }
 
         function handleImport(e) {
             const f = e.target.files[0]; if(!f) return;
-            const btn = document.getElementById('user-badge-button');
-            const originalBtnHtml = btn.innerHTML;
-            
+            const btn = getEl('user-badge-button'); const originalBtnHtml = btn.innerHTML;
             btn.innerHTML = `<svg class="animate-spin h-3 w-3 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="tracking-wide">Cargando CSV...</span>`;
             
             const r = new FileReader();
             r.onload = async (ev) => {
                 const rs = ev.target.result.split('\n'), loaded = [];
-                const safeCenterMap = {};
-                Object.keys(CENTERS).forEach(k => safeCenterMap[CENTERS[k].name.toUpperCase()] = k);
+                const safeCenterMap = {}; Object.keys(CENTERS).forEach(k => safeCenterMap[CENTERS[k].name.toUpperCase()] = k);
                 const slotTracker = {}; 
 
                 for(let i=1; i<rs.length; i++) {
                     if(!rs[i].trim()) continue;
-                    let c = rs[i].split(',');
-                    if (c.length < 5) c = rs[i].split(';');
-                    if (c.length < 5) c = rs[i].split('\t');
-                    if (c.length < 5) continue;
+                    let c = rs[i].split(','); if (c.length < 5) c = rs[i].split(';'); if (c.length < 5) c = rs[i].split('\t'); if (c.length < 5) continue;
                     
                     const clean = (str) => str ? str.replace(/['"\r\n]+/g, '').trim() : '';
-                    const rawDate = clean(c[0]);
-                    const centerName = clean(c[1]).toUpperCase(); 
-                    const site = clean(c[2]);
-                    const rawTime = clean(c[3]);
-                    const pax = parseInt(clean(c[4]), 10);
-
-                    const normalizedDate = normalizeCSVDate(rawDate);
-                    const normalizedTime = normalizeCSVTime(rawTime);
-                    const cKey = safeCenterMap[centerName];
+                    const rawDate = clean(c[0]), centerName = clean(c[1]).toUpperCase(), site = clean(c[2]), rawTime = clean(c[3]), pax = parseInt(clean(c[4]), 10);
+                    const normalizedDate = normalizeCSVDate(rawDate), normalizedTime = normalizeCSVTime(rawTime), cKey = safeCenterMap[centerName];
 
                     if(cKey && !isNaN(pax)) {
                         const trackKey = `${normalizedDate}-${normalizedTime}-${site}`;
-                        if (!slotTracker[trackKey]) slotTracker[trackKey] = 1;
-                        else slotTracker[trackKey]++;
-                        const assignedSubslot = slotTracker[trackKey];
-                        loaded.push({ date: normalizedDate, center: cKey, site: site, time: normalizedTime, pax: pax, subslot: assignedSubslot });
+                        if (!slotTracker[trackKey]) slotTracker[trackKey] = 1; else slotTracker[trackKey]++;
+                        loaded.push({ date: normalizedDate, center: cKey, site: site, time: normalizedTime, pax: pax, subslot: slotTracker[trackKey] });
                     }
                 }
                 
                 if(loaded.length) { 
                     try {
                         const monthlyData = {};
-                        loaded.forEach((item, index) => {
+                        loaded.forEach((item) => {
                             const monthKey = item.date.substring(0, 7);
                             if (!monthlyData[monthKey]) monthlyData[monthKey] = {};
-                            
-                            const customDocId = generateId(item.date, item.time, item.site, item.center, item.subslot);
-                            monthlyData[monthKey][customDocId] = item;
+                            monthlyData[monthKey][generateId(item.date, item.time, item.site, item.center, item.subslot)] = item;
                         });
                         
                         const batch = db.batch();
-                        for (const [month, dataMap] of Object.entries(monthlyData)) {
-                            const docRef = db.collection("reservations_monthly").doc(month);
-                            batch.set(docRef, { allocations: dataMap }, { merge: true });
-                        }
-                        
+                        for (const [month, dataMap] of Object.entries(monthlyData)) batch.set(db.collection("reservations_monthly").doc(month), { allocations: dataMap }, { merge: true });
                         await batch.commit();
                         showNotification('Importación Exitosa', `Se ha procesado y guardado la planificación completa (${loaded.length} reservas).`); 
                         if(loaded[0] && loaded[0].date) setDate(loaded[0].date);
                     } catch(err) {
                         showNotification('Error', 'Hubo un problema de red al guardar en la nube.', true);
-                    } finally {
-                        btn.innerHTML = originalBtnHtml;
-                    }
-                }
-                else {
-                    showNotification('Error de Formato', 'No se encontraron datos válidos. Comprueba el archivo.', true);
-                    btn.innerHTML = originalBtnHtml;
+                    } finally { btn.innerHTML = originalBtnHtml; }
+                } else {
+                    showNotification('Error de Formato', 'No se encontraron datos válidos. Comprueba el archivo.', true); btn.innerHTML = originalBtnHtml;
                 }
             };
             r.readAsText(f); e.target.value = '';
         }
 
         /* =========================================================================
-           7.5 EXPORT FUNCTIONALITY (CSV & VECTOR PDF)
+           7. EXPORT FUNCTIONALITY (CSV & TRUE-VECTOR PDF)
            ========================================================================= */
         function selectExportFormat(format) {
-            document.getElementById('export-format').value = format;
-            const btnPdf = document.getElementById('btn-format-pdf');
-            const btnCsv = document.getElementById('btn-format-csv');
-            if (format === 'pdf') {
-                btnPdf.className = 'flex-1 py-2 px-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-lg font-bold text-sm transition-colors';
-                btnCsv.className = 'flex-1 py-2 px-3 border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition-colors';
-            } else {
-                btnCsv.className = 'flex-1 py-2 px-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-lg font-bold text-sm transition-colors';
-                btnPdf.className = 'flex-1 py-2 px-3 border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition-colors';
-            }
+            getEl('export-format').value = format;
+            const btnPdf = getEl('btn-format-pdf'), btnCsv = getEl('btn-format-csv');
+            btnPdf.className = `flex-1 py-2 px-3 border-2 rounded-lg font-bold text-sm transition-colors ${format === 'pdf' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+            btnCsv.className = `flex-1 py-2 px-3 border-2 rounded-lg font-bold text-sm transition-colors ${format === 'csv' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
         }
 
         function openPrintModal() {
-            selectExportFormat('pdf'); // Default format to PDF
+            selectExportFormat('pdf'); 
             let mHtml = '<option value="all">Todos los meses</option>';
-            for(let i=0; i<12; i++) {
-                mHtml += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
-            }
-            document.getElementById('print-month').innerHTML = mHtml;
+            for(let i=0; i<12; i++) mHtml += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
+            getEl('print-month').innerHTML = mHtml;
 
             let cHtml = '<option value="all">Todos los centros</option>';
-            Object.keys(CENTERS).forEach(k => {
-                cHtml += `<option value="${k}">${CENTERS[k].name}</option>`;
-            });
-            document.getElementById('print-center').innerHTML = cHtml;
-
-            document.getElementById('print-modal').classList.remove('hidden');
+            Object.keys(CENTERS).forEach(k => cHtml += `<option value="${k}">${CENTERS[k].name}</option>`);
+            getEl('print-center').innerHTML = cHtml;
+            showEl('print-modal');
         }
 
-        function closePrintModal() {
-            document.getElementById('print-modal').classList.add('hidden');
-        }
+        function closePrintModal() { hideEl('print-modal'); }
 
         function executeExport() {
-            const format = document.getElementById('export-format').value;
-            if (format === 'pdf') {
-                executePrintPDF();
-            } else {
-                executePrintCSV();
-            }
+            const format = getEl('export-format').value;
+            if (format === 'pdf') executePrintPDF(); else executePrintCSV();
         }
 
         function executePrintCSV() {
-            const monthVal = document.getElementById('print-month').value;
-            const centerVal = document.getElementById('print-center').value;
-
+            const monthVal = getEl('print-month').value, centerVal = getEl('print-center').value;
             let targetCenters = centerVal === 'all' ? Object.keys(CENTERS) : [centerVal];
             let filtered = allocations.filter(a => targetCenters.includes(a.center));
+            if (monthVal !== 'all') filtered = filtered.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === parseInt(monthVal, 10));
 
-            if (monthVal !== 'all') {
-                filtered = filtered.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === parseInt(monthVal, 10));
-            }
-
-            if (filtered.length === 0) {
-                showNotification('Sin Datos', 'No hay reservas para los filtros seleccionados.', true);
-                closePrintModal();
-                return;
-            }
+            if (filtered.length === 0) { showNotification('Sin Datos', 'No hay reservas para los filtros seleccionados.', true); closePrintModal(); return; }
 
             try {
                 let csv = "Fecha,Centro,Punto,Hora,Plazas\n";
-                
-                // Sort array chronologically for better readability
-                filtered.sort((a, b) => {
-                    if (a.date !== b.date) return a.date.localeCompare(b.date);
-                    return a.time.localeCompare(b.time);
-                });
-
-                filtered.forEach(a => {
-                    const cName = CENTERS[a.center] ? CENTERS[a.center].name : a.center;
-                    csv += `${a.date},${cName},${a.site},${a.time},${a.pax}\n`;
-                });
+                filtered.sort((a, b) => a.date !== b.date ? a.date.localeCompare(b.date) : a.time.localeCompare(b.time));
+                filtered.forEach(a => { csv += `${a.date},${CENTERS[a.center] ? CENTERS[a.center].name : a.center},${a.site},${a.time},${a.pax}\n`; });
                 const l = document.createElement("a"); 
                 l.setAttribute("href", "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv)); 
                 l.setAttribute("download", `Planificacion_${centerVal}_${monthVal}.csv`); 
-                l.click();
-                closePrintModal();
-            } catch (error) {
-                showNotification('Error', 'Hubo un problema al exportar el CSV.', true);
-            }
+                l.click(); closePrintModal();
+            } catch (error) { showNotification('Error', 'Hubo un problema al exportar el CSV.', true); }
         }
 
         function executePrintPDF() {
-            const monthVal = document.getElementById('print-month').value;
-            const centerVal = document.getElementById('print-center').value;
-
+            const monthVal = getEl('print-month').value, centerVal = getEl('print-center').value;
             let targetCenters = centerVal === 'all' ? Object.keys(CENTERS) : [centerVal];
             let filtered = allocations.filter(a => targetCenters.includes(a.center));
+            if (monthVal !== 'all') filtered = filtered.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === parseInt(monthVal, 10));
 
-            if (monthVal !== 'all') {
-                filtered = filtered.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === parseInt(monthVal, 10));
-            }
-
-            if (filtered.length === 0) {
-                showNotification('Sin Datos', 'No hay reservas para los filtros seleccionados.', true);
-                closePrintModal();
-                return;
-            }
+            if (filtered.length === 0) { showNotification('Sin Datos', 'No hay reservas para los filtros seleccionados.', true); closePrintModal(); return; }
 
             const byDate = {};
-            filtered.forEach(a => {
-                if (!byDate[a.date]) byDate[a.date] = [];
-                byDate[a.date].push(a);
-            });
-
+            filtered.forEach(a => { if (!byDate[a.date]) byDate[a.date] = []; byDate[a.date].push(a); });
             const sortedDates = Object.keys(byDate).sort();
 
             closePrintModal();
@@ -1297,15 +1082,12 @@
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('p', 'pt', 'a4');
-
-                    const startX = 40; // Left margin
-                    let currentY = 40; // Top margin
+                    const startX = 40; let currentY = 40; 
 
                     for (let i = 0; i < sortedDates.length; i++) {
                         const date = sortedDates[i];
                         const dateItems = byDate[date] || [];
-                        const centerDailyPax = {};
-                        let totalDailyPax = 0;
+                        const centerDailyPax = {}; let totalDailyPax = 0;
                         
                         dateItems.forEach(item => {
                             if(!centerDailyPax[item.center]) centerDailyPax[item.center] = 0;
@@ -1313,13 +1095,9 @@
                             totalDailyPax += item.pax;
                         });
 
-                        if (i > 0 && i % 3 === 0) {
-                            doc.addPage();
-                            currentY = 40;
-                        }
-
+                        if (i > 0 && i % 3 === 0) { doc.addPage(); currentY = 40; }
                         drawDayBlock(doc, date, dateItems, centerDailyPax, totalDailyPax, startX, currentY);
-                        currentY += 230; // Distance between days reduced to reflect shorter tables
+                        currentY += 230; 
                     }
 
                     doc.save(`Planificacion_${centerVal}_${monthVal}.pdf`);
@@ -1328,91 +1106,47 @@
                     console.error("PDF Generation Error: ", err);
                     showNotification('Error', 'Hubo un problema al generar el PDF.', true);
                 }
-            }, 100); // Small delay to allow the loading notification to render
+            }, 100); 
         }
 
-        // Pure jsPDF Vector Drawing Function
         function drawDayBlock(doc, dateStr, dateItems, centerDailyPax, totalDailyPax, startX, startY) {
-            const dObj = new Date(dateStr);
-            const dayName = DAYS_ES[dObj.getDay()].substring(0,3).toUpperCase();
+            const dObj = new Date(dateStr), dayName = DAYS_ES[dObj.getDay()].substring(0,3).toUpperCase();
             const dateTitle = `${dayName}. ${dObj.getDate()}-${MONTHS_SHORT[dObj.getMonth()].toUpperCase()}`;
-
-            const cMap = {
-                'B': { bg: '#ef4444', text: '#ffffff' }, 
-                'H': { bg: '#000000', text: '#ffffff' },
-                'M': { bg: '#00b050', text: '#ffffff' }, // Mangamar Green
-                'N': { bg: '#f59e0b', text: '#000000' }, 
-                'P': { bg: '#3b82f6', text: '#ffffff' }, 
-                'D': { bg: '#a855f7', text: '#ffffff' },
-                'C': { bg: '#64748b', text: '#ffffff' }, 
-                'X': { bg: '#cbd5e1', text: '#000000' }
-            };
-
             const timeLabels = ['09:00 - 10:30', '10:30 - 12:00', '12:00 - 13:30', '13:30 - 15:00', '15:00 - 16:30', '16:30 - 18:00', '18:00 - 19:00'];
             const timeKeys = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00'];
 
             let siteColumnTotals = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0 };
-            dateItems.forEach(it => {
-                if (siteColumnTotals[it.site] !== undefined) {
-                    siteColumnTotals[it.site] += it.pax;
-                }
-            });
+            dateItems.forEach(it => { if (siteColumnTotals[it.site] !== undefined) siteColumnTotals[it.site] += it.pax; });
 
-            const colorPink = '#f20884'; 
-            const colorYellow = '#ffff00'; 
-            const colorLightGray = '#f8fafc';
+            const colorPink = '#f20884', colorYellow = '#ffff00', colorLightGray = '#f8fafc';
+            const rowH = 14, subH = 12, restH = 12;
 
-            const rowH = 14;  // Main rows height (decreased from 16)
-            const subH = 12;  // Time subslots height (decreased from 14)
-            const restH = 12; // Break height (decreased from 14)
-
-            // Mathematical Box Drawing helper
             const drawBox = (x, y, w, h, bg, text, textColor, fontStyle, fontSize) => {
-                if (bg) {
-                    doc.setFillColor(bg);
-                    doc.rect(x, y, w, h, 'F');
-                }
-                
-                doc.setDrawColor(0, 0, 0); // Black lines
-                doc.setLineWidth(0.5); // Hairline ultra-thin
-                doc.rect(x, y, w, h, 'S');
-
+                if (bg) { doc.setFillColor(bg); doc.rect(x, y, w, h, 'F'); }
+                doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.5); doc.rect(x, y, w, h, 'S');
                 if (text !== undefined && text !== null && text !== '') {
-                    doc.setTextColor(textColor);
-                    doc.setFont('helvetica', fontStyle);
-                    doc.setFontSize(fontSize);
-                    // Perfect vertical alignment math for jsPDF base coordinates
-                    const baselineOffset = (fontSize * 0.35); 
-                    const baseline = y + (h / 2) + baselineOffset;
-                    doc.text(text.toString(), x + (w / 2), baseline, { align: 'center' });
+                    doc.setTextColor(textColor); doc.setFont('helvetica', fontStyle); doc.setFontSize(fontSize);
+                    doc.text(text.toString(), x + (w / 2), y + (h / 2) + (fontSize * 0.35), { align: 'center' });
                 }
             };
 
             let currentY = startY;
 
-            // --- Row 1: Date & Title ---
             drawBox(startX, currentY, 80, rowH, colorLightGray, dateTitle, '#000', 'bold', 8);
             drawBox(startX + 80, currentY, 360, rowH, colorPink, '270 PLAZAS', '#fff', 'bold', 10);
             currentY += rowH;
 
-            // --- Row 2: Headers ---
             drawBox(startX, currentY, 55, rowH, colorYellow, '270', '#000', 'bold', 8);
             drawBox(startX + 55, currentY, 25, rowH, colorYellow, 'S4', '#000', 'bold', 8);
             
             let currentX = startX + 80;
             SITES.forEach(s => {
-                let cleanName = '';
-                if (s === 'Bajo de Dentro') cleanName = 'DENTRO';
-                else if (s === 'Piles II') cleanName = 'PILES 2';
-                else if (s === 'Piles I') cleanName = 'PILES 1';
-                else cleanName = s.toUpperCase();
-
+                let cleanName = s === 'Bajo de Dentro' ? 'DENTRO' : (s === 'Piles II' ? 'PILES 2' : (s === 'Piles I' ? 'PILES 1' : s.toUpperCase()));
                 drawBox(currentX, currentY, 72, rowH, colorLightGray, cleanName, '#000', 'bold', 8);
                 currentX += 72;
             });
             currentY += rowH;
 
-            // --- Row 3: Capacities ---
             drawBox(startX, currentY, 80, rowH, colorPink, '', '#fff', 'bold', 8);
             currentX = startX + 80;
             SITES.forEach(s => {
@@ -1422,339 +1156,197 @@
             });
             currentY += rowH;
 
-            // --- Time Rows ---
             timeKeys.forEach((tm, idx) => {
                 if (tm === '13:30') {
                     drawBox(startX, currentY, 55, restH, '#e2e8f0', timeLabels[idx], '#000', 'normal', 7); 
                     drawBox(startX + 55, currentY, 25, restH, colorYellow, '', '#000', 'normal', 7);
                     drawBox(startX + 80, currentY, 360, restH, '#000000', '', '#fff', 'normal', 7);
-                    currentY += restH;
-                    return;
+                    currentY += restH; return;
                 }
 
-                // Normal time row
-                const timeRowH = subH * 2; // Combines the two 12px subslots into 24px
+                const timeRowH = subH * 2; 
                 drawBox(startX, currentY, 55, timeRowH, colorLightGray, timeLabels[idx], '#000', 'normal', 7); 
                 drawBox(startX + 55, currentY, 25, timeRowH, colorYellow, '', '#000', 'normal', 7);
 
                 currentX = startX + 80;
                 SITES.forEach(s => {
                     const items = dateItems.filter(i => i.time === tm && i.site === s);
-                    let it1 = items.find(i => i.subslot === 1) || items[0];
-                    let it2 = items.find(i => i.subslot === 2) || (items.length > 1 ? items[1] : null);
+                    let it1 = items.find(i => i.subslot === 1) || items[0], it2 = items.find(i => i.subslot === 2) || (items.length > 1 ? items[1] : null);
                     if(items.length === 1) { it1 = items[0]; it2 = null; }
 
-                    // Draw outer box for the time block
-                    doc.setDrawColor(0);
-                    doc.setLineWidth(0.5);
-                    doc.rect(currentX, currentY, 72, timeRowH, 'S');
+                    doc.setDrawColor(0); doc.setLineWidth(0.5); doc.rect(currentX, currentY, 72, timeRowH, 'S');
 
                     const drawSub = (it, subY) => {
                         if (!it) return;
-                        const cInfo = cMap[it.center];
-                        
-                        // Center color box
-                        doc.setFillColor(cInfo.bg);
-                        doc.rect(currentX, subY, 28, subH, 'F'); // No 'S' here to prevent internal horizontal lines
-                        
-                        // Vertical dividing line
-                        doc.setDrawColor(0);
-                        doc.line(currentX + 28, subY, currentX + 28, subY + subH);
-
-                        // Center Initial (Bold)
-                        doc.setTextColor(cInfo.text);
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(8);
+                        const cInfo = CENTERS[it.center];
+                        doc.setFillColor(cInfo.pdfBg); doc.rect(currentX, subY, 28, subH, 'F');
+                        doc.setDrawColor(0); doc.line(currentX + 28, subY, currentX + 28, subY + subH);
+                        doc.setTextColor(cInfo.pdfText); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
                         doc.text(it.center, currentX + 14, subY + (subH / 2) + (8 * 0.35), { align: 'center' });
-
-                        // Pax Number (Thin/Normal)
-                        doc.setTextColor('#000');
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(8);
+                        doc.setTextColor('#000'); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
                         doc.text(it.pax.toString(), currentX + 50, subY + (subH / 2) + (8 * 0.35), { align: 'center' });
                     };
 
-                    drawSub(it1, currentY);
-                    drawSub(it2, currentY + subH);
-
+                    drawSub(it1, currentY); drawSub(it2, currentY + subH);
                     currentX += 72;
                 });
                 currentY += timeRowH;
             });
 
-            // --- Footer Row ---
             drawBox(startX, currentY, 80, rowH, colorYellow, '', '#000', 'bold', 8);
             currentX = startX + 80;
             SITES.forEach(s => {
                 const diff = SITE_CAPACITY[s] - siteColumnTotals[s];
-                const displayDiff = diff >= 0 ? `+${diff}` : diff.toString();
-                const textColor = diff >= 0 ? '#2563eb' : '#dc2626'; 
-                drawBox(currentX, currentY, 72, rowH, '#ffffff', displayDiff, textColor, 'normal', 8);
+                drawBox(currentX, currentY, 72, rowH, '#ffffff', diff >= 0 ? `+${diff}` : diff.toString(), diff >= 0 ? '#2563eb' : '#dc2626', 'normal', 8);
                 currentX += 72;
             });
 
-            // --- Legend Table ---
-            const legendX = startX + 455; // Right next to main table
-            let legendY = startY;
-            const legendOrder = ['B', 'D', 'H', 'M', 'N', 'P', 'X', 'C'];
-            
-            legendOrder.forEach(k => {
-                if(!cMap[k]) return; 
-                const cInfo = cMap[k];
-                const paxCount = centerDailyPax[k] || 0; 
-                
-                drawBox(legendX, legendY, 25, subH, cInfo.bg, k, cInfo.text, 'bold', 8);
+            const legendX = startX + 455; let legendY = startY;
+            ['B', 'D', 'H', 'M', 'N', 'P', 'X', 'C'].forEach(k => {
+                if(!CENTERS[k]) return; 
+                const cInfo = CENTERS[k], paxCount = centerDailyPax[k] || 0; 
+                drawBox(legendX, legendY, 25, subH, cInfo.pdfBg, k, cInfo.pdfText, 'bold', 8);
                 drawBox(legendX + 25, legendY, 35, subH, '#ffffff', paxCount.toString(), '#000', 'normal', 8); 
                 legendY += subH;
             });
-            
             drawBox(legendX, legendY, 25, subH, '#94a3b8', '', '#fff', 'normal', 8);
             drawBox(legendX + 25, legendY, 35, subH, colorLightGray, totalDailyPax.toString(), '#000', 'normal', 8);
         }
 
         function promptEmptyData() {
             try { exportCSV(); } catch(e) {}
-            setTimeout(() => document.getElementById('empty-confirm-modal').classList.remove('hidden'), 800);
+            setTimeout(() => showEl('empty-confirm-modal'), 800);
         }
 
         async function executeEmptyData() {
-            const btnConfirm = document.getElementById('btn-confirm-empty');
-            const btnCancel = document.getElementById('btn-cancel-empty');
-            btnConfirm.textContent = "Borrando...";
-            btnConfirm.disabled = true;
-            btnCancel.disabled = true;
+            const btnConfirm = getEl('btn-confirm-empty'), btnCancel = getEl('btn-cancel-empty');
+            btnConfirm.textContent = "Borrando..."; btnConfirm.disabled = true; btnCancel.disabled = true;
 
             try {
                 const snapshot = await db.collection("reservations_monthly").get();
-                if (!snapshot.empty) {
-                    const deletePromises = snapshot.docs.map(doc => doc.ref.delete());
-                    await Promise.all(deletePromises);
-                }
-                const swapSnapshot = await db.collection("swaps").get();
-                if (!swapSnapshot.empty) {
-                    const swapPromises = swapSnapshot.docs.map(doc => doc.ref.delete());
-                    await Promise.all(swapPromises);
-                }
+                if (!snapshot.empty) await Promise.all(snapshot.docs.map(doc => doc.ref.delete()));
                 
-                // Empty the new History logs too
+                const swapSnapshot = await db.collection("swaps").get();
+                if (!swapSnapshot.empty) await Promise.all(swapSnapshot.docs.map(doc => doc.ref.delete()));
+                
                 const historySnapshot = await db.collection("history_logs").get();
-                if (!historySnapshot.empty) {
-                    const historyPromises = historySnapshot.docs.map(doc => doc.ref.delete());
-                    await Promise.all(historyPromises);
-                }
+                if (!historySnapshot.empty) await Promise.all(historySnapshot.docs.map(doc => doc.ref.delete()));
 
-                document.getElementById('empty-confirm-modal').classList.add('hidden');
+                hideEl('empty-confirm-modal');
                 showNotification('Base de Datos Vaciada', `Se han eliminado permanentemente todos los archivos de la nube.`);
             } catch (error) {
-                document.getElementById('empty-confirm-modal').classList.add('hidden');
-                showNotification('Error', 'Hubo un problema al vaciar los datos.', true);
+                hideEl('empty-confirm-modal'); showNotification('Error', 'Hubo un problema al vaciar los datos.', true);
             } finally {
-                btnConfirm.textContent = "Sí, vaciar";
-                btnConfirm.disabled = false;
-                btnCancel.disabled = false;
+                btnConfirm.textContent = "Sí, vaciar"; btnConfirm.disabled = false; btnCancel.disabled = false;
             }
         }
 
         /* =========================================================================
            8. DRAG & DROP + SWAPS + DOUBLE CLICK (THE BRAIN)
            ========================================================================= */
-        let draggedItemId = null;
-        let pendingDrop = null;
-        let pendingNewSalidaWA = null; 
-        let pendingSwapIntent = null; 
-        let isProcessingDrop = false; 
+        let draggedItemId = null, pendingDrop = null, pendingNewSalidaWA = null, pendingSwapIntent = null, isProcessingDrop = false; 
 
         function cancelWhatsAppDrop() {
-            document.getElementById('whatsapp-confirm-modal').classList.add('hidden');
-            document.getElementById('swap-choice-modal').classList.add('hidden');
-            pendingDrop = null;
-            pendingSwapIntent = null;
-            pendingNewSalidaWA = null;
-            isProcessingDrop = false;
-            renderAll(); 
+            hideEl('whatsapp-confirm-modal'); hideEl('swap-choice-modal');
+            pendingDrop = null; pendingSwapIntent = null; pendingNewSalidaWA = null; isProcessingDrop = false; renderAll(); 
         }
 
         async function confirmWhatsAppAction() {
-            document.getElementById('whatsapp-confirm-modal').classList.add('hidden');
-            document.getElementById('btn-confirm-wa').disabled = true; 
+            hideEl('whatsapp-confirm-modal'); getEl('btn-confirm-wa').disabled = true; 
             
             if (pendingDrop) {
-                const drop = pendingDrop;
-                pendingDrop = null; 
-                await sendSilentWebhook(drop.msg);
-                await executeDrop(drop.id, drop.item, drop.newTime, drop.newSite, drop.newSubslot);
-                
-                // Log the History for a 'Move' (Hueco)
-                logHistory('move', { 
-                    date: drop.item.date, 
-                    oldTime: drop.item.time, 
-                    oldSite: drop.item.site, 
-                    newTime: drop.newTime, 
-                    newSite: drop.newSite, 
-                    pax: drop.item.pax 
-                });
+                const drop = pendingDrop; pendingDrop = null; 
+                await sendSilentWebhook(drop.msg); await executeDrop(drop.id, drop.item, drop.newTime, drop.newSite, drop.newSubslot);
+                logHistory('move', { date: drop.item.date, oldTime: drop.item.time, oldSite: drop.item.site, newTime: drop.newTime, newSite: drop.newSite, pax: drop.item.pax });
             }
             else if (pendingSwapIntent) {
-                const swap = pendingSwapIntent;
-                pendingSwapIntent = null; 
+                const swap = pendingSwapIntent; pendingSwapIntent = null; 
                 await sendSilentWebhook(swap.msg);
                 try {
-                    await db.collection("swaps").add({
-                        initiatorId: swap.initId, targetId: swap.targetId,
-                        initiatorCenter: swap.initItem.center, targetCenter: swap.targetItem.center,
-                        initiatorData: swap.initItem, targetData: swap.targetItem,
-                        status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    await db.collection("swaps").add({ initiatorId: swap.initId, targetId: swap.targetId, initiatorCenter: swap.initItem.center, targetCenter: swap.targetItem.center, initiatorData: swap.initItem, targetData: swap.targetItem, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
                     showNotification('Solicitud Enviada', 'La propuesta de intercambio ha sido enviada al otro centro.');
-                } catch(e) {
-                    showNotification('Error', 'Hubo un fallo al solicitar el intercambio.', true);
-                }
+                } catch(e) { showNotification('Error', 'Hubo un fallo al solicitar el intercambio.', true); }
             }
             else if (pendingNewSalidaWA) {
-                const newSalida = pendingNewSalidaWA;
-                pendingNewSalidaWA = null; 
-                await sendSilentWebhook(newSalida.msg);
-                await executeNewSalida(newSalida.data, newSalida.pax, newSalida.centerKey);
-                
-                // Log the History for a 'New Salida'
-                logHistory('add', { 
-                    date: newSalida.data.date, 
-                    time: newSalida.data.time, 
-                    site: newSalida.data.site, 
-                    pax: newSalida.pax 
-                });
+                const newSalida = pendingNewSalidaWA; pendingNewSalidaWA = null; 
+                await sendSilentWebhook(newSalida.msg); await executeNewSalida(newSalida.data, newSalida.pax, newSalida.centerKey);
+                logHistory('add', { date: newSalida.data.date, time: newSalida.data.time, site: newSalida.data.site, pax: newSalida.pax });
             }
-            document.getElementById('btn-confirm-wa').disabled = false;
-            isProcessingDrop = false;
+            getEl('btn-confirm-wa').disabled = false; isProcessingDrop = false;
         }
 
-        // --- CORE DB PROCESSORS: STRICT UPDATES WITHOUT ID CHANGES ---
-        
         async function executeDrop(id, item, newTime, newSite, newSubslot) {
             const monthKey = item.date.substring(0, 7); 
             try {
-                const updates = {};
-                let finalSubslot = 1;
-
-                // 1. Clean up old slot: If 1 boat remains there, FORCE it to subslot 1 (Rule 1)
+                const updates = {}; let finalSubslot = 1;
                 const remainingOld = allocations.filter(a => a.date === item.date && a.time === item.time && a.site === item.site && String(a.id) !== String(id));
-                if (remainingOld.length === 1) {
-                    const rem = remainingOld[0];
-                    if (rem.subslot !== 1) {
-                        updates[`allocations.${rem.id}.subslot`] = 1;
-                    }
-                }
+                if (remainingOld.length === 1 && remainingOld[0].subslot !== 1) updates[`allocations.${remainingOld[0].id}.subslot`] = 1;
 
-                // 2. Configure new slot: Empty = 1, One boat = 2 (Rule 1 & 2)
                 const existingNew = allocations.filter(a => a.date === item.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
                 if (existingNew.length === 1) {
-                    const exist = existingNew[0];
-                    finalSubslot = 2; // Rule 2: incoming goes below
-                    if (exist.subslot !== 1) {
-                        updates[`allocations.${exist.id}.subslot`] = 1; // Force existing to top
-                    }
-                } else {
-                    finalSubslot = 1; // Rule 1: empty slot gets top
+                    finalSubslot = 2; 
+                    if (existingNew[0].subslot !== 1) updates[`allocations.${existingNew[0].id}.subslot`] = 1; 
                 }
 
-                // 3. Update the dragged item itself using its EXACT original ID (Rule 4)
-                updates[`allocations.${id}.time`] = newTime;
-                updates[`allocations.${id}.site`] = newSite;
-                updates[`allocations.${id}.subslot`] = finalSubslot;
-
+                updates[`allocations.${id}.time`] = newTime; updates[`allocations.${id}.site`] = newSite; updates[`allocations.${id}.subslot`] = finalSubslot;
                 await db.collection("reservations_monthly").doc(monthKey).update(updates);
-            } catch(error) {
-                showNotification('Error', 'No se pudo guardar en la nube.', true);
-            }
+            } catch(error) { showNotification('Error', 'No se pudo guardar en la nube.', true); }
         }
 
-        // Helper function for completely safe, ID-preserving swaps (Rule 3, 4 & 5)
         async function performSwap(initId, initItem, targetId, targetItem, swapDocId = null) {
-            const month1 = initItem.date.substring(0, 7);
-            const month2 = targetItem.date.substring(0, 7); 
-
+            const month1 = initItem.date.substring(0, 7), month2 = targetItem.date.substring(0, 7); 
             try {
                 const batch = db.batch();
-                
-                // Rule 3: They explicitly take EACH OTHER'S exact physical places.
-                // Rule 4 & 5: Update the existing keys precisely. Unrelated boats in these slots are 100% ignored.
                 if (month1 === month2) {
-                    const docRef = db.collection("reservations_monthly").doc(month1);
-                    batch.update(docRef, {
-                        [`allocations.${initId}.time`]: targetItem.time,
-                        [`allocations.${initId}.site`]: targetItem.site,
-                        [`allocations.${initId}.subslot`]: targetItem.subslot || 1,
-                        
-                        [`allocations.${targetId}.time`]: initItem.time,
-                        [`allocations.${targetId}.site`]: initItem.site,
-                        [`allocations.${targetId}.subslot`]: initItem.subslot || 2
+                    batch.update(db.collection("reservations_monthly").doc(month1), {
+                        [`allocations.${initId}.time`]: targetItem.time, [`allocations.${initId}.site`]: targetItem.site, [`allocations.${initId}.subslot`]: targetItem.subslot || 1,
+                        [`allocations.${targetId}.time`]: initItem.time, [`allocations.${targetId}.site`]: initItem.site, [`allocations.${targetId}.subslot`]: initItem.subslot || 2
                     });
                 } else {
-                    // Cross month swaps: Rebuild to move between docs safely
                     const new_iItem = { ...initItem, time: targetItem.time, site: targetItem.site, subslot: targetItem.subslot || 1 };
                     const new_tItem = { ...targetItem, time: initItem.time, site: initItem.site, subslot: initItem.subslot || 2 };
-                    
                     batch.update(db.collection("reservations_monthly").doc(month1), { [`allocations.${initId}`]: firebase.firestore.FieldValue.delete() });
                     batch.update(db.collection("reservations_monthly").doc(month2), { [`allocations.${targetId}`]: firebase.firestore.FieldValue.delete() });
                     batch.set(db.collection("reservations_monthly").doc(month2), { allocations: { [initId]: new_iItem } }, { merge: true });
                     batch.set(db.collection("reservations_monthly").doc(month1), { allocations: { [targetId]: new_tItem } }, { merge: true });
                 }
-
                 if (swapDocId) batch.delete(db.collection("swaps").doc(swapDocId));
-                
                 await batch.commit();
-            } catch(e) {
-                console.error(e);
-                throw e;
-            }
+            } catch(e) { console.error(e); throw e; }
         }
         
         async function executeNewSalida(info, pax, userKeyChoice) {
             const { date, time, site, targetSubslot } = info;
-            const centerCode = USER_CENTER_KEYS[userKeyChoice] || USER_CENTER_KEYS[currentUserKey];
-            const monthKey = date.substring(0, 7);
+            const centerCode = USER_CENTER_KEYS[userKeyChoice] || USER_CENTER_KEYS[currentUserKey], monthKey = date.substring(0, 7);
             
             try {
-                const updates = {};
-                let finalSubslot = 1;
-
+                const updates = {}; let finalSubslot = 1;
                 const existingInSlot = allocations.filter(a => a.date === date && a.time === time && a.site === site);
                 if (existingInSlot.length === 1) {
-                    const exist = existingInSlot[0];
-                    finalSubslot = 2; // Rule 2
-                    if (exist.subslot !== 1) updates[`allocations.${exist.id}.subslot`] = 1; // Rule 1
+                    finalSubslot = 2; 
+                    if (existingInSlot[0].subslot !== 1) updates[`allocations.${existingInSlot[0].id}.subslot`] = 1; 
                 }
 
                 const uniqueId = `boat_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
                 const newItem = { date, time, site, center: centerCode, pax, subslot: finalSubslot };
                 updates[`allocations.${uniqueId}`] = newItem;
 
-                const docRef = db.collection("reservations_monthly").doc(monthKey);
-                try {
-                    await docRef.update(updates);
-                } catch(e) {
-                    await docRef.set({ allocations: { [uniqueId]: newItem } }, { merge: true });
-                }
-            } catch(e) {
-                showNotification('Error', 'Hubo un problema guardando en la nube.', true);
-            }
+                try { await db.collection("reservations_monthly").doc(monthKey).update(updates); } 
+                catch(e) { await db.collection("reservations_monthly").doc(monthKey).set({ allocations: { [uniqueId]: newItem } }, { merge: true }); }
+            } catch(e) { showNotification('Error', 'Hubo un problema guardando en la nube.', true); }
         }
 
         function openNotificationsModal() {
-            const myCode = USER_CENTER_KEYS[currentUserKey];
-            const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
-            const listEl = document.getElementById('notifications-list');
-            listEl.innerHTML = '';
+            const myCode = USER_CENTER_KEYS[currentUserKey], pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
+            const listEl = getEl('notifications-list'); listEl.innerHTML = '';
             
-            if (pendingForMe.length === 0) {
-                listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-6">No tienes solicitudes pendientes.</p>`;
-            } else {
+            if (pendingForMe.length === 0) listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-6">No tienes solicitudes pendientes.</p>`;
+            else {
                 pendingForMe.forEach(req => {
-                    const initName = CENTERS[req.initiatorCenter].name;
-                    const d = new Date(req.initiatorData.date);
+                    const initName = CENTERS[req.initiatorCenter].name, d = new Date(req.initiatorData.date);
                     const dStr = `${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
                     
-                    const html = `
+                    listEl.innerHTML += `
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm">
                         <div class="flex gap-3 mb-3">
                             <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 text-xs">🔄</span>
@@ -1769,104 +1361,64 @@
                             <button onclick="acceptSwap('${req.id}')" class="flex-1 px-3 py-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white text-xs font-bold rounded-lg transition-colors shadow-sm">Aceptar Cambio</button>
                         </div>
                     </div>`;
-                    listEl.innerHTML += html;
                 });
             }
-            document.getElementById('notifications-modal').classList.remove('hidden');
+            showEl('notifications-modal');
         }
 
-        async function rejectSwap(swapId) {
-            try { await db.collection("swaps").doc(swapId).delete(); openNotificationsModal(); } catch(e) {}
-        }
+        async function rejectSwap(swapId) { try { await db.collection("swaps").doc(swapId).delete(); openNotificationsModal(); } catch(e) {} }
 
         async function acceptSwap(swapId) {
-            const req = swapRequests.find(s => s.id === swapId);
-            if (!req) return;
-            document.getElementById('notifications-modal').classList.add('hidden');
+            const req = swapRequests.find(s => s.id === swapId); if (!req) return;
+            hideEl('notifications-modal');
             
             try {
                 await performSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData, swapId);
-                const targetInfo = getCenterInfoSafe(req.targetData.center);
-                const initInfo = getCenterInfoSafe(req.initiatorCenter);
+                const targetInfo = getCenterInfoSafe(req.targetData.center), initInfo = getCenterInfoSafe(req.initiatorCenter);
                 const d = new Date(req.initiatorData.date);
                 
                 const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *INTERCAMBIO ACEPTADO* - ${initInfo.name} y ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, intercambiaron *${req.initiatorData.site} (${req.initiatorData.time})* por *${req.targetData.site} (${req.targetData.time})*.`;
-                
                 await sendSilentWebhook(msg);
                 
-                // Log the History for a successful 'Swap'
-                logHistory('swap', { 
-                    date: req.initiatorData.date, 
-                    initCenter: req.initiatorCenter, 
-                    initSite: req.initiatorData.site, 
-                    initTime: req.initiatorData.time,
-                    initPax: req.initiatorData.pax,
-                    targetCenter: req.targetData.center,
-                    targetSite: req.targetData.site, 
-                    targetTime: req.targetData.time,
-                    targetPax: req.targetData.pax 
-                });
-            } catch(e) {
-                showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
-            }
+                logHistory('swap', { date: req.initiatorData.date, initCenter: req.initiatorCenter, initSite: req.initiatorData.site, initTime: req.initiatorData.time, initPax: req.initiatorData.pax, targetCenter: req.targetData.center, targetSite: req.targetData.site, targetTime: req.targetData.time, targetPax: req.targetData.pax });
+            } catch(e) { showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true); }
         }
         
-        async function adminInstantSwap(req) {
-            try {
-                await performSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData);
-            } catch(e) {
-                showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true);
-            }
-        }
+        async function adminInstantSwap(req) { try { await performSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData); } catch(e) { showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true); } }
 
         function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
-            const targetInfo = getCenterInfoSafe(targetItem.center);
-            const initInfo = getCenterInfoSafe(initItem.center);
+            const targetInfo = getCenterInfoSafe(targetItem.center), initInfo = getCenterInfoSafe(initItem.center);
             const d = new Date(initItem.date);
-            
             const msg = `🤖 *AVISO AUTOMÁTICO*\n🔀 *SOLICITUD DE INTERCAMBIO* - ${initInfo.name} a ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ofrece *${initItem.site} (${initItem.time})* por *${targetItem.site} (${targetItem.time})*. Entrad al visor para confirmar.`;
             
             pendingSwapIntent = { initId, initItem, targetId, targetItem, msg };
-            document.getElementById('wa-action-type').textContent = "Solicitud de Intercambio";
-            document.getElementById('confirm-whatsapp-msg').innerText = msg;
-            document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
+            getEl('wa-action-type').textContent = "Solicitud de Intercambio";
+            getEl('confirm-whatsapp-msg').innerText = msg;
+            showEl('whatsapp-confirm-modal');
         }
 
         function showSwapChoiceModal(initId, initItem, targets, isAdmin = false) {
-            pendingSwapInit = { initId, initItem };
-            pendingSwapTargets = targets;
-            pendingSwapIsAdmin = isAdmin;
-            
-            const container = document.getElementById('swap-choice-buttons');
-            container.innerHTML = '';
+            pendingSwapInit = { initId, initItem }; pendingSwapTargets = targets; pendingSwapIsAdmin = isAdmin;
+            const container = getEl('swap-choice-buttons'); container.innerHTML = '';
             
             targets.forEach(target => {
-                const cInfo = CENTERS[target.center];
-                const btn = document.createElement('button');
+                const cInfo = CENTERS[target.center], btn = document.createElement('button');
                 btn.className = `w-full px-4 py-4 rounded-xl text-sm font-bold shadow-sm border border-slate-200 hover:shadow-md transition-all flex items-center justify-between ${cInfo.color} ${cInfo.text}`;
                 btn.innerHTML = `<span>${cInfo.name}</span> <span class="bg-black/20 px-2 py-1 rounded-md">${target.pax} Plazas</span>`;
                 btn.onclick = () => selectSwapTarget(target.id);
                 container.appendChild(btn);
             });
-            document.getElementById('swap-choice-modal').classList.remove('hidden');
+            showEl('swap-choice-modal');
         }
 
         async function selectSwapTarget(targetId) {
-            document.getElementById('swap-choice-modal').classList.add('hidden');
+            hideEl('swap-choice-modal');
             const targetItem = pendingSwapTargets.find(t => t.id === targetId);
-            const { initId, initItem } = pendingSwapInit;
-            const isAdmin = pendingSwapIsAdmin;
-
-            pendingSwapInit = null;
-            pendingSwapTargets = [];
-            pendingSwapIsAdmin = false;
+            const { initId, initItem } = pendingSwapInit, isAdmin = pendingSwapIsAdmin;
+            pendingSwapInit = null; pendingSwapTargets = []; pendingSwapIsAdmin = false;
             
-            if (isAdmin) {
-                await adminInstantSwap({ initiatorId: initId, targetId: targetId, initiatorData: initItem, targetData: targetItem });
-                isProcessingDrop = false;
-            } else {
-                triggerSwapConfirmation(initId, initItem, targetId, targetItem);
-            }
+            if (isAdmin) { await adminInstantSwap({ initiatorId: initId, targetId: targetId, initiatorData: initItem, targetData: targetItem }); isProcessingDrop = false; } 
+            else { triggerSwapConfirmation(initId, initItem, targetId, targetItem); }
         }
 
         document.addEventListener('dragstart', (e) => {
@@ -1879,73 +1431,42 @@
         });
 
         document.addEventListener('dragend', (e) => {
-            const block = e.target.closest('.draggable-item');
-            if (!block) return;
-            draggedItemId = null;
-            block.classList.remove('opacity-50');
+            const block = e.target.closest('.draggable-item'); if (!block) return;
+            draggedItemId = null; block.classList.remove('opacity-50');
             document.querySelectorAll('.dropzone').forEach(el => el.classList.remove('bg-blue-50', 'bg-purple-50'));
         });
 
         document.addEventListener('dragover', (e) => {
             if (isGuestMode || !draggedItemId || isProcessingDrop) return;
-            e.preventDefault(); 
-            if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-            
-            document.querySelectorAll('.bg-blue-50, .bg-purple-50').forEach(el => {
-                if (el !== e.target.closest('.dropzone')) el.classList.remove('bg-blue-50', 'bg-purple-50');
-            });
+            e.preventDefault(); if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+            document.querySelectorAll('.bg-blue-50, .bg-purple-50').forEach(el => { if (el !== e.target.closest('.dropzone')) el.classList.remove('bg-blue-50', 'bg-purple-50'); });
 
-            const dropzone = e.target.closest('.dropzone');
-            if (!dropzone) return;
-            
-            const newTime = dropzone.dataset.time;
-            const newSite = dropzone.dataset.site;
-            const ds = formatDateString(currentDate);
-            
+            const dropzone = e.target.closest('.dropzone'); if (!dropzone) return;
+            const newTime = dropzone.dataset.time, newSite = dropzone.dataset.site, ds = formatDateString(currentDate);
             const existing = allocations.filter(a => a.date === ds && a.time === newTime && a.site === newSite && String(a.id) !== String(draggedItemId));
-            
-            // Highlight intent for the entire block visually
-            if (existing.length >= 2) dropzone.classList.add('bg-purple-50');
-            else dropzone.classList.add('bg-blue-50');
+            if (existing.length >= 2) dropzone.classList.add('bg-purple-50'); else dropzone.classList.add('bg-blue-50');
         });
 
         document.addEventListener('dragleave', (e) => {
             const dropzone = e.target.closest('.dropzone');
-            if (dropzone && !dropzone.contains(e.relatedTarget)) {
-                dropzone.classList.remove('bg-blue-50', 'bg-purple-50');
-            }
+            if (dropzone && !dropzone.contains(e.relatedTarget)) dropzone.classList.remove('bg-blue-50', 'bg-purple-50');
         });
 
         document.addEventListener('drop', async (e) => {
             if (isGuestMode || isProcessingDrop) return;
-            e.preventDefault();
-            
-            document.querySelectorAll('.dropzone').forEach(el => el.classList.remove('bg-blue-50', 'bg-purple-50'));
-            
-            let id = draggedItemId;
-            if (!id) return;
+            e.preventDefault(); document.querySelectorAll('.dropzone').forEach(el => el.classList.remove('bg-blue-50', 'bg-purple-50'));
+            let id = draggedItemId; if (!id) return;
 
-            const dropzone = e.target.closest('.dropzone');
-            if (!dropzone) return;
-
-            const newTime = dropzone.dataset.time;
-            const newSite = dropzone.dataset.site;
-
-            const initItem = allocations.find(a => String(a.id) === String(id));
-            if (!initItem) return;
+            const dropzone = e.target.closest('.dropzone'); if (!dropzone) return;
+            const newTime = dropzone.dataset.time, newSite = dropzone.dataset.site;
+            const initItem = allocations.find(a => String(a.id) === String(id)); if (!initItem) return;
             
             if (initItem.time === newTime && initItem.site === newSite) return;
+            if (currentUserKey !== 'admin' && initItem.center !== USER_CENTER_KEYS[currentUserKey]) { showNotification('Acción Bloqueada', 'Solo puedes mover tus propias reservas.', true); return; }
 
-            if (currentUserKey !== 'admin' && initItem.center !== USER_CENTER_KEYS[currentUserKey]) {
-                showNotification('Acción Bloqueada', 'Solo puedes mover tus propias reservas.', true);
-                return;
-            }
-
-            isProcessingDrop = true; // Lock system to prevent duplicated background actions
-
+            isProcessingDrop = true; 
             const existingItemsInSlot = allocations.filter(a => a.date === initItem.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
 
-            // PRIORITY 1: Is there an empty slot? (Hueco)
             if (existingItemsInSlot.length < 2) {
                 const itemsInNewSiteToday = allocations.filter(a => a.date === initItem.date && a.site === newSite && String(a.id) !== String(id));
                 const currentPaxNewSite = itemsInNewSiteToday.reduce((sum, a) => sum + a.pax, 0);
@@ -1953,42 +1474,22 @@
 
                 if (initItem.pax > remainingCapacity) {
                     showNotification('Cupo Lleno', `No puedes mover la salida aquí. El punto tiene ${remainingCapacity} plazas libres y tu barco tiene ${initItem.pax}.`, true);
-                    isProcessingDrop = false;
-                    return;
+                    isProcessingDrop = false; return;
                 }
 
                 if (currentUserKey !== 'admin') {
-                    const d = new Date(initItem.date);
-                    const centerInfo = getCenterInfoSafe(initItem.center);
-                    
+                    const d = new Date(initItem.date), centerInfo = getCenterInfoSafe(initItem.center);
                     const msg = `🤖 *AVISO AUTOMÁTICO*\n➡️ *CAMBIO DE HORARIO* - ${centerInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, movió su salida de *${initItem.site} (${initItem.time})* a *${newSite} (${newTime})*.`;
-                    
                     pendingDrop = { id, item: initItem, newTime, newSite, msg };
-                    document.getElementById('wa-action-type').textContent = "Cambio de Horario/Punto";
-                    document.getElementById('confirm-whatsapp-msg').innerText = msg;
-                    document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
-                } else {
-                    await executeDrop(id, initItem, newTime, newSite);
-                    isProcessingDrop = false;
-                }
-            } 
-            // PRIORITY 2: The slot is fully packed (2 boats). Must be an Intercambio!
-            else {
+                    getEl('wa-action-type').textContent = "Cambio de Horario/Punto"; getEl('confirm-whatsapp-msg').innerText = msg; showEl('whatsapp-confirm-modal');
+                } else { await executeDrop(id, initItem, newTime, newSite); isProcessingDrop = false; }
+            } else {
                 if (currentUserKey !== 'admin') {
                     const targets = existingItemsInSlot.filter(t => t.center !== initItem.center);
-                    if (targets.length === 0) {
-                        showNotification('Acción Bloqueada', 'Ambos barcos en este horario son tuyos. No puedes hacer un intercambio.', true);
-                        isProcessingDrop = false;
-                        return;
-                    } 
-                    if (targets.length === 1) {
-                        triggerSwapConfirmation(id, initItem, targets[0].id, targets[0]);
-                    } else {
-                        showSwapChoiceModal(id, initItem, targets);
-                    }
-                } else {
-                    showSwapChoiceModal(id, initItem, existingItemsInSlot, true);
-                }
+                    if (targets.length === 0) { showNotification('Acción Bloqueada', 'Ambos barcos en este horario son tuyos. No puedes hacer un intercambio.', true); isProcessingDrop = false; return; } 
+                    if (targets.length === 1) triggerSwapConfirmation(id, initItem, targets[0].id, targets[0]);
+                    else showSwapChoiceModal(id, initItem, targets);
+                } else { showSwapChoiceModal(id, initItem, existingItemsInSlot, true); }
             }
         });
 
@@ -1997,73 +1498,40 @@
 
             const ds = formatDateString(currentDate);
             const existingItemsInSlot = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
-            if (existingItemsInSlot.length >= 2) {
-                showNotification('Horario Completo', 'Ya hay 2 barcos asignados en este horario.', true);
-                return;
-            }
+            if (existingItemsInSlot.length >= 2) { showNotification('Horario Completo', 'Ya hay 2 barcos asignados en este horario.', true); return; }
 
             const itemsInSiteToday = allocations.filter(a => a.date === ds && a.site === site);
             const currentPax = itemsInSiteToday.reduce((sum, a) => sum + a.pax, 0);
             const remainingCapacity = SITE_CAPACITY[site] - currentPax;
 
-            if (remainingCapacity <= 0) {
-                showNotification('Cupo Lleno', 'No quedan plazas disponibles para este punto de buceo hoy.', true);
-                return;
-            }
-            
+            if (remainingCapacity <= 0) { showNotification('Cupo Lleno', 'No quedan plazas disponibles para este punto de buceo hoy.', true); return; }
             const allowedMax = Math.min(11, remainingCapacity);
 
             pendingNewSalida = { date: ds, time, site, maxPax: remainingCapacity };
-            document.getElementById('new-salida-title').textContent = `${site} a las ${time}`;
-            document.getElementById('new-salida-avail').textContent = `Plazas disponibles en el punto: ${remainingCapacity} (Máx por barco: ${allowedMax})`;
+            getEl('new-salida-title').textContent = `${site} a las ${time}`;
+            getEl('new-salida-avail').textContent = `Plazas disponibles en el punto: ${remainingCapacity} (Máx por barco: ${allowedMax})`;
             
-            const paxInput = document.getElementById('new-salida-pax');
-            paxInput.value = '';
-            paxInput.max = allowedMax;
-            
-            if (currentUserKey === 'admin') document.getElementById('new-salida-center-container').classList.remove('hidden');
-            else document.getElementById('new-salida-center-container').classList.add('hidden');
-
-            document.getElementById('new-salida-modal').classList.remove('hidden');
+            const paxInput = getEl('new-salida-pax'); paxInput.value = ''; paxInput.max = allowedMax;
+            getEl('new-salida-center-container').classList.toggle('hidden', currentUserKey !== 'admin');
+            showEl('new-salida-modal');
         }
 
-        function cancelNewSalida() {
-            document.getElementById('new-salida-modal').classList.add('hidden');
-            pendingNewSalida = null;
-        }
+        function cancelNewSalida() { hideEl('new-salida-modal'); pendingNewSalida = null; }
 
         async function confirmNewSalida() {
-            const paxInput = document.getElementById('new-salida-pax');
-            let pax = parseInt(paxInput.value, 10);
-            const allowedMax = Math.min(11, pendingNewSalida.maxPax);
-            
-            if (!pax || isNaN(pax) || pax <= 0) {
-                showNotification('Error', 'Introduce un número válido.', true);
-                return;
-            }
+            const pax = parseInt(getEl('new-salida-pax').value, 10), allowedMax = Math.min(11, pendingNewSalida.maxPax);
+            if (!pax || isNaN(pax) || pax <= 0) { showNotification('Error', 'Introduce un número válido.', true); return; }
+            if (pax > allowedMax) { showNotification('Límite excedido', `El máximo permitido es ${allowedMax} plazas.`, true); return; }
 
-            if (pax > allowedMax) {
-                showNotification('Límite excedido', `El máximo permitido es ${allowedMax} plazas.`, true);
-                return;
-            }
-
-            document.getElementById('new-salida-modal').classList.add('hidden');
+            hideEl('new-salida-modal');
             
             if (currentUserKey === 'admin') {
-                const adminCenterChoice = document.getElementById('new-salida-center').value;
-                await executeNewSalida(pendingNewSalida, pax, adminCenterChoice);
+                await executeNewSalida(pendingNewSalida, pax, getEl('new-salida-center').value);
             } else {
-                const { date, time, site } = pendingNewSalida;
-                const dObj = new Date(date);
-                const centerInfo = getCenterInfoSafe(currentUserKey);
-                
+                const { date, time, site } = pendingNewSalida, dObj = new Date(date), centerInfo = getCenterInfoSafe(currentUserKey);
                 const msg = `🤖 *AVISO AUTOMÁTICO*\n➕ *NUEVA SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, añadió una salida a *${site} (${time})* de ${pax} plazas.`;
-                
                 pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: currentUserKey, msg: msg };
-
-                document.getElementById('wa-action-type').textContent = "Nueva Salida";
-                document.getElementById('confirm-whatsapp-msg').innerText = msg;
-                document.getElementById('whatsapp-confirm-modal').classList.remove('hidden');
+                getEl('wa-action-type').textContent = "Nueva Salida"; getEl('confirm-whatsapp-msg').innerText = msg; showEl('whatsapp-confirm-modal');
             }
         }
 
@@ -2073,8 +1541,8 @@
         function renderDaily() {
             if(activeViewMode !== 'diario') return;
             const ds = formatDateString(currentDate);
-            document.getElementById('daily-date-header').textContent = `${DAYS_ES[currentDate.getDay()]}, ${currentDate.getDate()} DE ${MONTHS_ES[currentDate.getMonth()]} DE ${currentDate.getFullYear()}`;
-            const grid = document.getElementById('schedule-grid'); grid.innerHTML = '';
+            getEl('daily-date-header').textContent = `${DAYS_ES[currentDate.getDay()]}, ${currentDate.getDate()} DE ${MONTHS_ES[currentDate.getMonth()]} DE ${currentDate.getFullYear()}`;
+            const grid = getEl('schedule-grid'); grid.innerHTML = '';
             const t = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0 };
             let totalFilteredPax = 0;
 
@@ -2084,76 +1552,50 @@
                     return;
                 }
 
-                let subRow1 = '';
-                let subRow2 = '';
+                let subRow1 = ''; let subRow2 = '';
 
                 SITES.forEach(site => {
                     const siteItems = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
                     const renderedItems = siteItems.filter(item => selectedCenters.includes(item.center));
                     
-                    let item1 = renderedItems.find(i => i.subslot === 1);
-                    let item2 = renderedItems.find(i => i.subslot === 2);
+                    let item1 = renderedItems.find(i => i.subslot === 1), item2 = renderedItems.find(i => i.subslot === 2);
 
-                    if (renderedItems.length === 1) {
-                        item1 = renderedItems[0]; 
-                        item2 = null;
-                    } else if (renderedItems.length === 2) {
-                        if (!item1 && !item2) {
-                            item1 = renderedItems[0]; item2 = renderedItems[1];
-                        } else if (item1 && !item2) {
-                            item2 = renderedItems.find(i => String(i.id) !== String(item1.id));
-                        } else if (!item1 && item2) {
-                            item1 = renderedItems.find(i => String(i.id) !== String(item2.id));
-                        }
+                    if (renderedItems.length === 1) { item1 = renderedItems[0]; item2 = null; } 
+                    else if (renderedItems.length === 2) {
+                        if (!item1 && !item2) { item1 = renderedItems[0]; item2 = renderedItems[1]; } 
+                        else if (item1 && !item2) { item2 = renderedItems.find(i => String(i.id) !== String(item1.id)); } 
+                        else if (!item1 && item2) { item1 = renderedItems.find(i => String(i.id) !== String(item2.id)); }
                     }
 
-                    let html1 = '';
-                    let html2 = '';
-
                     const createBlockHTML = (item) => {
-                        t[site] += item.pax;
-                        totalFilteredPax += item.pax;
+                        t[site] += item.pax; totalFilteredPax += item.pax;
                         const c = CENTERS[item.center];
-                        
                         const isPending = swapRequests.some(s => String(s.initiatorId) === String(item.id) || String(s.targetId) === String(item.id));
                         const ghostClass = isPending ? 'pending-swap-ghost' : '';
-                        
                         const canDragBlock = !isPending && !isGuestMode && (currentUserKey === 'admin' || item.center === USER_CENTER_KEYS[currentUserKey]);
                         const dragAttrs = canDragBlock ? `draggable="true" data-drag-id="${item.id}"` : `draggable="false" data-drag-id="${item.id}"`;
-                        
                         const cursorClass = canDragBlock ? `cursor-grab active:cursor-grabbing hover:opacity-90 draggable-item` : `cursor-default opacity-90`;
 
                         return `<div ${dragAttrs} class="boat-block w-full h-[34px] rounded-[4px] px-2 py-1.5 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
-                            <div class="truncate flex items-center gap-1.5 pointer-events-none">
-                                <span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span>
-                                <span>${c.name} ${isPending ? '🔄' : ''}</span>
-                            </div>
+                            <div class="truncate flex items-center gap-1.5 pointer-events-none"><span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span><span>${c.name} ${isPending ? '🔄' : ''}</span></div>
                             <span class="bg-black/20 px-1.5 py-0.5 rounded-sm pointer-events-none">${item.pax}</span>
                         </div>`;
                     };
 
-                    if (item1) html1 += createBlockHTML(item1);
-                    if (item2) html2 += createBlockHTML(item2);
-
+                    let html1 = item1 ? createBlockHTML(item1) : '', html2 = item2 ? createBlockHTML(item2) : '';
                     subRow1 += `<div class="border-r border-b border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${html1}</div>`;
                     subRow2 += `<div class="border-r border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${html2}</div>`;
                 });
 
-                grid.innerHTML += `
-                    <div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b border-slate-200">
-                        <div class="row-span-2 flex items-center justify-center border-r border-slate-200 font-black italic text-slate-500 text-sm bg-slate-50/20">${time}</div>
-                        <div class="flex items-center justify-center border-r border-b border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">1</div>
-                        ${subRow1}
-                        <div class="flex items-center justify-center border-r border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">2</div>
-                        ${subRow2}
-                    </div>
-                `;
+                grid.innerHTML += `<div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b border-slate-200">
+                    <div class="row-span-2 flex items-center justify-center border-r border-slate-200 font-black italic text-slate-500 text-sm bg-slate-50/20">${time}</div>
+                    <div class="flex items-center justify-center border-r border-b border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">1</div>${subRow1}
+                    <div class="flex items-center justify-center border-r border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">2</div>${subRow2}</div>`;
             });
             
-            document.getElementById('total-pax-header').textContent = totalFilteredPax;
+            getEl('total-pax-header').textContent = totalFilteredPax;
             SITES.forEach(s => {
-                const el = document.getElementById({'Bajo de Dentro':'cap-bajo', 'Piles II':'cap-piles2', 'Piles I':'cap-piles1', 'Testa':'cap-testa', 'Morra':'cap-morra'}[s]);
-                el.innerHTML = `<div class="flex flex-col items-center"><span class="${t[s] > SITE_CAPACITY[s] ? 'text-red-600' : 'text-green-600'} font-black text-lg leading-none">${t[s]}</span><div class="w-8 border-t border-slate-300 my-0.5"></div><span class="text-slate-500 font-bold leading-none">${SITE_CAPACITY[s]} ${t[s] > SITE_CAPACITY[s] ? '❌' : '✅'}</span></div>`;
+                getEl({'Bajo de Dentro':'cap-bajo', 'Piles II':'cap-piles2', 'Piles I':'cap-piles1', 'Testa':'cap-testa', 'Morra':'cap-morra'}[s]).innerHTML = `<div class="flex flex-col items-center"><span class="${t[s] > SITE_CAPACITY[s] ? 'text-red-600' : 'text-green-600'} font-black text-lg leading-none">${t[s]}</span><div class="w-8 border-t border-slate-300 my-0.5"></div><span class="text-slate-500 font-bold leading-none">${SITE_CAPACITY[s]} ${t[s] > SITE_CAPACITY[s] ? '❌' : '✅'}</span></div>`;
             });
         }
 
@@ -2162,177 +1604,90 @@
             const isW = activeViewMode === 'semanal';
             const start = isW ? getMonday(currentDate) : new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
             const num = isW ? 7 : new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-            document.getElementById('mega-date-header').textContent = isW ? `Semana ${getWeekNumber(currentDate)} - ${currentDate.getFullYear()}` : `${MONTHS_ES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            getEl('mega-date-header').textContent = isW ? `Semana ${getWeekNumber(currentDate)} - ${currentDate.getFullYear()}` : `${MONTHS_ES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
             
             const anchor = `<svg class="w-3 h-3 inline mr-1 text-blue-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>`;
-            let h = `<div class="mega-grid text-[10px] text-center">`;
-            h += `<div class="sticky top-0 left-0 bg-slate-100 border-r-2 border-b-2 border-slate-300 z-50 flex items-center justify-center font-bold text-slate-500 h-[72px]" style="grid-row: span 2;">FECHA</div>`;
+            let h = `<div class="mega-grid text-[10px] text-center"><div class="sticky top-0 left-0 bg-slate-100 border-r-2 border-b-2 border-slate-300 z-50 flex items-center justify-center font-bold text-slate-500 h-[72px]" style="grid-row: span 2;">FECHA</div>`;
             SITES.forEach(s => h += `<div class="sticky top-0 z-40 bg-white text-blue-700 border-r-2 border-b-2 border-slate-200 h-10 flex items-center justify-center font-black uppercase tracking-widest" style="grid-column: span 7;">${anchor} ${s}</div>`);
             SITES.forEach(() => TIMES.forEach(tm => h += `<div class="sticky top-[40px] z-30 border-r border-b-2 border-slate-300 h-8 flex items-center justify-center font-bold ${tm === '13:30' ? 'bg-red-50 text-red-400' : 'bg-slate-50 text-slate-500'}">${tm}</div>`));
+            
             for (let i = 0; i < num; i++) {
                 const d = new Date(start); d.setDate(start.getDate() + i); const ds = formatDateString(d);
                 const isD = d.getDay() === 0 || d.getDay() === 6 || FESTIVOS.includes(ds);
                 h += `<div class="sticky left-0 bg-white border-r-2 border-b border-slate-200 flex flex-col justify-center items-center z-10 py-1 shadow-sm cursor-pointer hover:bg-blue-50" onclick="setDate('${ds}'); switchView('diario');">
-                    <span class="font-bold text-[8px] ${isD ? 'text-red-400' : 'text-slate-400'}">${DAYS_ES[d.getDay()].substring(0,3)}</span>
-                    <span class="text-xs font-black ${isD ? 'text-red-600' : 'text-slate-800'}">${d.getDate()}</span>
-                </div>`;
+                    <span class="font-bold text-[8px] ${isD ? 'text-red-400' : 'text-slate-400'}">${DAYS_ES[d.getDay()].substring(0,3)}</span><span class="text-xs font-black ${isD ? 'text-red-600' : 'text-slate-800'}">${d.getDate()}</span></div>`;
                 SITES.forEach(s => TIMES.forEach(tm => {
                     const its = allocations.filter(a => a.date === ds && a.site === s && a.time === tm && selectedCenters.includes(a.center));
                     h += `<div class="border-r border-b border-slate-200 ${tm === '13:30' ? 'bg-red-50/20' : 'bg-white'} p-[2px] flex flex-col gap-[2px] min-h-[44px]">`;
                     its.forEach(it => { 
                         const c = CENTERS[it.center]; 
-                        const isPending = swapRequests.some(s => String(s.initiatorId) === String(it.id) || String(s.targetId) === String(it.id));
-                        const ghostClass = isPending ? 'opacity-40 grayscale border border-slate-400' : '';
+                        const ghostClass = swapRequests.some(sw => String(sw.initiatorId) === String(it.id) || String(sw.targetId) === String(it.id)) ? 'opacity-40 grayscale border border-slate-400' : '';
                         h += `<span class="${c.color} ${c.text} ${ghostClass} w-full py-[2px] rounded-[3px] font-bold text-[8px] leading-none shadow-sm">${it.center}${it.pax}</span>`; 
                     });
                     h += `</div>`;
                 }));
             }
-            h += `</div>`; document.getElementById('mega-grid-container').innerHTML = h;
+            getEl('mega-grid-container').innerHTML = h + `</div>`;
         }
 
         function renderStats() {
             if(activeViewMode !== 'estadisticas') return;
-            
             const anchor = `<svg class="w-3.5 h-3.5 inline mr-1.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>`;
-            const isBarcos = statsUnit === 'barcos';
+            const isBarcos = statsUnit === 'barcos', filteredAllocations = allocations.filter(a => selectedCenters.includes(a.center));
+            const cStats = {}, gTot = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 };
+            
+            Object.keys(CENTERS).forEach(k => { cStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 }; });
+            filteredAllocations.forEach(a => { const val = isBarcos ? 1 : a.pax; cStats[a.center][a.site] += val; cStats[a.center].total += val; gTot[a.site] += val; gTot.total += val; });
 
-            const filteredAllocations = allocations.filter(a => selectedCenters.includes(a.center));
-
-            const cStats = {};
-            const gTot = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 };
-            Object.keys(CENTERS).forEach(k => {
-                cStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 };
-            });
-
-            filteredAllocations.forEach(a => {
-                const val = isBarcos ? 1 : a.pax;
-                cStats[a.center][a.site] += val;
-                cStats[a.center].total += val;
-                gTot[a.site] += val;
-                gTot.total += val;
-            });
-
-            let tableHtml = `<div class="w-full overflow-x-auto rounded-xl border border-slate-200 shadow-sm mb-12 bg-white">
-                <table class="w-full text-left min-w-[900px] stats-table">
-                    <thead>
-                        <tr class="border-b border-slate-200 bg-white">
-                            <th class="px-5 py-4 align-bottom border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 w-56" rowspan="2">Centro</th>`;
-
-            SITES.forEach(s => {
-                tableHtml += `<th class="pt-5 pb-3 px-2 text-center border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-600" colspan="2">
-                    <div class="flex items-center justify-center gap-1.5">${anchor}<span>${s}</span></div>
-                </th>`;
-            });
-
+            let tableHtml = `<div class="w-full overflow-x-auto rounded-xl border border-slate-200 shadow-sm mb-12 bg-white"><table class="w-full text-left min-w-[900px] stats-table"><thead><tr class="border-b border-slate-200 bg-white"><th class="px-5 py-4 align-bottom border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 w-56" rowspan="2">Centro</th>`;
+            SITES.forEach(s => tableHtml += `<th class="pt-5 pb-3 px-2 text-center border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-600" colspan="2"><div class="flex items-center justify-center gap-1.5">${anchor}<span>${s}</span></div></th>`);
             tableHtml += `<th class="px-5 py-4 text-center align-middle bg-[#111827] text-white text-[10px] font-black uppercase tracking-widest" rowspan="2">Total Real</th></tr><tr class="border-b border-slate-200 bg-white">`;
-
-            SITES.forEach(() => {
-                tableHtml += `<th class="py-2.5 px-1 text-center border-r border-slate-100 text-[9px] font-bold uppercase text-slate-400">Cant.</th>
-                              <th class="py-2.5 px-1 text-center border-r border-slate-100 text-[9px] font-bold uppercase text-blue-500">% P.</th>`;
-            });
-
+            SITES.forEach(() => tableHtml += `<th class="py-2.5 px-1 text-center border-r border-slate-100 text-[9px] font-bold uppercase text-slate-400">Cant.</th><th class="py-2.5 px-1 text-center border-r border-slate-100 text-[9px] font-bold uppercase text-blue-500">% P.</th>`);
             tableHtml += `</tr></thead><tbody>`;
 
             Object.keys(CENTERS).forEach(k => {
-                const c = CENTERS[k]; const s = cStats[k];
+                const c = CENTERS[k], s = cStats[k];
                 if(s.total === 0) return; 
-                
-                tableHtml += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors bg-white">
-                    <td class="px-5 py-4 border-r border-slate-100">
-                        <div class="flex items-center gap-4">
-                            <span class="w-7 h-7 rounded ${c.color} ${c.text} flex items-center justify-center text-[11px] font-black shadow-sm shrink-0">${k}</span>
-                            <span class="font-bold text-slate-800 text-sm whitespace-nowrap">${c.name}</span>
-                        </div>
-                    </td>`;
-                
+                tableHtml += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors bg-white"><td class="px-5 py-4 border-r border-slate-100"><div class="flex items-center gap-4"><span class="w-7 h-7 rounded ${c.color} ${c.text} flex items-center justify-center text-[11px] font-black shadow-sm shrink-0">${k}</span><span class="font-bold text-slate-800 text-sm whitespace-nowrap">${c.name}</span></div></td>`;
                 SITES.forEach(site => {
-                    const count = s[site];
-                    const percent = gTot[site] > 0 ? ((count / gTot[site]) * 100).toFixed(1) : '0.0';
-                    tableHtml += `<td class="py-4 px-2 text-center text-slate-700 font-semibold text-[13px] border-r border-slate-100">${count.toLocaleString('en-US')}</td>`;
-                    tableHtml += `<td class="py-4 px-2 text-center text-blue-500 font-semibold text-[11px] border-r border-slate-100">${percent}%</td>`;
+                    const count = s[site], percent = gTot[site] > 0 ? ((count / gTot[site]) * 100).toFixed(1) : '0.0';
+                    tableHtml += `<td class="py-4 px-2 text-center text-slate-700 font-semibold text-[13px] border-r border-slate-100">${count.toLocaleString('en-US')}</td><td class="py-4 px-2 text-center text-blue-500 font-semibold text-[11px] border-r border-slate-100">${percent}%</td>`;
                 });
-                
                 tableHtml += `<td class="px-5 py-4 text-center font-black text-slate-900 text-[14px] tracking-wide border-l border-slate-200 bg-white">${s.total.toLocaleString('en-US')}</td></tr>`;
             });
 
-            tableHtml += `</tbody><tfoot><tr>
-                            <td class="px-5 py-4 text-[10px] font-black uppercase tracking-widest bg-[#1f2937] text-white border-r border-slate-700">Totales Por Punto</td>`;
+            tableHtml += `</tbody><tfoot><tr><td class="px-5 py-4 text-[10px] font-black uppercase tracking-widest bg-[#1f2937] text-white border-r border-slate-700">Totales Por Punto</td>`;
+            SITES.forEach(s => tableHtml += `<td class="py-4 px-2 text-center bg-[#111827] border-r border-slate-700 font-bold text-blue-400 text-[15px]">${gTot[s].toLocaleString('en-US')}</td><td class="py-4 px-2 text-center bg-[#111827] border-r border-slate-700 font-medium text-slate-500 text-[11px]">100%</td>`);
+            tableHtml += `<td class="px-5 py-4 text-center bg-[#3b82f6] text-white font-bold text-lg tracking-wide italic">${gTot.total.toLocaleString('en-US')} <span class="not-italic text-[10px] font-normal tracking-widest ml-1 opacity-90">${isBarcos ? 'SAL.' : 'BUC.'}</span></td></tr></tfoot></table></div>`;
 
-            SITES.forEach(s => {
-                tableHtml += `<td class="py-4 px-2 text-center bg-[#111827] border-r border-slate-700 font-bold text-blue-400 text-[15px]">${gTot[s].toLocaleString('en-US')}</td>
-                              <td class="py-4 px-2 text-center bg-[#111827] border-r border-slate-700 font-medium text-slate-500 text-[11px]">100%</td>`;
-            });
-
-            const suffix = isBarcos ? 'SAL.' : 'BUC.';
-            tableHtml += `<td class="px-5 py-4 text-center bg-[#3b82f6] text-white font-bold text-lg tracking-wide italic">${gTot.total.toLocaleString('en-US')} <span class="not-italic text-[10px] font-normal tracking-widest ml-1 opacity-90">${suffix}</span></td>
-                        </tr></tfoot></table></div>`;
-
-            document.getElementById('safe-main-table-container').innerHTML = tableHtml;
-
-            const mGrid = document.getElementById('stats-monthly-grid');
-            mGrid.innerHTML = '';
+            getEl('safe-main-table-container').innerHTML = tableHtml;
+            const mGrid = getEl('stats-monthly-grid'); mGrid.innerHTML = '';
             
             for(let m = 0; m < 12; m++) {
                 const mAlloc = filteredAllocations.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === m);
                 if (mAlloc.length === 0) continue; 
                 
-                const mStats = {};
-                Object.keys(CENTERS).forEach(k => mStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 });
-                
-                mAlloc.forEach(a => {
-                    const val = isBarcos ? 1 : a.pax;
-                    mStats[a.center][a.site] += val;
-                    mStats[a.center].total += val;
-                });
+                const mStats = {}; Object.keys(CENTERS).forEach(k => mStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 });
+                mAlloc.forEach(a => { const val = isBarcos ? 1 : a.pax; mStats[a.center][a.site] += val; mStats[a.center].total += val; });
 
-                let cHtml = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-7 hover:shadow-md transition-shadow">
-                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                        <h4 class="font-black italic text-lg md:text-xl uppercase tracking-tight text-slate-900">${MONTHS_ES[m]} 2026</h4>
-                        <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded tracking-widest uppercase border border-emerald-100">${statsUnit}</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs min-w-[400px]">
-                            <thead>
-                                <tr class="text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 text-[9px]">
-                                    <th class="pb-2 font-bold">Centro</th>
-                                    <th class="pb-2 text-center">Bajo</th>
-                                    <th class="pb-2 text-center">Piles</th>
-                                    <th class="pb-2 text-center">Piles</th>
-                                    <th class="pb-2 text-center">Testa</th>
-                                    <th class="pb-2 text-center">Morra</th>
-                                    <th class="pb-2 text-center font-black text-slate-800 bg-slate-50 px-2 rounded-t-lg">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                
+                let cHtml = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-7 hover:shadow-md transition-shadow"><div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3"><h4 class="font-black italic text-lg md:text-xl uppercase tracking-tight text-slate-900">${MONTHS_ES[m]} 2026</h4><span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded tracking-widest uppercase border border-emerald-100">${statsUnit}</span></div><div class="overflow-x-auto"><table class="w-full text-left text-xs min-w-[400px]"><thead><tr class="text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 text-[9px]"><th class="pb-2 font-bold">Centro</th><th class="pb-2 text-center">Bajo</th><th class="pb-2 text-center">Piles</th><th class="pb-2 text-center">Piles</th><th class="pb-2 text-center">Testa</th><th class="pb-2 text-center">Morra</th><th class="pb-2 text-center font-black text-slate-800 bg-slate-50 px-2 rounded-t-lg">Total</th></tr></thead><tbody>`;
                 Object.keys(CENTERS).forEach(k => {
-                    const st = mStats[k];
-                    if(st.total === 0) return;
-                    const c = CENTERS[k];
-                    cHtml += `<tr class="border-b border-slate-50 hover:bg-slate-50/50">
-                        <td class="py-2.5 font-bold flex items-center gap-2 text-slate-700 text-[10px]"><span class="w-3.5 h-3.5 rounded-sm ${c.color} ${c.text} flex items-center justify-center text-[7px] font-black">${k}</span> ${c.name}</td>
-                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Bajo de Dentro'].toLocaleString('en-US')}</td>
-                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles II'].toLocaleString('en-US')}</td>
-                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles I'].toLocaleString('en-US')}</td>
-                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Testa'].toLocaleString('en-US')}</td>
-                        <td class="py-2.5 text-center text-slate-600 font-medium">${st['Morra'].toLocaleString('en-US')}</td>
-                        <td class="py-2.5 text-center font-black text-slate-900 bg-slate-50 px-2">${st.total.toLocaleString('en-US')}</td>
-                    </tr>`;
+                    const st = mStats[k]; if(st.total === 0) return; const c = CENTERS[k];
+                    cHtml += `<tr class="border-b border-slate-50 hover:bg-slate-50/50"><td class="py-2.5 font-bold flex items-center gap-2 text-slate-700 text-[10px]"><span class="w-3.5 h-3.5 rounded-sm ${c.color} ${c.text} flex items-center justify-center text-[7px] font-black">${k}</span> ${c.name}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Bajo de Dentro'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles II'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles I'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Testa'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Morra'].toLocaleString('en-US')}</td><td class="py-2.5 text-center font-black text-slate-900 bg-slate-50 px-2">${st.total.toLocaleString('en-US')}</td></tr>`;
                 });
                 cHtml += `</tbody></table></div></div>`;
-                document.getElementById('stats-monthly-grid').innerHTML += cHtml;
+                mGrid.innerHTML += cHtml;
             }
         }
 
         function renderCalendar() {
-            const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
+            const grid = getEl('calendar-grid'); grid.innerHTML = '';
             const y = currentDate.getFullYear(), m = currentDate.getMonth(), dsToday = formatDateString(currentDate);
-            document.getElementById('month-selector-sidebar').value = m;
-            document.getElementById('month-selector-main').value = m;
-            document.getElementById('week-selector').value = getWeekNumber(currentDate);
+            getEl('month-selector-sidebar').value = m; getEl('month-selector-main').value = m; getEl('week-selector').value = getWeekNumber(currentDate);
+            
             const first = new Date(y, m, 1).getDay(), off = first === 0 ? 6 : first - 1;
             for (let i = 0; i < off; i++) grid.appendChild(document.createElement('div'));
+            
             for (let d = 1; d <= new Date(y, m+1, 0).getDate(); d++) {
                 const dt = new Date(y, m, d), ds = formatDateString(dt);
                 const isD = dt.getDay() === 0 || dt.getDay() === 6 || FESTIVOS.includes(ds);
