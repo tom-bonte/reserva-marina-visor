@@ -110,7 +110,7 @@
         </div>
     </div>
 
-    <!-- Print PDF Modal (NEW) -->
+    <!-- Print PDF Modal -->
     <div id="print-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
             <div class="flex items-center gap-3 mb-4">
@@ -131,14 +131,10 @@
             <input type="hidden" id="export-format" value="pdf">
 
             <label class="block text-xs font-bold text-slate-700 mb-1">Seleccionar Centro</label>
-            <select id="print-center" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-4">
-                <!-- Injected via JS -->
-            </select>
+            <select id="print-center" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-4"></select>
 
             <label class="block text-xs font-bold text-slate-700 mb-1">Seleccionar Mes</label>
-            <select id="print-month" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-6">
-                <!-- Injected via JS -->
-            </select>
+            <select id="print-month" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-6"></select>
 
             <div class="flex gap-3">
                 <button onclick="hideEl('print-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
@@ -168,7 +164,7 @@
                     <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <li class="flex items-start gap-2">
                             <span class="text-lg">📥</span>
-                            <span><strong>Exportar Datos:</strong> Haz clic en el botón de descarga en la barra superior para generar un PDF o un archivo CSV con las reservas. Esta función está disponible también para los invitados (modo lectura).</span>
+                            <span><strong>Exportar Datos:</strong> Haz clic en el botón de descarga en la barra superior para generar un PDF o un archivo CSV con las reservas. Esta función está disponible también para los invitados.</span>
                         </li>
                     </ul>
                 </div>
@@ -177,36 +173,20 @@
                     <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">CENTROS DE BUCEO</span></p>
                     <p class="mb-2">Como centro de buceo autorizado, puedes editar <b>únicamente tus propias reservas</b>. Dispones de las siguientes acciones:</p>
                     <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        <li class="flex items-start gap-2">
-                            <span class="text-lg">🕐</span>
-                            <span><strong>Mover una salida (Hueco):</strong> Arrastra tu bloque a cualquier espacio. Si hay menos de 2 barcos ahí, se cuenta automáticamente como un Hueco (siempre que el punto tenga plazas suficientes).</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-lg">➕</span>
-                            <span><strong>Añadir nueva salida:</strong> Si hay un horario libre, haz <b>doble clic</b> en el espacio vacío para añadir una nueva salida (Máximo 11 buceadores).</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-lg">🔄</span>
-                            <span><strong>Intercambiar salidas:</strong> Si arrastras tu barco a un horario que <b>ya está completamente lleno (2 barcos)</b>, el sistema te preguntará con cuál de los 2 quieres intercambiar.</span>
-                        </li>
+                        <li class="flex items-start gap-2"><span class="text-lg">🕐</span><span><strong>Mover una salida (Hueco):</strong> Arrastra tu bloque a cualquier espacio. Si hay menos de 2 barcos ahí, se cuenta automáticamente como un Hueco.</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">➕</span><span><strong>Añadir nueva salida:</strong> Si hay un horario libre, haz <b>doble clic</b> en el espacio vacío para añadir una nueva salida (Máximo 11 buceadores).</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">🔄</span><span><strong>Intercambiar salidas:</strong> Si arrastras tu barco a un horario que <b>ya está completamente lleno (2 barcos)</b>, el sistema te preguntará con cuál quieres intercambiar.</span></li>
                     </ul>
                 </div>
 
                 <div>
                     <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-slate-800 text-white px-2 py-1 rounded text-xs">ADMINISTRADORES</span></p>
                     <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        <li class="flex items-start gap-2">
-                            <span class="text-lg">👑</span>
-                            <span><strong>Control Total:</strong> Mover o intercambiar los barcos de <i>cualquier centro</i> sin necesitar confirmación.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-lg">📥</span>
-                            <span><strong>Gestión de Datos:</strong> Importar CSV y vaciar la base de datos.</span>
-                        </li>
+                        <li class="flex items-start gap-2"><span class="text-lg">👑</span><span><strong>Control Total:</strong> Mover o intercambiar los barcos de <i>cualquier centro</i> sin necesitar confirmación.</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">📥</span><span><strong>Gestión de Datos:</strong> Importar CSV y vaciar la base de datos.</span></li>
                     </ul>
                 </div>
             </div>
-
             <div class="mt-6 pt-4 border-t border-slate-100">
                 <button onclick="hideEl('help-modal')" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-sm">Entendido</button>
             </div>
@@ -222,13 +202,13 @@
             <h3 class="text-xl font-black text-slate-800 mb-2">¿Borrar toda la base de datos?</h3>
             <p class="text-sm text-slate-500 mb-6">Se ha descargado una copia de seguridad. ¿Estás seguro de que quieres vaciar la base de datos en la nube permanentemente?</p>
             <div class="flex gap-3">
-                <button id="btn-cancel-empty" onclick="hideEl('empty-confirm-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="hideEl('empty-confirm-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
                 <button id="btn-confirm-empty" onclick="executeEmptyData()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Sí, vaciar</button>
             </div>
         </div>
     </div>
 
-    <!-- CLEAN & MODERN WhatsApp Confirmation Modal -->
+    <!-- WhatsApp Confirmation Modal -->
     <div id="whatsapp-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
             <div class="flex items-center gap-4 mb-5">
@@ -240,13 +220,10 @@
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Aviso Automático</p>
                 </div>
             </div>
-            
             <p class="text-sm text-slate-600 mb-3 font-medium">Se actualizará la nube y se publicará este mensaje automático en el grupo de WhatsApp de la Reserva Marina:</p>
-            
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-sm text-slate-700 italic shadow-inner leading-relaxed">
                 <span id="confirm-whatsapp-msg" class="block font-medium whitespace-pre-wrap"></span>
             </div>
-            
             <div class="flex gap-3">
                 <button onclick="cancelWhatsAppDrop()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
                 <button id="btn-confirm-wa" onclick="confirmWhatsAppAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-colors flex justify-center items-center gap-2 shadow-md">
@@ -256,7 +233,7 @@
         </div>
     </div>
 
-    <!-- Swap Target Choice Modal -->
+    <!-- Swap Choice Modal -->
     <div id="swap-choice-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
             <div class="flex items-center gap-4 mb-5">
@@ -269,14 +246,12 @@
                 </div>
             </div>
             <p class="text-sm text-slate-600 mb-5 font-medium">Hay dos barcos en este horario. ¿Con cuál de ellos quieres proponer el intercambio?</p>
-            <div id="swap-choice-buttons" class="flex flex-col gap-3">
-                <!-- Buttons injected dynamically -->
-            </div>
+            <div id="swap-choice-buttons" class="flex flex-col gap-3"></div>
             <button onclick="cancelWhatsAppDrop()" class="w-full mt-4 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
         </div>
     </div>
 
-    <!-- Swap Request Notifications Modal -->
+    <!-- Notifications Modal -->
     <div id="notifications-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-100 transform transition-all max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4 shrink-0">
@@ -293,14 +268,11 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            
-            <div id="notifications-list" class="overflow-y-auto space-y-4 flex-1">
-                <!-- Notifications injected here -->
-            </div>
+            <div id="notifications-list" class="overflow-y-auto space-y-4 flex-1"></div>
         </div>
     </div>
 
-    <!-- New Salida Configuration Modal -->
+    <!-- New Salida Modal -->
     <div id="new-salida-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
             <div class="flex items-center gap-3 mb-4">
