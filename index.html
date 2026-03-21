@@ -11,6 +11,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
+    <!-- jsPDF for Native True-Vector PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; }
@@ -107,6 +110,45 @@
         </div>
     </div>
 
+    <!-- Print PDF Modal (NEW) -->
+    <div id="print-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 leading-tight">Exportar Datos</h3>
+                    <p class="text-xs font-bold text-slate-500">Descargar planificación</p>
+                </div>
+            </div>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Formato</label>
+            <div class="flex gap-2 mb-4">
+                <button id="btn-format-pdf" onclick="selectExportFormat('pdf')" class="flex-1 py-2 px-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-lg font-bold text-sm transition-colors">PDF</button>
+                <button id="btn-format-csv" onclick="selectExportFormat('csv')" class="flex-1 py-2 px-3 border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition-colors">CSV</button>
+            </div>
+            <input type="hidden" id="export-format" value="pdf">
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Seleccionar Centro</label>
+            <select id="print-center" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-4">
+                <!-- Injected via JS -->
+            </select>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Seleccionar Mes</label>
+            <select id="print-month" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-6">
+                <!-- Injected via JS -->
+            </select>
+
+            <div class="flex gap-3">
+                <button onclick="closePrintModal()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="executeExport()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm flex justify-center items-center gap-2">
+                    Descargar <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Help Modal -->
     <div id="help-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-200 transform transition-all max-h-[90vh] overflow-y-auto">
@@ -121,6 +163,16 @@
             </div>
             
             <div class="space-y-5 text-sm text-slate-600">
+                <div>
+                    <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs">TODOS LOS USUARIOS</span></p>
+                    <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <li class="flex items-start gap-2">
+                            <span class="text-lg">📥</span>
+                            <span><strong>Exportar Datos:</strong> Haz clic en el botón de descarga en la barra superior para generar un PDF o un archivo CSV con las reservas. Esta función está disponible también para los invitados (modo lectura).</span>
+                        </li>
+                    </ul>
+                </div>
+
                 <div>
                     <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">CENTROS DE BUCEO</span></p>
                     <p class="mb-2">Como centro de buceo autorizado, puedes editar <b>únicamente tus propias reservas</b>. Dispones de las siguientes acciones:</p>
@@ -335,6 +387,10 @@
         <div class="flex items-center gap-3 relative">
             <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleImport(event)" />
             
+            <button onclick="openPrintModal()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition-colors shadow-sm" title="Descargar PDF / CSV">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            </button>
+
             <button onclick="switchView('historial')" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition-colors shadow-sm" title="Historial">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </button>
@@ -548,9 +604,9 @@
         let currentDate = new Date(2026, 2, 29); 
         let allocations = []; 
         let swapRequests = []; 
-        let historyLogs = []; // Stores the newly created history logs
+        let historyLogs = []; 
         let selectedCenters = Object.keys(CENTERS);
-        let selectedHistoryMonth = 'all'; // State for custom month filter
+        let selectedHistoryMonth = 'all'; 
         let activeViewMode = 'diario';
         let statsUnit = 'plazas'; 
         let isGuestMode = false;
@@ -562,7 +618,6 @@
         const WHATSAPP_WEBHOOK_URL = "https://hook.eu1.make.com/nwgnqeiosbu73mtwljk7i252atthcuwd"; 
 
         async function sendSilentWebhook(msg) {
-            // Added check to prevent sending empty messages to webhook
             if (!WHATSAPP_WEBHOOK_URL || !msg || msg.trim() === "") return;
             
             try {
@@ -628,13 +683,11 @@
                 renderAll(); 
             });
 
-            // New Listener for History Logging
             unsubscribeHistory = db.collection("history_logs").onSnapshot((snapshot) => {
                 const historyFromCloud = [];
                 snapshot.forEach(doc => { historyFromCloud.push({ id: doc.id, ...doc.data() }); });
                 historyLogs = historyFromCloud;
                 
-                // If history view is currently open, refresh it in real-time
                 if (activeViewMode === 'historial') {
                     renderHistory();
                 }
@@ -714,15 +767,12 @@
                 html += `<div class="h-px bg-slate-100 my-1"></div>`;
             }
             
-            html += `<button onclick="exportCSV(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Exportar CSV</button>`;
-            
             if (currentUserKey === 'admin') {
-                html += `<div class="h-px bg-slate-100 my-1"></div>`;
                 html += `<button onclick="triggerImport(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar CSV</button>`;
                 html += `<button onclick="promptEmptyData(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Vaciar Datos</button>`;
+                html += `<div class="h-px bg-slate-100 my-1"></div>`;
             }
             
-            html += `<div class="h-px bg-slate-100 my-1"></div>`;
             html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
             
             menu.innerHTML = html;
@@ -859,8 +909,6 @@
             renderStats();
         }
 
-        // Click outside listener moved up to the central event listener
-
         function initFilters() {
             const c = document.getElementById('filter-container'); c.innerHTML = '';
             Object.keys(CENTERS).forEach(k => {
@@ -876,7 +924,6 @@
             let mH = ''; for(let i=0; i<12; i++) mH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
             document.getElementById('month-selector-sidebar').innerHTML = mH; document.getElementById('month-selector-main').innerHTML = mH;
             
-            // Build Custom Month Filter for History
             const mContainer = document.getElementById('month-filter-container');
             if (mContainer) {
                 mContainer.innerHTML = '';
@@ -907,21 +954,19 @@
         function changeWeek(n) { currentDate = getDateOfISOWeek(parseInt(n), 2026); renderAll(); }
         function setDate(s) { const p = s.split('-'); currentDate = new Date(p[0], p[1]-1, p[2]); renderAll(); }
         function toggleFilterDropdown() { document.getElementById('filter-dropdown-panel').classList.toggle('hidden'); }
-        
         function toggleMonthDropdown() { document.getElementById('month-dropdown-panel').classList.toggle('hidden'); }
         function selectHistoryMonth(val, text) {
             selectedHistoryMonth = val;
             document.getElementById('month-filter-button-text').textContent = text;
             document.getElementById('month-dropdown-panel').classList.add('hidden');
-            initSelectors(); // Re-render to update the checkmark location
+            initSelectors(); 
             renderHistory();
         }
 
         /* =========================================================================
-           6. HISTORY LOGGER & UI (NEW FEATURE)
+           6. HISTORY LOGGER
            ========================================================================= */
         async function logHistory(actionType, details) {
-            // Rule: NOT logged if made by Admin or Guest
             if (currentUserKey === 'admin' || isGuestMode) return; 
 
             try {
@@ -936,7 +981,6 @@
             }
         }
 
-        // Helper to consistently get center info whether passed a short code ('M') or a full key ('mangamar')
         function getCenterInfoSafe(keyOrCode) {
             if (!keyOrCode) return { name: 'Otro centro', color: 'bg-slate-200', text: 'text-slate-800' };
             if (CENTERS[keyOrCode]) return CENTERS[keyOrCode];
@@ -952,14 +996,12 @@
             if (!listEl) return;
             listEl.innerHTML = '';
 
-            // Sort descending locally to avoid complex Firestore indexing rules
             const sortedLogs = [...historyLogs].sort((a, b) => {
                 const timeA = a.timestamp ? a.timestamp.toMillis() : Date.now();
                 const timeB = b.timestamp ? b.timestamp.toMillis() : Date.now();
                 return timeB - timeA;
             });
 
-            // Filter using selectedCenters array from the global filter AND the custom month dropdown
             const filteredLogs = sortedLogs.filter(log => {
                 const codeKey = USER_CENTER_KEYS[log.centerKey];
                 const isCenterSelected = selectedCenters.includes(codeKey);
@@ -979,24 +1021,19 @@
             }
 
             filteredLogs.forEach(log => {
-                let icon = '';
-                let text = '';
-                let headerPills = '';
+                let icon = ''; let text = ''; let headerPills = '';
                 
-                // Construct Date/Time string
                 let logDateStr = 'Ahora mismo';
                 if (log.timestamp) {
                     const d = log.timestamp.toDate();
                     logDateStr = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
                 }
 
-                // Details string creation
                 const targetDObj = new Date(log.details.date);
                 const targetDateStr = `${targetDObj.getDate()} de ${MONTHS_SHORT[targetDObj.getMonth()]}`;
 
                 if (log.actionType === 'swap') {
                     icon = '🔀';
-                    
                     const initInfo = getCenterInfoSafe(log.details.initCenter || log.centerKey);
                     const targetInfo = getCenterInfoSafe(log.details.targetCenter);
 
@@ -1042,7 +1079,6 @@
                 `;
             });
         }
-
 
         /* =========================================================================
            7. NOTIFICATIONS & DATA OPS
@@ -1116,7 +1152,6 @@
                             const monthKey = item.date.substring(0, 7);
                             if (!monthlyData[monthKey]) monthlyData[monthKey] = {};
                             
-                            // Generate unique persistent IDs strictly tied to the initial imported subslots
                             const customDocId = generateId(item.date, item.time, item.site, item.center, item.subslot);
                             monthlyData[monthKey][customDocId] = item;
                         });
@@ -1144,18 +1179,337 @@
             r.readAsText(f); e.target.value = '';
         }
 
-        function exportCSV() {
+        /* =========================================================================
+           7.5 EXPORT FUNCTIONALITY (CSV & VECTOR PDF)
+           ========================================================================= */
+        function selectExportFormat(format) {
+            document.getElementById('export-format').value = format;
+            const btnPdf = document.getElementById('btn-format-pdf');
+            const btnCsv = document.getElementById('btn-format-csv');
+            if (format === 'pdf') {
+                btnPdf.className = 'flex-1 py-2 px-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-lg font-bold text-sm transition-colors';
+                btnCsv.className = 'flex-1 py-2 px-3 border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition-colors';
+            } else {
+                btnCsv.className = 'flex-1 py-2 px-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-lg font-bold text-sm transition-colors';
+                btnPdf.className = 'flex-1 py-2 px-3 border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition-colors';
+            }
+        }
+
+        function openPrintModal() {
+            selectExportFormat('pdf'); // Default format to PDF
+            let mHtml = '<option value="all">Todos los meses</option>';
+            for(let i=0; i<12; i++) {
+                mHtml += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
+            }
+            document.getElementById('print-month').innerHTML = mHtml;
+
+            let cHtml = '<option value="all">Todos los centros</option>';
+            Object.keys(CENTERS).forEach(k => {
+                cHtml += `<option value="${k}">${CENTERS[k].name}</option>`;
+            });
+            document.getElementById('print-center').innerHTML = cHtml;
+
+            document.getElementById('print-modal').classList.remove('hidden');
+        }
+
+        function closePrintModal() {
+            document.getElementById('print-modal').classList.add('hidden');
+        }
+
+        function executeExport() {
+            const format = document.getElementById('export-format').value;
+            if (format === 'pdf') {
+                executePrintPDF();
+            } else {
+                executePrintCSV();
+            }
+        }
+
+        function executePrintCSV() {
+            const monthVal = document.getElementById('print-month').value;
+            const centerVal = document.getElementById('print-center').value;
+
+            let targetCenters = centerVal === 'all' ? Object.keys(CENTERS) : [centerVal];
+            let filtered = allocations.filter(a => targetCenters.includes(a.center));
+
+            if (monthVal !== 'all') {
+                filtered = filtered.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === parseInt(monthVal, 10));
+            }
+
+            if (filtered.length === 0) {
+                showNotification('Sin Datos', 'No hay reservas para los filtros seleccionados.', true);
+                closePrintModal();
+                return;
+            }
+
             try {
                 let csv = "Fecha,Centro,Punto,Hora,Plazas\n";
-                allocations.filter(a => a && a.center && selectedCenters.includes(a.center)).forEach(a => {
+                
+                // Sort array chronologically for better readability
+                filtered.sort((a, b) => {
+                    if (a.date !== b.date) return a.date.localeCompare(b.date);
+                    return a.time.localeCompare(b.time);
+                });
+
+                filtered.forEach(a => {
                     const cName = CENTERS[a.center] ? CENTERS[a.center].name : a.center;
                     csv += `${a.date},${cName},${a.site},${a.time},${a.pax}\n`;
                 });
                 const l = document.createElement("a"); 
                 l.setAttribute("href", "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv)); 
-                l.setAttribute("download", "Export_Reservas.csv"); 
+                l.setAttribute("download", `Planificacion_${centerVal}_${monthVal}.csv`); 
                 l.click();
-            } catch (error) {}
+                closePrintModal();
+            } catch (error) {
+                showNotification('Error', 'Hubo un problema al exportar el CSV.', true);
+            }
+        }
+
+        function executePrintPDF() {
+            const monthVal = document.getElementById('print-month').value;
+            const centerVal = document.getElementById('print-center').value;
+
+            let targetCenters = centerVal === 'all' ? Object.keys(CENTERS) : [centerVal];
+            let filtered = allocations.filter(a => targetCenters.includes(a.center));
+
+            if (monthVal !== 'all') {
+                filtered = filtered.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === parseInt(monthVal, 10));
+            }
+
+            if (filtered.length === 0) {
+                showNotification('Sin Datos', 'No hay reservas para los filtros seleccionados.', true);
+                closePrintModal();
+                return;
+            }
+
+            const byDate = {};
+            filtered.forEach(a => {
+                if (!byDate[a.date]) byDate[a.date] = [];
+                byDate[a.date].push(a);
+            });
+
+            const sortedDates = Object.keys(byDate).sort();
+
+            closePrintModal();
+            showNotification('Generando PDF Vectorial', 'Por favor, espera mientras se dibuja el documento...', false);
+
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'pt', 'a4');
+
+                    const startX = 40; // Left margin
+                    let currentY = 40; // Top margin
+
+                    for (let i = 0; i < sortedDates.length; i++) {
+                        const date = sortedDates[i];
+                        const dateItems = byDate[date] || [];
+                        const centerDailyPax = {};
+                        let totalDailyPax = 0;
+                        
+                        dateItems.forEach(item => {
+                            if(!centerDailyPax[item.center]) centerDailyPax[item.center] = 0;
+                            centerDailyPax[item.center] += item.pax;
+                            totalDailyPax += item.pax;
+                        });
+
+                        if (i > 0 && i % 3 === 0) {
+                            doc.addPage();
+                            currentY = 40;
+                        }
+
+                        drawDayBlock(doc, date, dateItems, centerDailyPax, totalDailyPax, startX, currentY);
+                        currentY += 230; // Distance between days reduced to reflect shorter tables
+                    }
+
+                    doc.save(`Planificacion_${centerVal}_${monthVal}.pdf`);
+                    closeNotification();
+                } catch (err) {
+                    console.error("PDF Generation Error: ", err);
+                    showNotification('Error', 'Hubo un problema al generar el PDF.', true);
+                }
+            }, 100); // Small delay to allow the loading notification to render
+        }
+
+        // Pure jsPDF Vector Drawing Function
+        function drawDayBlock(doc, dateStr, dateItems, centerDailyPax, totalDailyPax, startX, startY) {
+            const dObj = new Date(dateStr);
+            const dayName = DAYS_ES[dObj.getDay()].substring(0,3).toUpperCase();
+            const dateTitle = `${dayName}. ${dObj.getDate()}-${MONTHS_SHORT[dObj.getMonth()].toUpperCase()}`;
+
+            const cMap = {
+                'B': { bg: '#ef4444', text: '#ffffff' }, 
+                'H': { bg: '#000000', text: '#ffffff' },
+                'M': { bg: '#00b050', text: '#ffffff' }, // Mangamar Green
+                'N': { bg: '#f59e0b', text: '#000000' }, 
+                'P': { bg: '#3b82f6', text: '#ffffff' }, 
+                'D': { bg: '#a855f7', text: '#ffffff' },
+                'C': { bg: '#64748b', text: '#ffffff' }, 
+                'X': { bg: '#cbd5e1', text: '#000000' }
+            };
+
+            const timeLabels = ['09:00 - 10:30', '10:30 - 12:00', '12:00 - 13:30', '13:30 - 15:00', '15:00 - 16:30', '16:30 - 18:00', '18:00 - 19:00'];
+            const timeKeys = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00'];
+
+            let siteColumnTotals = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0 };
+            dateItems.forEach(it => {
+                if (siteColumnTotals[it.site] !== undefined) {
+                    siteColumnTotals[it.site] += it.pax;
+                }
+            });
+
+            const colorPink = '#f20884'; 
+            const colorYellow = '#ffff00'; 
+            const colorLightGray = '#f8fafc';
+
+            const rowH = 14;  // Main rows height (decreased from 16)
+            const subH = 12;  // Time subslots height (decreased from 14)
+            const restH = 12; // Break height (decreased from 14)
+
+            // Mathematical Box Drawing helper
+            const drawBox = (x, y, w, h, bg, text, textColor, fontStyle, fontSize) => {
+                if (bg) {
+                    doc.setFillColor(bg);
+                    doc.rect(x, y, w, h, 'F');
+                }
+                
+                doc.setDrawColor(0, 0, 0); // Black lines
+                doc.setLineWidth(0.5); // Hairline ultra-thin
+                doc.rect(x, y, w, h, 'S');
+
+                if (text !== undefined && text !== null && text !== '') {
+                    doc.setTextColor(textColor);
+                    doc.setFont('helvetica', fontStyle);
+                    doc.setFontSize(fontSize);
+                    // Perfect vertical alignment math for jsPDF base coordinates
+                    const baselineOffset = (fontSize * 0.35); 
+                    const baseline = y + (h / 2) + baselineOffset;
+                    doc.text(text.toString(), x + (w / 2), baseline, { align: 'center' });
+                }
+            };
+
+            let currentY = startY;
+
+            // --- Row 1: Date & Title ---
+            drawBox(startX, currentY, 80, rowH, colorLightGray, dateTitle, '#000', 'bold', 8);
+            drawBox(startX + 80, currentY, 360, rowH, colorPink, '270 PLAZAS', '#fff', 'bold', 10);
+            currentY += rowH;
+
+            // --- Row 2: Headers ---
+            drawBox(startX, currentY, 55, rowH, colorYellow, '270', '#000', 'bold', 8);
+            drawBox(startX + 55, currentY, 25, rowH, colorYellow, 'S4', '#000', 'bold', 8);
+            
+            let currentX = startX + 80;
+            SITES.forEach(s => {
+                let cleanName = '';
+                if (s === 'Bajo de Dentro') cleanName = 'DENTRO';
+                else if (s === 'Piles II') cleanName = 'PILES 2';
+                else if (s === 'Piles I') cleanName = 'PILES 1';
+                else cleanName = s.toUpperCase();
+
+                drawBox(currentX, currentY, 72, rowH, colorLightGray, cleanName, '#000', 'bold', 8);
+                currentX += 72;
+            });
+            currentY += rowH;
+
+            // --- Row 3: Capacities ---
+            drawBox(startX, currentY, 80, rowH, colorPink, '', '#fff', 'bold', 8);
+            currentX = startX + 80;
+            SITES.forEach(s => {
+                drawBox(currentX, currentY, 36, rowH, colorPink, SITE_CAPACITY[s], '#000', 'bold', 8); 
+                drawBox(currentX + 36, currentY, 36, rowH, colorPink, siteColumnTotals[s], '#000', 'bold', 8); 
+                currentX += 72;
+            });
+            currentY += rowH;
+
+            // --- Time Rows ---
+            timeKeys.forEach((tm, idx) => {
+                if (tm === '13:30') {
+                    drawBox(startX, currentY, 55, restH, '#e2e8f0', timeLabels[idx], '#000', 'normal', 7); 
+                    drawBox(startX + 55, currentY, 25, restH, colorYellow, '', '#000', 'normal', 7);
+                    drawBox(startX + 80, currentY, 360, restH, '#000000', '', '#fff', 'normal', 7);
+                    currentY += restH;
+                    return;
+                }
+
+                // Normal time row
+                const timeRowH = subH * 2; // Combines the two 12px subslots into 24px
+                drawBox(startX, currentY, 55, timeRowH, colorLightGray, timeLabels[idx], '#000', 'normal', 7); 
+                drawBox(startX + 55, currentY, 25, timeRowH, colorYellow, '', '#000', 'normal', 7);
+
+                currentX = startX + 80;
+                SITES.forEach(s => {
+                    const items = dateItems.filter(i => i.time === tm && i.site === s);
+                    let it1 = items.find(i => i.subslot === 1) || items[0];
+                    let it2 = items.find(i => i.subslot === 2) || (items.length > 1 ? items[1] : null);
+                    if(items.length === 1) { it1 = items[0]; it2 = null; }
+
+                    // Draw outer box for the time block
+                    doc.setDrawColor(0);
+                    doc.setLineWidth(0.5);
+                    doc.rect(currentX, currentY, 72, timeRowH, 'S');
+
+                    const drawSub = (it, subY) => {
+                        if (!it) return;
+                        const cInfo = cMap[it.center];
+                        
+                        // Center color box
+                        doc.setFillColor(cInfo.bg);
+                        doc.rect(currentX, subY, 28, subH, 'F'); // No 'S' here to prevent internal horizontal lines
+                        
+                        // Vertical dividing line
+                        doc.setDrawColor(0);
+                        doc.line(currentX + 28, subY, currentX + 28, subY + subH);
+
+                        // Center Initial (Bold)
+                        doc.setTextColor(cInfo.text);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8);
+                        doc.text(it.center, currentX + 14, subY + (subH / 2) + (8 * 0.35), { align: 'center' });
+
+                        // Pax Number (Thin/Normal)
+                        doc.setTextColor('#000');
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(8);
+                        doc.text(it.pax.toString(), currentX + 50, subY + (subH / 2) + (8 * 0.35), { align: 'center' });
+                    };
+
+                    drawSub(it1, currentY);
+                    drawSub(it2, currentY + subH);
+
+                    currentX += 72;
+                });
+                currentY += timeRowH;
+            });
+
+            // --- Footer Row ---
+            drawBox(startX, currentY, 80, rowH, colorYellow, '', '#000', 'bold', 8);
+            currentX = startX + 80;
+            SITES.forEach(s => {
+                const diff = SITE_CAPACITY[s] - siteColumnTotals[s];
+                const displayDiff = diff >= 0 ? `+${diff}` : diff.toString();
+                const textColor = diff >= 0 ? '#2563eb' : '#dc2626'; 
+                drawBox(currentX, currentY, 72, rowH, '#ffffff', displayDiff, textColor, 'normal', 8);
+                currentX += 72;
+            });
+
+            // --- Legend Table ---
+            const legendX = startX + 455; // Right next to main table
+            let legendY = startY;
+            const legendOrder = ['B', 'D', 'H', 'M', 'N', 'P', 'X', 'C'];
+            
+            legendOrder.forEach(k => {
+                if(!cMap[k]) return; 
+                const cInfo = cMap[k];
+                const paxCount = centerDailyPax[k] || 0; 
+                
+                drawBox(legendX, legendY, 25, subH, cInfo.bg, k, cInfo.text, 'bold', 8);
+                drawBox(legendX + 25, legendY, 35, subH, '#ffffff', paxCount.toString(), '#000', 'normal', 8); 
+                legendY += subH;
+            });
+            
+            drawBox(legendX, legendY, 25, subH, '#94a3b8', '', '#fff', 'normal', 8);
+            drawBox(legendX + 25, legendY, 35, subH, colorLightGray, totalDailyPax.toString(), '#000', 'normal', 8);
         }
 
         function promptEmptyData() {
@@ -1740,10 +2094,8 @@
                     let item1 = renderedItems.find(i => i.subslot === 1);
                     let item2 = renderedItems.find(i => i.subslot === 2);
 
-                    // Strictly enforce rendering Rules (1 & 5). Unrelated boats stay in position.
-                    // Fallback to fix corrupted data ONLY if it absolutely doesn't fit logic.
                     if (renderedItems.length === 1) {
-                        item1 = renderedItems[0]; // Rule 1: Always Top if 1 boat
+                        item1 = renderedItems[0]; 
                         item2 = null;
                     } else if (renderedItems.length === 2) {
                         if (!item1 && !item2) {
