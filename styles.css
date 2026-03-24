@@ -1,0 +1,49 @@
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; }
+        
+        /* Drag & Drop Core */
+        .draggable-item { 
+            -webkit-user-drag: element; 
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+        
+        .boat-block { transition: opacity 0.2s ease, outline 0.1s ease, box-shadow 0.1s ease; }
+        .boat-block * { pointer-events: none; }
+        
+        .dropzone { height: 100%; min-height: 38px; user-select: none; -webkit-user-select: none; transition: background-color 0.1s ease; }
+        
+        /* Visual cues for Drag intent */
+        .bg-blue-50 { background-color: #eff6ff !important; }
+        .bg-purple-50 { background-color: #faf5ff !important; }
+
+        .pending-swap-ghost {
+            opacity: 0.45 !important;
+            filter: grayscale(100%);
+            border: 2px dashed #94a3b8 !important;
+        }
+
+        /* Layout Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Tab States */
+        .tab-active { background-color: white; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 0.5rem; }
+        .tab-inactive { color: #64748b; }
+        .tab-inactive:hover { color: #334155; }
+        
+        /* Calendar Styles */
+        .calendar-day-active { background-color: #2563eb; color: white; font-weight: bold; border-radius: 0.375rem; }
+        .calendar-day-inactive:hover { background-color: #f1f5f9; border-radius: 0.375rem; cursor: pointer; }
+
+        /* Mega Grid Styles */
+        .mega-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(35, 34px);
+            width: max-content;
+        }
+
+        /* Stats Table Custom Padding */
+        .stats-table th, .stats-table td { padding: 12px 8px; }

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor Reserva Interior - Professional Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Authentication & Firestore Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <!-- jsPDF for Native True-Vector PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="p-4 md:p-6 text-slate-800 flex flex-col h-screen overflow-hidden">
+
+    <!-- Firebase Login Modal -->
+    <div id="password-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
+            <div class="flex items-center gap-3 mb-2">
+                <svg class="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"></path></svg>
+                <h3 class="text-xl font-black text-slate-800">Acceso al Visor</h3>
+            </div>
+            <p class="text-sm text-slate-500 mb-4">Selecciona tu usuario e introduce la contraseña.</p>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Usuario / Centro</label>
+            <select id="login-user" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 font-bold text-slate-700 cursor-pointer">
+                <option value="admin">Administrador (Root)</option>
+                <option value="mangamar">Mangamar</option>
+                <option value="balky">Balky</option>
+                <option value="hormigas">Islas Hormigas</option>
+                <option value="naranjito">Naranjito</option>
+                <option value="planeta">Planeta Azul</option>
+                <option value="divers">Divers</option>
+                <option value="club">CLUB</option>
+                <option value="xlm">X La Manga</option>
+            </select>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Contraseña</label>
+            <div class="relative">
+                <input type="password" id="login-password" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2 font-mono pr-10" placeholder="••••••••" onkeypress="if(event.key === 'Enter') verifyLogin()">
+                <button type="button" onclick="togglePassword()" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none">
+                    <svg id="eye-icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </button>
+            </div>
+
+            <p id="password-error" class="text-xs text-red-500 font-bold hidden mb-4 text-center">Contraseña incorrecta.</p>
+
+            <div class="flex gap-3 mt-4">
+                <button onclick="hideEl('password-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="verifyLogin()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print PDF Modal -->
+    <div id="print-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 leading-tight">Exportar Datos</h3>
+                    <p class="text-xs font-bold text-slate-500">Descargar planificación</p>
+                </div>
+            </div>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Formato</label>
+            <div class="flex gap-2 mb-4">
+                <button id="btn-format-pdf" onclick="selectExportFormat('pdf')" class="flex-1 py-2 px-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-lg font-bold text-sm transition-colors">PDF</button>
+                <button id="btn-format-csv" onclick="selectExportFormat('csv')" class="flex-1 py-2 px-3 border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-lg font-bold text-sm transition-colors">CSV</button>
+            </div>
+            <input type="hidden" id="export-format" value="pdf">
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Seleccionar Centro</label>
+            <select id="print-center" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-4"></select>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">Seleccionar Mes</label>
+            <select id="print-month" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mb-6"></select>
+
+            <div class="flex gap-3">
+                <button onclick="hideEl('print-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="executeExport()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm flex justify-center items-center gap-2">
+                    Descargar <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-200 transform transition-all max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 leading-tight">Instrucciones de Uso</h3>
+                    <p class="text-xs font-bold text-slate-500">¿Qué puedo hacer en el visor?</p>
+                </div>
+            </div>
+            
+            <div class="space-y-5 text-sm text-slate-600">
+                <div>
+                    <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs">TODOS LOS USUARIOS</span></p>
+                    <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <li class="flex items-start gap-2">
+                            <span class="text-lg">📥</span>
+                            <span><strong>Exportar Datos:</strong> Haz clic en el botón de descarga en la barra superior para generar un PDF o un archivo CSV con las reservas. Esta función está disponible también para los invitados.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">CENTROS DE BUCEO</span></p>
+                    <p class="mb-2">Como centro de buceo autorizado, puedes editar <b>únicamente tus propias reservas</b>. Dispones de las siguientes acciones:</p>
+                    <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <li class="flex items-start gap-2"><span class="text-lg">🕐</span><span><strong>Mover una salida (Hueco):</strong> Arrastra tu bloque a cualquier espacio. Si hay menos de 2 barcos ahí, se cuenta automáticamente como un Hueco.</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">➕</span><span><strong>Añadir nueva salida:</strong> Si hay un horario libre, haz <b>doble clic</b> en el espacio vacío para añadir una nueva salida (Máximo 11 buceadores).</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">🔄</span><span><strong>Intercambiar salidas:</strong> Si arrastras tu barco a un horario que <b>ya está completamente lleno (2 barcos)</b>, el sistema te preguntará con cuál quieres intercambiar.</span></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-slate-800 text-white px-2 py-1 rounded text-xs">ADMINISTRADORES</span></p>
+                    <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <li class="flex items-start gap-2"><span class="text-lg">👑</span><span><strong>Control Total:</strong> Mover o intercambiar barcos de <i>cualquier centro</i> sin necesitar confirmación.</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">📥</span><span><strong>Gestión de Datos:</strong> Importar CSV y vaciar la base de datos.</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <button onclick="hideEl('help-modal')" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-sm">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty DB Modal -->
+    <div id="empty-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
+            <div class="mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-red-100 text-red-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">¿Borrar toda la base de datos?</h3>
+            <p class="text-sm text-slate-500 mb-6">Se ha descargado una copia de seguridad. ¿Estás seguro de que quieres vaciar la base de datos en la nube permanentemente?</p>
+            <div class="flex gap-3">
+                <button id="btn-cancel-empty" onclick="hideEl('empty-confirm-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button id="btn-confirm-empty" onclick="executeEmptyData()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Sí, vaciar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Config Wizard Modal (Minimalist 3-Tier Profile System) -->
+    <div id="config-wizard-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-10 w-full max-w-5xl border border-slate-200 transform transition-all max-h-[95vh] overflow-y-auto flex flex-col">
+            
+            <div class="flex justify-between items-start mb-8 shrink-0">
+                <h1 class="text-3xl font-black italic tracking-tighter uppercase text-slate-900">Configuración de Cupos</h1>
+                <button onclick="hideEl('config-wizard-modal')" class="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="flex flex-col items-center text-center mb-8 shrink-0">
+                <h3 class="text-sm font-black text-slate-800 mb-4 uppercase tracking-widest">Definición de Temporadas Fijas</h3>
+                <div class="flex flex-wrap justify-center gap-6 text-sm text-slate-600">
+                    <div class="flex items-center gap-2"><span class="bg-rose-100 text-rose-700 px-3 py-1 rounded-md text-xs font-black">PICO</span> <span>Julio y Agosto</span></div>
+                    <div class="flex items-center gap-2"><span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-md text-xs font-black">ALTA</span> <span>Jun, Sep, Sem. Santa (27 Mar-6 Abr) y Navidad (25-31 Dic)</span></div>
+                    <div class="flex items-center gap-2"><span class="bg-slate-200 text-slate-700 px-3 py-1 rounded-md text-xs font-black">BAJA</span> <span>El resto del año</span></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pb-4">
+                <!-- PICO COLUMN -->
+                <div class="border-2 border-rose-100 rounded-xl overflow-hidden h-max">
+                    <div class="bg-rose-50 text-rose-800 font-black text-center py-3 border-b border-rose-100 uppercase tracking-widest">Temporada Pico</div>
+                    <div class="p-4" id="wizard-peak-table"></div>
+                </div>
+
+                <!-- ALTA COLUMN -->
+                <div class="border-2 border-amber-100 rounded-xl overflow-hidden h-max">
+                    <div class="bg-amber-50 text-amber-800 font-black text-center py-3 border-b border-amber-100 uppercase tracking-widest">Temporada Alta</div>
+                    <div class="p-4" id="wizard-high-table"></div>
+                </div>
+
+                <!-- BAJA COLUMN -->
+                <div class="border-2 border-slate-200 rounded-xl overflow-hidden h-max">
+                    <div class="bg-slate-100 text-slate-700 font-black text-center py-3 border-b border-slate-200 uppercase tracking-widest">Temporada Baja</div>
+                    <div class="p-4" id="wizard-low-table"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 mt-6 shrink-0 pt-6 border-t border-slate-100">
+                <button onclick="hideEl('config-wizard-modal')" class="w-1/2 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cerrar sin guardar</button>
+                <button id="btn-save-config" onclick="saveConfigWizard()" class="w-1/2 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-md">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WhatsApp Confirmation Modal -->
+    <div id="whatsapp-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-full bg-[#e1fbe8] flex items-center justify-center text-[#25D366] shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Confirmar <span id="wa-action-type">Acción</span></h3>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Aviso Automático</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-3 font-medium">Se actualizará la nube y se publicará este mensaje automático en el grupo de WhatsApp de la Reserva Marina:</p>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-sm text-slate-700 italic shadow-inner leading-relaxed">
+                <span id="confirm-whatsapp-msg" class="block font-medium whitespace-pre-wrap"></span>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="cancelWhatsAppDrop()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button id="btn-confirm-wa" onclick="confirmWhatsAppAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-colors flex justify-center items-center gap-2 shadow-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Swap Choice Modal -->
+    <div id="swap-choice-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Elegir Intercambio</h3>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Múltiples Opciones</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5 font-medium">Hay dos barcos en este horario. ¿Con cuál de ellos quieres proponer el intercambio?</p>
+            <div id="swap-choice-buttons" class="flex flex-col gap-3"></div>
+            <button onclick="cancelWhatsAppDrop()" class="w-full mt-4 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Partial Action Modal (Used for both Moves and Swaps) -->
+    <div id="partial-action-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Límite de Cupo</h3>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Reducción Automática</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5 font-medium whitespace-pre-line" id="partial-action-msg"></p>
+            <div class="flex gap-3">
+                <button onclick="cancelPartialAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button id="btn-confirm-partial-action" onclick="confirmPartialAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 transition-colors shadow-md">Aceptar Ajuste</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notifications-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-100 transform transition-all max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 leading-tight">Centro de Notificaciones</h3>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Solicitudes de Intercambio</p>
+                    </div>
+                </div>
+                <button onclick="hideEl('notifications-modal')" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="notifications-list" class="overflow-y-auto space-y-4 flex-1"></div>
+        </div>
+    </div>
+
+    <!-- New Salida Modal -->
+    <div id="new-salida-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 leading-tight">Añadir Salida</h3>
+                    <p id="new-salida-title" class="text-xs font-bold text-slate-500">Bajo de Dentro a las 09:00</p>
+                </div>
+            </div>
+            
+            <p id="new-salida-avail" class="text-sm font-bold text-green-600 mb-4 bg-green-50 px-3 py-2 rounded-lg border border-green-100">Plazas disponibles: 0</p>
+            
+            <div id="new-salida-center-container" class="mb-4 hidden">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Asignar a Centro (Modo Admin)</label>
+                <select id="new-salida-center" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="mangamar">Mangamar</option>
+                    <option value="balky">Balky</option>
+                    <option value="hormigas">Islas Hormigas</option>
+                    <option value="naranjito">Naranjito</option>
+                    <option value="planeta">Planeta Azul</option>
+                    <option value="divers">Divers</option>
+                    <option value="club">CLUB</option>
+                    <option value="xlm">X La Manga</option>
+                </select>
+            </div>
+
+            <label class="block text-xs font-bold text-slate-700 mb-1">¿Cuántas plazas necesitas?</label>
+            <input type="number" id="new-salida-pax" min="1" max="11" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6 font-mono text-lg font-bold text-slate-800" placeholder="Ej: 11">
+
+            <div class="flex gap-3">
+                <button onclick="cancelNewSalida()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button onclick="confirmNewSalida()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm flex justify-center items-center gap-2">
+                    Siguiente <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
+            <div id="notification-icon" class="mx-auto w-12 h-12 rounded-full mb-4 flex items-center justify-center"></div>
+            <h3 id="notification-title" class="text-xl font-black text-slate-800 mb-2">Notificación</h3>
+            <p id="notification-message" class="text-sm text-slate-500 mb-6">Mensaje aquí.</p>
+            <button onclick="hideEl('notification-modal')" class="w-full px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.6 2 5.2 2 2.5 0 2.5-2 5.2-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5.2-2 2.6 0 2.6 2 5.2 2 2.5 0 2.5-2 5.2-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5.2-2 2.6 0 2.6 2 5.2 2 2.5 0 2.5-2 5.2-2 1.3 0 1.9.5 2.5 1"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-black text-lg text-slate-900 leading-tight tracking-tight">CABO DE PALOS</h1>
+                <h2 class="font-bold text-blue-600 tracking-wide text-sm uppercase">Visor Reserva Interior</h2>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="flex bg-slate-100 p-1.5 rounded-xl text-xs font-bold uppercase tracking-wider overflow-x-auto">
+            <button onclick="switchView('diario')" id="tab-diario" class="px-5 py-2.5 tab-active flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> Diario
+            </button>
+            <button onclick="switchView('semanal')" id="tab-semanal" class="px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> Semanal
+            </button>
+            <button onclick="switchView('mensual')" id="tab-mensual" class="px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> Mensual
+            </button>
+            <button onclick="switchView('estadisticas')" id="tab-estadisticas" class="px-5 py-2.5 tab-inactive flex items-center gap-2 transition-all">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> Estadísticas
+            </button>
+        </div>
+
+        <!-- RIGHT SIDE HEADER CONTROLS -->
+        <div class="flex items-center gap-3 relative">
+            <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleImport(event)" />
+            
+            <button onclick="openPrintModal()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition-colors shadow-sm" title="Descargar PDF / CSV">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            </button>
+
+            <button onclick="switchView('historial')" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition-colors shadow-sm" title="Historial">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>
+
+            <button onclick="openHelpModal()" class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors shadow-sm" title="Instrucciones">
+                <span class="font-black text-lg">?</span>
+            </button>
+
+            <button id="btn-login-header" onclick="openLoginModal()" class="px-5 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                Iniciar sesión
+            </button>
+
+            <div class="relative hidden" id="user-menu-wrapper">
+                <div class="relative inline-block">
+                    <button onclick="toggleVis('user-dropdown')" id="user-badge-button" class="rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-opacity bg-slate-200 text-slate-600">
+                        <span class="bg-black/10 px-1.5 rounded-sm">INV</span>
+                        <span class="tracking-wide">Invitado (Lectura)</span>
+                        <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <span id="notif-bubble" class="absolute -top-2 -right-2 flex h-5 w-5 hidden items-center justify-center z-50">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" style="animation-duration: 1.5s;"></span>
+                      <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 border border-white text-[10px] font-black text-white items-center justify-center shadow-md" id="notif-count">0</span>
+                    </span>
+                </div>
+                
+                <div id="user-dropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 flex flex-col overflow-hidden"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Filter Bar -->
+    <div id="global-filter-bar" class="bg-white rounded-xl shadow-sm border border-slate-200 px-5 py-3 mb-4 shrink-0 flex items-center gap-5 relative z-40 transition-all">
+        <div id="toolbar-period-selectors" class="hidden items-center gap-4 border-r border-slate-200 pr-5">
+            <div id="toolbar-week" class="hidden items-center gap-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Semana</span>
+                <select id="week-selector" onchange="changeWeek(this.value)" class="bg-transparent font-bold text-sm text-slate-800 focus:outline-none cursor-pointer border-b border-slate-300 pb-0.5"></select>
+            </div>
+            <div id="toolbar-month" class="hidden items-center gap-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mes</span>
+                <select id="month-selector-main" onchange="changeMonth(this.value)" class="bg-transparent font-bold text-sm text-slate-800 focus:outline-none cursor-pointer border-b border-slate-300 pb-0.5"></select>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 relative" id="center-filter-dropdown-wrapper">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">FILTRO:</span>
+            <button onclick="toggleVis('filter-dropdown-panel')" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
+                <span id="filter-button-text">TODOS LOS CENTROS</span>
+                <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="filter-dropdown-panel" class="hidden absolute left-10 top-full mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-xl z-50 flex flex-col overflow-hidden">
+                <div class="p-2 border-b border-slate-100 bg-slate-50 flex justify-between gap-2">
+                    <button onclick="setAllFilters(true)" class="flex-1 text-[10px] bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold py-1.5 rounded transition-colors shadow-sm">Todos</button>
+                    <button onclick="setAllFilters(false)" class="flex-1 text-[10px] bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold py-1.5 rounded transition-colors shadow-sm">Ninguno</button>
+                </div>
+                <div class="max-h-64 overflow-y-auto p-1.5 flex flex-col" id="filter-container"></div>
+            </div>
+        </div>
+
+        <div class="hidden items-center gap-2 relative ml-2" id="history-month-filter-wrapper">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-200 pl-5">MES:</span>
+            <button onclick="toggleVis('month-dropdown-panel')" class="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-sm">
+                <span id="month-filter-button-text">TODOS LOS MESES</span>
+                <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="month-dropdown-panel" class="hidden absolute left-14 top-full mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-xl z-50 flex flex-col overflow-hidden">
+                <div class="max-h-64 overflow-y-auto p-1.5 flex flex-col gap-1" id="month-filter-container"></div>
+            </div>
+        </div>
+
+        <div class="text-[10px] text-slate-400 font-bold italic tracking-widest hidden md:block ml-auto uppercase">PLANIFICACIÓN CONSOLIDADA 2026</div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden relative z-10">
+        
+        <aside id="sidebar-calendario" class="w-full lg:w-72 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col shrink-0 overflow-y-auto">
+            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                Calendario
+            </h3>
+            <select id="month-selector-sidebar" onchange="changeMonth(this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-800 font-bold rounded-lg p-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"></select>
+            <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                <div class="text-[10px] font-bold text-slate-400">L</div><div class="text-[10px] font-bold text-slate-400">M</div><div class="text-[10px] font-bold text-slate-400">X</div><div class="text-[10px] font-bold text-slate-400">J</div><div class="text-[10px] font-bold text-slate-400">V</div><div class="text-[10px] font-bold text-red-400">S</div><div class="text-[10px] font-bold text-red-400">D</div>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+        </aside>
+
+        <div id="main-content-area" class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-slate-200 relative flex flex-col overflow-hidden">
+            
+            <main id="view-diario" class="p-6 flex flex-col h-full overflow-hidden bg-white">
+                <div class="mb-6 shrink-0 flex justify-between items-end">
+                    <div>
+                        <h2 id="daily-date-header" class="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
+                        <p class="text-xs font-bold text-slate-400 tracking-widest mt-1 uppercase">Cupo Diario: <span id="daily-max-header"></span> Plazas. Asignadas un total de <span id="total-pax-header" class="text-blue-600">0</span> plazas</p>
+                    </div>
+                </div>
+                
+                <div id="daily-grid-container" class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs">
+                    <!-- Header and Grid generated dynamically based on date limits -->
+                </div>
+                
+                <div id="daily-footer-container" class="shrink-0">
+                    <!-- Footer capacities generated dynamically based on date limits -->
+                </div>
+            </main>
+
+            <main id="view-mega" class="hidden flex-col h-full overflow-hidden bg-white">
+                <div class="p-6 shrink-0 bg-white border-b border-slate-200 shadow-sm z-30">
+                    <h2 id="mega-date-header" class="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
+                </div>
+                <div class="flex-1 overflow-auto bg-slate-50 relative" id="mega-scroll-container">
+                    <div id="mega-grid-container"></div>
+                </div>
+            </main>
+        </div>
+        
+        <main id="view-estadisticas" class="hidden flex-col h-full overflow-y-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:p-8 flex-1 min-w-0 w-full">
+            <div class="bg-[#181f2f] rounded-2xl p-6 md:p-8 mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl shrink-0 border border-[#2d3748]">
+                <div class="flex items-start gap-4">
+                    <div>
+                        <h2 class="text-3xl font-black italic tracking-tighter text-white">AUDITORÍA DE TEMPORADA</h2>
+                        <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase">DISTRIBUCIÓN ANUAL RESERVA MARINA 2026</p>
+                    </div>
+                </div>
+                <div class="relative w-full md:w-64" id="unit-dropdown-wrapper">
+                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 ml-1">UNIDAD DE ANÁLISIS:</div>
+                    <button onclick="toggleVis('unit-dropdown-panel')" class="w-full bg-[#1e293b] border border-slate-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm flex justify-between items-center hover:bg-[#334155]">
+                        <span id="unit-dropdown-text">Plazas (Buceadores)</span>
+                    </button>
+                    <div id="unit-dropdown-panel" class="hidden absolute left-0 top-full mt-2 w-full bg-[#1e293b] border border-slate-600 rounded-lg shadow-2xl z-50 flex flex-col">
+                        <button onclick="setStatsUnit('plazas')" class="text-left px-4 py-3 text-sm font-bold text-white hover:bg-[#334155] transition-colors border-b border-slate-700 flex justify-between items-center">
+                            Plazas (Buceadores)
+                        </button>
+                        <button onclick="setStatsUnit('barcos')" class="text-left px-4 py-3 text-sm font-bold text-slate-300 hover:bg-[#334155] transition-colors flex justify-between items-center">
+                            Barcos (Salidas)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="safe-main-table-container"></div>
+            <div id="stats-monthly-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8"></div>
+        </main>
+
+        <main id="view-historial" class="hidden flex-col h-full overflow-y-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:p-8 flex-1 min-w-0 w-full">
+            <div class="bg-slate-800 rounded-2xl p-6 md:p-8 mb-6 shadow-xl shrink-0 border border-slate-700">
+                <h2 class="text-3xl font-black italic tracking-tighter text-white">HISTORIAL DE CAMBIOS</h2>
+                <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase">Registro de Actividad en Tiempo Real</p>
+            </div>
+            <div id="history-list" class="space-y-4">
+                <!-- Logs injected here -->
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div id="history-pagination" class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 shadow-sm hidden shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-500">Mostrar:</span>
+                    <select id="history-per-page" onchange="changeHistoryItemsPerPage(this.value)" class="text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="btn-hist-prev" onclick="changeHistoryPage(-1)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">Anterior</button>
+                    <span id="hist-page-info" class="text-xs font-bold text-slate-600">Pág 1 de 1</span>
+                    <button id="btn-hist-next" onclick="changeHistoryPage(1)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">Siguiente</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
