@@ -298,8 +298,8 @@
         </div>
     </div>
 
-    <!-- Partial Swap Modal -->
-    <div id="partial-swap-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+    <!-- Partial Action Modal (Used for both Moves and Swaps) -->
+    <div id="partial-action-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
             <div class="flex items-center gap-4 mb-5">
                 <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
@@ -307,13 +307,13 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-black text-slate-800 tracking-tight">Límite de Cupo</h3>
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Intercambio Reducido</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Reducción Automática</p>
                 </div>
             </div>
-            <p class="text-sm text-slate-600 mb-5 font-medium whitespace-pre-line" id="partial-swap-msg"></p>
+            <p class="text-sm text-slate-600 mb-5 font-medium whitespace-pre-line" id="partial-action-msg"></p>
             <div class="flex gap-3">
-                <button onclick="cancelPartialSwap()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
-                <button id="btn-confirm-partial-swap" onclick="confirmPartialSwap()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 transition-colors shadow-md">Aceptar Ajuste</button>
+                <button onclick="cancelPartialAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button id="btn-confirm-partial-action" onclick="confirmPartialAction()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 transition-colors shadow-md">Aceptar Ajuste</button>
             </div>
         </div>
     </div>
@@ -989,6 +989,7 @@
         /* =========================================================================
            4. UTILITIES & UI CONTROLLERS
            ========================================================================= */
+        function getMonday(d) { d = new Date(d); var day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
         function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
         function getDateOfISOWeek(w, y) { var simple = new Date(y, 0, 1 + (w - 1) * 7); var ISOweekStart = simple; if (simple.getDay() <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); return ISOweekStart; }
         
@@ -1548,12 +1549,12 @@
            8. DRAG & DROP + SWAPS + DOUBLE CLICK (THE BRAIN)
            ========================================================================= */
         let draggedItemId = null, pendingDrop = null, pendingNewSalidaWA = null, pendingSwapIntent = null, isProcessingDrop = false; 
-        let pendingSwapInit = null, pendingSwapTargets = [], pendingSwapIsAdmin = false, pendingNewSalida = null, pendingPartialSwap = null;
+        let pendingSwapInit = null, pendingSwapTargets = [], pendingSwapIsAdmin = false, pendingNewSalida = null, pendingPartialSwap = null, pendingPartialMove = null;
 
         function cancelWhatsAppDrop() {
-            hideEl('whatsapp-confirm-modal'); hideEl('swap-choice-modal'); hideEl('partial-swap-modal');
+            hideEl('whatsapp-confirm-modal'); hideEl('swap-choice-modal'); hideEl('partial-action-modal');
             pendingDrop = null; pendingSwapIntent = null; pendingNewSalidaWA = null; isProcessingDrop = false; 
-            pendingSwapInit = null; pendingSwapTargets = []; pendingSwapIsAdmin = false; pendingNewSalida = null; pendingPartialSwap = null;
+            pendingSwapInit = null; pendingSwapTargets = []; pendingSwapIsAdmin = false; pendingNewSalida = null; pendingPartialSwap = null; pendingPartialMove = null;
             renderAll(); 
         }
 
@@ -1581,7 +1582,7 @@
             getEl('btn-confirm-wa').disabled = false; isProcessingDrop = false;
         }
 
-        async function executeDrop(id, item, newTime, newSite, newSubslot) {
+        async function executeDrop(id, item, newTime, newSite) {
             const monthKey = item.date.substring(0, 7); 
             try {
                 const updates = {}; let finalSubslot = 1;
@@ -1594,7 +1595,13 @@
                     if (existingNew[0].subslot !== 1) updates[`allocations.${existingNew[0].id}.subslot`] = 1; 
                 }
 
-                updates[`allocations.${id}.time`] = newTime; updates[`allocations.${id}.site`] = newSite; updates[`allocations.${id}.subslot`] = finalSubslot;
+                updates[`allocations.${id}.time`] = newTime; 
+                updates[`allocations.${id}.site`] = newSite; 
+                updates[`allocations.${id}.subslot`] = finalSubslot;
+                if (item.pax !== undefined) {
+                    updates[`allocations.${id}.pax`] = item.pax;
+                }
+                
                 await db.collection("reservations_monthly").doc(monthKey).update(updates);
             } catch(error) { showNotification('Error', 'No se pudo guardar en la nube.', true); }
         }
@@ -1622,7 +1629,7 @@
         }
         
         async function executeNewSalida(info, pax, userKeyChoice) {
-            const { date, time, site, targetSubslot } = info;
+            const { date, time, site } = info;
             const centerCode = USER_CENTER_KEYS[userKeyChoice] || USER_CENTER_KEYS[currentUserKey], monthKey = date.substring(0, 7);
             
             try {
@@ -1652,14 +1659,22 @@
                     const initName = CENTERS[req.initiatorCenter].name, d = parseDateT00(req.initiatorData.date);
                     const dStr = `${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
                     
+                    const initPaxStr = req.initiatorData.originalPax && req.initiatorData.originalPax > req.initiatorData.pax 
+                        ? `<span class="text-amber-600 font-bold bg-amber-50 px-1 rounded ml-1">(reducido a ${req.initiatorData.pax} pax)</span>` 
+                        : `(${req.initiatorData.pax} pax)`;
+                        
+                    const targetPaxStr = req.targetData.originalPax && req.targetData.originalPax > req.targetData.pax 
+                        ? `<span class="text-red-500 font-bold bg-red-50 px-1 rounded ml-1">(Se reducirá a ${req.targetData.pax} pax por límite del cupo)</span>` 
+                        : `(${req.targetData.pax} pax)`;
+
                     listEl.innerHTML += `
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm">
                         <div class="flex gap-3 mb-3">
                             <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 text-xs">🔄</span>
                             <div>
-                                <p class="text-sm font-bold text-slate-800"><span class="text-blue-600">${initName}</span> te propone un cambio:</p>
-                                <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} a las ${req.initiatorData.time}</b> el ${dStr} (${req.initiatorData.pax} pax).</p>
-                                <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} a las ${req.targetData.time}</b> (${req.targetData.pax} pax).</p>
+                                <p class="text-sm font-bold text-slate-800"><span class="text-blue-600">${initName}</span> te propone un cambio para el <span class="uppercase border-b border-slate-300 pb-0.5">${dStr}</span>:</p>
+                                <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} a las ${req.initiatorData.time}</b> ${initPaxStr}.</p>
+                                <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} a las ${req.targetData.time}</b> ${targetPaxStr}.</p>
                             </div>
                         </div>
                         <div class="flex gap-2 mt-3">
@@ -1677,25 +1692,76 @@
         async function acceptSwap(swapId) {
             const req = swapRequests.find(s => s.id === swapId); if (!req) return;
             hideEl('notifications-modal');
-            
+
+            // --- REAL-TIME CAPACITY CHECK ---
+            const liveInitItem = allocations.find(a => String(a.id) === String(req.initiatorId));
+            const liveTargetItem = allocations.find(a => String(a.id) === String(req.targetId));
+
+            if (!liveInitItem || !liveTargetItem) {
+                showNotification('Error', 'Uno de los barcos ya no existe. Intercambio cancelado.', true);
+                db.collection("swaps").doc(swapId).delete();
+                return;
+            }
+
+            const desiredInitPax = req.initiatorData.originalPax || liveInitItem.pax;
+            const desiredTargetPax = req.targetData.originalPax || liveTargetItem.pax;
+
+            const itemsInTargetSite = allocations.filter(a => a.date === liveInitItem.date && a.site === liveTargetItem.site && String(a.id) !== String(liveTargetItem.id) && String(a.id) !== String(liveInitItem.id));
+            const currentPaxTargetSite = itemsInTargetSite.reduce((sum, a) => sum + a.pax, 0);
+            const maxAllowedInTarget = getDailyCapacity(liveInitItem.date, liveTargetItem.site) - currentPaxTargetSite;
+
+            const itemsInInitSite = allocations.filter(a => a.date === liveInitItem.date && a.site === liveInitItem.site && String(a.id) !== String(liveInitItem.id) && String(a.id) !== String(liveTargetItem.id));
+            const currentPaxInitSite = itemsInInitSite.reduce((sum, a) => sum + a.pax, 0);
+            const maxAllowedInInit = getDailyCapacity(liveInitItem.date, liveInitItem.site) - currentPaxInitSite;
+
+            let finalInitPax = Math.min(desiredInitPax, maxAllowedInTarget);
+            let finalTargetPax = Math.min(desiredTargetPax, maxAllowedInInit);
+
+            if (finalInitPax <= 0 || finalTargetPax <= 0) {
+                showNotification('Error de Cupo', 'El cupo de uno de los puntos se ha llenado. Ya no hay espacio para realizar este intercambio.', true);
+                db.collection("swaps").doc(swapId).delete();
+                return;
+            }
+
+            const finalInitData = { ...liveInitItem, pax: finalInitPax };
+            const finalTargetData = { ...liveTargetItem, pax: finalTargetPax };
+
             try {
-                await performSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData, swapId);
+                await performSwap(req.initiatorId, finalInitData, req.targetId, finalTargetData, swapId);
                 const targetInfo = getCenterInfoSafe(req.targetData.center), initInfo = getCenterInfoSafe(req.initiatorCenter);
-                const d = parseDateT00(req.initiatorData.date);
+                const d = parseDateT00(liveInitItem.date);
                 
-                const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *INTERCAMBIO ACEPTADO* - ${initInfo.name} y ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, intercambiaron *${req.initiatorData.site} (${req.initiatorData.time})* por *${req.targetData.site} (${req.targetData.time})*.`;
+                let paxNote = "";
+                if (finalInitPax < desiredInitPax || finalTargetPax < desiredTargetPax) {
+                    paxNote = `\n⚠️ Ajuste por cupo actual: ${initInfo.name} movió ${finalInitPax} pax. ${targetInfo.name} movió ${finalTargetPax} pax.`;
+                }
+
+                const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *INTERCAMBIO ACEPTADO* - ${initInfo.name} y ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, intercambiaron *${liveInitItem.site} (${liveInitItem.time})* (${finalInitPax} pax) por *${liveTargetItem.site} (${liveTargetItem.time})* (${finalTargetPax} pax).${paxNote}`;
                 await sendSilentWebhook(msg);
                 
-                logHistory('swap', { date: req.initiatorData.date, initCenter: req.initiatorCenter, initSite: req.initiatorData.site, initTime: req.initiatorData.time, initPax: req.initiatorData.pax, targetCenter: req.targetData.center, targetSite: req.targetData.site, targetTime: req.targetData.time, targetPax: req.targetData.pax });
+                logHistory('swap', { date: liveInitItem.date, initCenter: req.initiatorCenter, initSite: liveInitItem.site, initTime: liveInitItem.time, initPax: finalInitPax, targetCenter: req.targetData.center, targetSite: liveTargetItem.site, targetTime: liveTargetItem.time, targetPax: finalTargetPax });
             } catch(e) { showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true); }
         }
         
-        async function adminInstantSwap(req) { try { await performSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData); } catch(e) { showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true); } }
-
         function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
             const targetInfo = getCenterInfoSafe(targetItem.center), initInfo = getCenterInfoSafe(initItem.center);
             const d = parseDateT00(initItem.date);
-            const msg = `🤖 *AVISO AUTOMÁTICO*\n🔀 *SOLICITUD DE INTERCAMBIO* - ${initInfo.name} a ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ofrece *${initItem.site} (${initItem.time})* por *${targetItem.site} (${targetItem.time})*. Entrad al visor para confirmar.`;
+            
+            let initNote = `*${initItem.site} (${initItem.time})*`;
+            if (initItem.originalPax && initItem.originalPax > initItem.pax) {
+                initNote += ` (reducido a ${initItem.pax} pax)`;
+            } else {
+                initNote += ` (${initItem.pax} pax)`;
+            }
+
+            let targetNote = `*${targetItem.site} (${targetItem.time})*`;
+            if (targetItem.originalPax && targetItem.originalPax > targetItem.pax) {
+                targetNote += ` (se reducirá a ${targetItem.pax} pax)`;
+            } else {
+                targetNote += ` (${targetItem.pax} pax)`;
+            }
+
+            const msg = `🤖 *AVISO AUTOMÁTICO*\n🔀 *SOLICITUD DE INTERCAMBIO* - ${initInfo.name} a ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ofrece ${initNote} por ${targetNote}. Entrad al visor para confirmar.`;
             
             pendingSwapIntent = { initId, initItem, targetId, targetItem, msg };
             getEl('wa-action-type').textContent = "Solicitud de Intercambio";
@@ -1717,32 +1783,45 @@
             showEl('swap-choice-modal');
         }
 
-        function cancelPartialSwap() {
-            hideEl('partial-swap-modal');
+        function cancelPartialAction() {
+            hideEl('partial-action-modal');
             pendingPartialSwap = null;
+            pendingPartialMove = null;
             isProcessingDrop = false;
             renderAll();
         }
 
-        function confirmPartialSwap() {
-            hideEl('partial-swap-modal');
-            if(!pendingPartialSwap) return;
-            const { initId, initItem, targetId, targetItem, safeInitPax, safeTargetPax, isAdmin } = pendingPartialSwap;
-            pendingPartialSwap = null;
+        function confirmPartialAction() {
+            hideEl('partial-action-modal');
+            
+            if (pendingPartialSwap) {
+                const { initId, initItem, targetId, targetItem, safeInitPax, safeTargetPax, isAdmin } = pendingPartialSwap;
+                pendingPartialSwap = null;
 
-            const adjustedInitItem = { ...initItem, pax: safeInitPax };
-            const adjustedTargetItem = { ...targetItem, pax: safeTargetPax };
+                const adjustedInitItem = { ...initItem, pax: safeInitPax, originalPax: initItem.originalPax || initItem.pax };
+                const adjustedTargetItem = { ...targetItem, pax: safeTargetPax, originalPax: targetItem.originalPax || targetItem.pax };
 
-            executeProceedWithSwap(initId, adjustedInitItem, targetId, adjustedTargetItem, isAdmin);
+                if (isAdmin) { 
+                    acceptAdminInstantSwap(initId, adjustedInitItem, targetId, adjustedTargetItem);
+                } else { 
+                    triggerSwapConfirmation(initId, adjustedInitItem, targetId, adjustedTargetItem); 
+                }
+            } else if (pendingPartialMove) {
+                const { id, item, newTime, newSite, newPax } = pendingPartialMove;
+                pendingPartialMove = null;
+                
+                const adjustedItem = { ...item, pax: newPax };
+                executeProceedWithMove(id, adjustedItem, newTime, newSite);
+            }
         }
 
-        function executeProceedWithSwap(initId, initItem, targetId, targetItem, isAdmin) {
-            if (isAdmin) { 
-                adminInstantSwap({ initiatorId: initId, targetId: targetId, initiatorData: initItem, targetData: targetItem }); 
-                isProcessingDrop = false; 
-            } else { 
-                triggerSwapConfirmation(initId, initItem, targetId, targetItem); 
+        async function acceptAdminInstantSwap(initId, initItem, targetId, targetItem) {
+            try { 
+                await performSwap(initId, initItem, targetId, targetItem); 
+            } catch(e) { 
+                showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true); 
             }
+            isProcessingDrop = false;
         }
 
         async function selectSwapTarget(targetId) {
@@ -1764,25 +1843,52 @@
             let safeInitPax = Math.min(initItem.pax, maxAllowedInTarget);
             let safeTargetPax = Math.min(targetItem.pax, maxAllowedInInit);
 
-            if (initItem.pax > maxAllowedInTarget || targetItem.pax > maxAllowedInInit) {
-                if (safeInitPax <= 0 || safeTargetPax <= 0) {
-                    showNotification('Error de Cupo', 'No hay plazas suficientes en absoluto para realizar este intercambio. El punto está totalmente lleno.', true);
-                    isProcessingDrop = false;
-                    return;
-                }
-                
-                pendingPartialSwap = { initId, initItem, targetId, targetItem, safeInitPax, safeTargetPax, isAdmin };
-                let msg = `El punto de destino casi ha alcanzado su límite diario. No puedes intercambiar los barcos con el 100% de las plazas intactas.\n\n`;
-                if (initItem.pax > maxAllowedInTarget) msg += `Tu barco de ${initItem.pax} plazas se reducirá forzosamente a ${safeInitPax} plazas.\n`;
-                if (targetItem.pax > maxAllowedInInit) msg += `El barco objetivo de ${targetItem.pax} plazas se reducirá forzosamente a ${safeTargetPax} plazas.\n`;
-                msg += `\n(Nota: Las plazas sobrantes se descartarán). ¿Aceptas continuar con este ajuste automático?`;
-                
-                getEl('partial-swap-msg').innerText = msg;
-                showEl('partial-swap-modal');
+            if (safeInitPax <= 0 || safeTargetPax <= 0) {
+                showNotification('Error de Cupo', 'No hay plazas suficientes para realizar este intercambio. El punto está totalmente lleno.', true);
+                isProcessingDrop = false;
                 return;
             }
 
-            executeProceedWithSwap(initId, initItem, targetId, targetItem, isAdmin);
+            // Only block and warn the initiating user if THEIR boat needs to shrink.
+            // If the target boat needs to shrink, that is the target user's problem. They will be warned during the acceptSwap step.
+            if (initItem.pax > maxAllowedInTarget) {
+                const dObj = parseDateT00(initItem.date);
+                const dStr = `${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()]}`;
+                pendingPartialSwap = { initId, initItem, targetId, targetItem, safeInitPax, safeTargetPax: targetItem.pax, isAdmin };
+                let msg = `Para el **${dStr}**, el punto de destino está casi lleno.\n\nTu barco de ${initItem.pax} plazas se reducirá forzosamente a ${safeInitPax} plazas si realizas el intercambio.\n\n¿Aceptas continuar con este ajuste automático?`;
+                getEl('partial-action-msg').innerText = msg;
+                showEl('partial-action-modal');
+                return;
+            }
+
+            const adjustedInitItem = { ...initItem, pax: safeInitPax, originalPax: initItem.pax };
+            const adjustedTargetItem = { ...targetItem, pax: targetItem.pax, originalPax: targetItem.pax };
+
+            if (isAdmin) { 
+                acceptAdminInstantSwap(initId, adjustedInitItem, targetId, adjustedTargetItem);
+            } else { 
+                triggerSwapConfirmation(initId, adjustedInitItem, targetId, adjustedTargetItem); 
+            }
+        }
+
+        function executeProceedWithMove(id, item, newTime, newSite) {
+            if (currentUserKey !== 'admin') {
+                const d = parseDateT00(item.date), centerInfo = getCenterInfoSafe(item.center);
+                let msg = `🤖 *AVISO AUTOMÁTICO*\n➡️ *CAMBIO DE HORARIO* - ${centerInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, movió su salida de *${item.site} (${item.time})* a *${newSite} (${newTime})* (${item.pax} pax).`;
+                
+                const originalItem = allocations.find(a => String(a.id) === String(id));
+                if (originalItem && item.pax < originalItem.pax) {
+                    msg += `\n⚠️ (Reducido a ${item.pax} plazas por límite de cupo).`;
+                }
+                
+                pendingDrop = { id, item, newTime, newSite, msg };
+                getEl('wa-action-type').textContent = "Cambio de Horario/Punto"; 
+                getEl('confirm-whatsapp-msg').innerText = msg; 
+                showEl('whatsapp-confirm-modal');
+            } else { 
+                executeDrop(id, item, newTime, newSite); 
+                isProcessingDrop = false; 
+            }
         }
 
         document.addEventListener('dragstart', (e) => {
@@ -1838,16 +1944,22 @@
                 const remainingCapacity = getDailyCapacity(initItem.date, newSite) - currentPaxNewSite;
 
                 if (initItem.pax > remainingCapacity) {
-                    showNotification('Cupo Lleno', `No puedes mover la salida aquí. El punto tiene ${remainingCapacity} plazas libres y tu barco tiene ${initItem.pax}.`, true);
-                    isProcessingDrop = false; return;
+                    if (remainingCapacity <= 0) {
+                        showNotification('Cupo Lleno', `No puedes mover la salida aquí. El punto está lleno.`, true);
+                        isProcessingDrop = false; return;
+                    }
+                    
+                    const dObj = parseDateT00(initItem.date);
+                    const dStr = `${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()]}`;
+                    
+                    pendingPartialMove = { id, item: initItem, newTime, newSite, newPax: remainingCapacity };
+                    const msg = `Para el **${dStr}**, el punto de destino solo tiene ${remainingCapacity} plazas libres.\n\nTu barco de ${initItem.pax} plazas se reducirá forzosamente a ${remainingCapacity} plazas si realizas el movimiento.\n\n¿Aceptas continuar con este ajuste automático?`;
+                    getEl('partial-action-msg').innerText = msg;
+                    showEl('partial-action-modal');
+                    return;
                 }
 
-                if (currentUserKey !== 'admin') {
-                    const d = parseDateT00(initItem.date), centerInfo = getCenterInfoSafe(initItem.center);
-                    const msg = `🤖 *AVISO AUTOMÁTICO*\n➡️ *CAMBIO DE HORARIO* - ${centerInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, movió su salida de *${initItem.site} (${initItem.time})* a *${newSite} (${newTime})*.`;
-                    pendingDrop = { id, item: initItem, newTime, newSite, msg };
-                    getEl('wa-action-type').textContent = "Cambio de Horario/Punto"; getEl('confirm-whatsapp-msg').innerText = msg; showEl('whatsapp-confirm-modal');
-                } else { await executeDrop(id, initItem, newTime, newSite); isProcessingDrop = false; }
+                executeProceedWithMove(id, initItem, newTime, newSite);
             } else {
                 // Swap logic (Slot is full)
                 if (currentUserKey !== 'admin') {
