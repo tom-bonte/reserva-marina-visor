@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -182,7 +182,7 @@
                 <div>
                     <p class="font-black text-slate-800 mb-2 flex items-center gap-2"><span class="bg-slate-800 text-white px-2 py-1 rounded text-xs">ADMINISTRADORES</span></p>
                     <ul class="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        <li class="flex items-start gap-2"><span class="text-lg">👑</span><span><strong>Control Total:</strong> Mover o intercambiar los barcos de <i>cualquier centro</i> sin necesitar confirmación.</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">👑</span><span><strong>Control Total:</strong> Mover o intercambiar barcos de <i>cualquier centro</i> sin necesitar confirmación.</span></li>
                         <li class="flex items-start gap-2"><span class="text-lg">📥</span><span><strong>Gestión de Datos:</strong> Importar CSV y vaciar la base de datos.</span></li>
                     </ul>
                 </div>
@@ -202,8 +202,55 @@
             <h3 class="text-xl font-black text-slate-800 mb-2">¿Borrar toda la base de datos?</h3>
             <p class="text-sm text-slate-500 mb-6">Se ha descargado una copia de seguridad. ¿Estás seguro de que quieres vaciar la base de datos en la nube permanentemente?</p>
             <div class="flex gap-3">
-                <button onclick="hideEl('empty-confirm-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
+                <button id="btn-cancel-empty" onclick="hideEl('empty-confirm-modal')" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
                 <button id="btn-confirm-empty" onclick="executeEmptyData()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Sí, vaciar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Config Wizard Modal (Minimalist 3-Tier Profile System) -->
+    <div id="config-wizard-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-10 w-full max-w-5xl border border-slate-200 transform transition-all max-h-[95vh] overflow-y-auto flex flex-col">
+            
+            <div class="flex justify-between items-start mb-8 shrink-0">
+                <h1 class="text-3xl font-black italic tracking-tighter uppercase text-slate-900">Configuración de Cupos</h1>
+                <button onclick="hideEl('config-wizard-modal')" class="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="flex flex-col items-center text-center mb-8 shrink-0">
+                <h3 class="text-sm font-black text-slate-800 mb-4 uppercase tracking-widest">Definición de Temporadas Fijas</h3>
+                <div class="flex flex-wrap justify-center gap-6 text-sm text-slate-600">
+                    <div class="flex items-center gap-2"><span class="bg-rose-100 text-rose-700 px-3 py-1 rounded-md text-xs font-black">PICO</span> <span>Julio y Agosto</span></div>
+                    <div class="flex items-center gap-2"><span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-md text-xs font-black">ALTA</span> <span>Jun, Sep, Sem. Santa (27 Mar-6 Abr) y Navidad (25-31 Dic)</span></div>
+                    <div class="flex items-center gap-2"><span class="bg-slate-200 text-slate-700 px-3 py-1 rounded-md text-xs font-black">BAJA</span> <span>El resto del año</span></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pb-4">
+                <!-- PICO COLUMN -->
+                <div class="border-2 border-rose-100 rounded-xl overflow-hidden h-max">
+                    <div class="bg-rose-50 text-rose-800 font-black text-center py-3 border-b border-rose-100 uppercase tracking-widest">Temporada Pico</div>
+                    <div class="p-4" id="wizard-peak-table"></div>
+                </div>
+
+                <!-- ALTA COLUMN -->
+                <div class="border-2 border-amber-100 rounded-xl overflow-hidden h-max">
+                    <div class="bg-amber-50 text-amber-800 font-black text-center py-3 border-b border-amber-100 uppercase tracking-widest">Temporada Alta</div>
+                    <div class="p-4" id="wizard-high-table"></div>
+                </div>
+
+                <!-- BAJA COLUMN -->
+                <div class="border-2 border-slate-200 rounded-xl overflow-hidden h-max">
+                    <div class="bg-slate-100 text-slate-700 font-black text-center py-3 border-b border-slate-200 uppercase tracking-widest">Temporada Baja</div>
+                    <div class="p-4" id="wizard-low-table"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 mt-6 shrink-0 pt-6 border-t border-slate-100">
+                <button onclick="hideEl('config-wizard-modal')" class="w-1/2 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cerrar sin guardar</button>
+                <button id="btn-save-config" onclick="saveConfigWizard()" class="w-1/2 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-md">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -248,6 +295,26 @@
             <p class="text-sm text-slate-600 mb-5 font-medium">Hay dos barcos en este horario. ¿Con cuál de ellos quieres proponer el intercambio?</p>
             <div id="swap-choice-buttons" class="flex flex-col gap-3"></div>
             <button onclick="cancelWhatsAppDrop()" class="w-full mt-4 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Partial Swap Modal -->
+    <div id="partial-swap-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Límite de Cupo</h3>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Intercambio Reducido</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-5 font-medium whitespace-pre-line" id="partial-swap-msg"></p>
+            <div class="flex gap-3">
+                <button onclick="cancelPartialSwap()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button id="btn-confirm-partial-swap" onclick="confirmPartialSwap()" class="flex-1 px-4 py-3.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 transition-colors shadow-md">Aceptar Ajuste</button>
+            </div>
         </div>
     </div>
 
@@ -456,24 +523,16 @@
                 <div class="mb-6 shrink-0 flex justify-between items-end">
                     <div>
                         <h2 id="daily-date-header" class="text-2xl md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
-                        <p class="text-xs font-bold text-slate-400 tracking-widest mt-1 uppercase">Cupo Diario: 270 Plazas. Asignadas un total de <span id="total-pax-header" class="text-blue-600">0</span> plazas</p>
+                        <p class="text-xs font-bold text-slate-400 tracking-widest mt-1 uppercase">Cupo Diario: <span id="daily-max-header"></span> Plazas. Asignadas un total de <span id="total-pax-header" class="text-blue-600">0</span> plazas</p>
                     </div>
                 </div>
-                <div class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs">
-                    <div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b-2 border-slate-200 bg-slate-50 text-[9px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-10 shadow-sm">
-                        <div class="p-3 text-slate-500 border-r border-slate-100 flex items-center justify-center">Hora</div>
-                        <div class="p-3 text-slate-400 border-r border-slate-200 flex items-center justify-center" title="Posición">P.</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Bajo de Dentro</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Piles II</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Piles I</div>
-                        <div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">Testa</div>
-                        <div class="p-3 flex items-center justify-center gap-1">Morra</div>
-                    </div>
-                    <div id="schedule-grid"></div>
+                
+                <div id="daily-grid-container" class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs">
+                    <!-- Header and Grid generated dynamically based on date limits -->
                 </div>
-                <div class="grid grid-cols-[104px_repeat(5,1fr)] bg-slate-50 border-t-2 border-slate-200 text-xs font-bold text-slate-500 text-center items-center shrink-0">
-                    <div class="p-4 flex justify-start border-r border-slate-200 italic pl-6 tracking-widest text-[10px]">OCUPACIÓN:</div>
-                    <div class="p-4 border-r border-slate-200" id="cap-bajo"></div><div class="p-4 border-r border-slate-200" id="cap-piles2"></div><div class="p-4 border-r border-slate-200" id="cap-piles1"></div><div class="p-4 border-r border-slate-200" id="cap-testa"></div><div class="p-4" id="cap-morra"></div>
+                
+                <div id="daily-footer-container" class="shrink-0">
+                    <!-- Footer capacities generated dynamically based on date limits -->
                 </div>
             </main>
 
@@ -544,18 +603,86 @@
 
     <script>
         /* =========================================================================
-           1. CORE DATA, UTILITIES & INITIALIZATION
+           1. CORE DATA, UTILITIES & INITIALIZATION ENGINE
            ========================================================================= */
         const getEl = id => document.getElementById(id);
         const hideEl = id => getEl(id)?.classList.add('hidden');
         const showEl = id => getEl(id)?.classList.remove('hidden');
         const toggleVis = id => getEl(id)?.classList.toggle('hidden');
 
+        // Elegant date parser to avoid timezone mismatch
+        const parseDateT00 = dateStr => new Date(dateStr + "T00:00:00");
+        const getStrYMD = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
         const SITES = ['Bajo de Dentro', 'Piles II', 'Piles I', 'Testa', 'Morra'];
+        const SEASONS = ['peak', 'high', 'low'];
         const TIMES = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00'];
-        const SITE_CAPACITY = { 'Bajo de Dentro': 70, 'Piles II': 50, 'Piles I': 50, 'Testa': 30, 'Morra': 50 };
         
-        // Merged PDF colors into the main CENTERS object
+        const FESTIVOS = new Set([
+            '2026-03-19', '2026-04-02', '2026-04-03', '2026-05-01', '2026-06-09', 
+            '2026-07-16', '2026-08-17', '2026-10-09', '2026-10-12', '2026-10-13', 
+            '2026-11-02', '2026-12-07', '2026-12-08', '2026-12-09', '2026-12-25'
+        ]);
+
+        // Fixed blocks that act as High Season (Alta) AND completely red calendar days.
+        const SPECIAL_PERIODS = [
+            { start: parseDateT00("2026-03-27").getTime(), end: parseDateT00("2026-04-06").getTime() }, // Semana Santa
+            { start: parseDateT00("2026-12-25").getTime(), end: parseDateT00("2026-12-31").getTime() }  // Navidad
+        ];
+
+        // DRY matrix definition
+        const DEFAULT_CAPS = {
+            peakSeasonMonths: [6, 7], // Jul, Aug
+            highSeasonMonths: [5, 8], // Jun, Sep
+            capacities: {
+                peak: {
+                    weekend: { 'Bajo de Dentro': 70, 'Piles II': 60, 'Piles I': 60, 'Testa': 50, 'Morra': 60 },
+                    weekday: { 'Bajo de Dentro': 50, 'Piles II': 50, 'Piles I': 50, 'Testa': 30, 'Morra': 0 }
+                },
+                high: {
+                    weekend: { 'Bajo de Dentro': 70, 'Piles II': 50, 'Piles I': 50, 'Testa': 30, 'Morra': 50 },
+                    weekday: { 'Bajo de Dentro': 50, 'Piles II': 50, 'Piles I': 50, 'Testa': 30, 'Morra': 0 }
+                },
+                low: {
+                    weekend: { 'Bajo de Dentro': 60, 'Piles II': 40, 'Piles I': 40, 'Testa': 20, 'Morra': 40 },
+                    weekday: { 'Bajo de Dentro': 40, 'Piles II': 40, 'Piles I': 40, 'Testa': 20, 'Morra': 0 }
+                }
+            }
+        };
+
+        // Master state
+        let sysConfig = JSON.parse(JSON.stringify(DEFAULT_CAPS));
+
+        // Logic check for Weekends and Festivos
+        const isWH = dStr => {
+            const day = parseDateT00(dStr).getDay();
+            return day === 0 || day === 6 || FESTIVOS.has(dStr);
+        };
+
+        // Logic check for painting the calendar red
+        const isRedCalendarDay = dStr => {
+            if (isWH(dStr)) return true;
+            const t = parseDateT00(dStr).getTime();
+            return SPECIAL_PERIODS.some(p => t >= p.start && t <= p.end);
+        };
+
+        // Determines which of the 3 matrices to apply
+        const getSeasonProfile = dStr => {
+            const d = parseDateT00(dStr), t = d.getTime(), m = d.getMonth();
+            if (sysConfig.peakSeasonMonths.includes(m)) return 'peak';
+            if (sysConfig.highSeasonMonths.includes(m) || SPECIAL_PERIODS.some(p => t >= p.start && t <= p.end)) return 'high';
+            return 'low';
+        };
+
+        // Pure declarative logic: season -> daytype -> site
+        const getDailyCapacity = (dStr, site) => {
+            const isWe = isWH(dStr);
+            if (site === 'Morra' && !isWe) return 0; // Forced strict rule
+            return sysConfig.capacities[getSeasonProfile(dStr)][isWe ? 'weekend' : 'weekday'][site] || 0;
+        };
+
+        const getDailySites = dStr => isWH(dStr) ? SITES : ['Bajo de Dentro', 'Piles II', 'Piles I', 'Testa'];
+        
         const CENTERS = {
             'B': { name: 'Balky', color: 'bg-[#ef4444]', text: 'text-white', pdfBg: '#ef4444', pdfText: '#ffffff' }, 
             'H': { name: 'Islas Hormigas', color: 'bg-[#0f172a]', text: 'text-white', pdfBg: '#000000', pdfText: '#ffffff' }, 
@@ -567,7 +694,6 @@
             'X': { name: 'X La Manga', color: 'bg-[#cbd5e1]', text: 'text-slate-800', pdfBg: '#cbd5e1', pdfText: '#000000' } 
         };
         
-        const FESTIVOS = ['2026-03-19'];
         const DAYS_ES = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
         const MONTHS_ES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
         const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -640,12 +766,36 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        let unsubscribeSnapshot = null; let unsubscribeSwaps = null; let unsubscribeHistory = null;
+        let unsubscribeSnapshot = null; let unsubscribeSwaps = null; let unsubscribeHistory = null; let unsubscribeConfig = null;
 
         function startFirestoreListener() {
             if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
             if (unsubscribeSwaps) { unsubscribeSwaps(); unsubscribeSwaps = null; }
             if (unsubscribeHistory) { unsubscribeHistory(); unsubscribeHistory = null; }
+            if (unsubscribeConfig) { unsubscribeConfig(); unsubscribeConfig = null; }
+
+            // DB LISTENER WITH AUTO-PATCHING
+            unsubscribeConfig = db.collection("config").doc("capacities").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    sysConfig = {
+                        peakSeasonMonths: data.peakSeasonMonths || DEFAULT_CAPS.peakSeasonMonths,
+                        highSeasonMonths: data.highSeasonMonths || DEFAULT_CAPS.highSeasonMonths,
+                        capacities: {
+                            peak: data.capacities?.peak || DEFAULT_CAPS.capacities.peak,
+                            high: data.capacities?.high || DEFAULT_CAPS.capacities.high,
+                            low:  data.capacities?.low  || DEFAULT_CAPS.capacities.low
+                        }
+                    };
+                    // FORCE PATCH: Overwrite old ghost values if they exist in the DB
+                    if (sysConfig.capacities.peak.weekend['Piles II'] === 50) {
+                        sysConfig.capacities.peak.weekend = { ...DEFAULT_CAPS.capacities.peak.weekend };
+                    }
+                } else {
+                    sysConfig = JSON.parse(JSON.stringify(DEFAULT_CAPS));
+                }
+                renderAll();
+            });
 
             unsubscribeSnapshot = db.collection("reservations_monthly").onSnapshot((snapshot) => {
                 const dataFromCloud = [];
@@ -726,20 +876,27 @@
                 html += `<button onclick="openNotificationsModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center justify-between"><div class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg> Notificaciones</div> <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">${pendingForMe.length}</span></button><div class="h-px bg-slate-100 my-1"></div>`;
             }
             if (currentUserKey === 'admin') {
+                html += `<button onclick="openConfigWizard(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Configurar Cupos</button>`;
                 html += `<button onclick="triggerImport(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar CSV</button>`;
                 html += `<button onclick="promptEmptyData(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Vaciar Datos</button><div class="h-px bg-slate-100 my-1"></div>`;
             }
             html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
-            getEl('user-dropdown').innerHTML = html;
+            const ud = getEl('user-dropdown');
+            if (ud) ud.innerHTML = html;
         }
 
         function updateNotificationsMenu() {
             const myCode = USER_CENTER_KEYS[currentUserKey];
             const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
+            const notifBubble = getEl('notif-bubble');
+            const notifCount = getEl('notif-count');
+            
             if (pendingForMe.length > 0 && !isGuestMode && currentUserKey !== 'admin') {
-                showEl('notif-bubble');
-                if(getEl('notif-count')) getEl('notif-count').innerText = pendingForMe.length;
-            } else { hideEl('notif-bubble'); }
+                if (notifBubble) showEl('notif-bubble');
+                if (notifCount) notifCount.innerText = pendingForMe.length;
+            } else { 
+                if (notifBubble) hideEl('notif-bubble'); 
+            }
             buildUserMenu();
         }
 
@@ -747,25 +904,91 @@
             isGuestMode = !user;
             currentUserKey = user ? (Object.keys(EMAIL_MAP).find(k => EMAIL_MAP[k] === user.email) || 'admin') : 'guest';
             hideEl('password-modal');
-            getEl('btn-login-header').classList.toggle('hidden', !isGuestMode);
-            getEl('user-menu-wrapper').classList.toggle('hidden', isGuestMode);
+            
+            const btnLogin = getEl('btn-login-header');
+            if (btnLogin) btnLogin.classList.toggle('hidden', !isGuestMode);
+            
+            const userMenuWrapper = getEl('user-menu-wrapper');
+            if (userMenuWrapper) userMenuWrapper.classList.toggle('hidden', isGuestMode);
             
             startFirestoreListener();
+            
             const badgeInfo = BADGE_INFO[currentUserKey] || { name: 'Invitado', color: 'bg-slate-200', text: 'text-slate-600' };
             const centerInitial = currentUserKey === 'admin' ? 'A' : (currentUserKey === 'mangamar' ? 'M' : (currentUserKey === 'guest' ? 'INV' : currentUserKey.charAt(0).toUpperCase()));
             const btn = getEl('user-badge-button');
             
-            btn.className = `rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-all ${badgeInfo.color} ${badgeInfo.text}`;
-            btn.innerHTML = `<span class="${isGuestMode ? 'bg-black/10' : 'bg-black/20'} px-1.5 rounded-sm">${centerInitial}</span><span class="tracking-wide">${badgeInfo.name}</span><svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+            if (btn) {
+                btn.className = `rounded-[4px] px-3 py-2 text-[10px] font-bold shadow-sm flex items-center gap-2 hover:opacity-90 transition-all ${badgeInfo.color} ${badgeInfo.text}`;
+                btn.innerHTML = `<span class="${isGuestMode ? 'bg-black/10' : 'bg-black/20'} px-1.5 rounded-sm">${centerInitial}</span><span class="tracking-wide">${badgeInfo.name}</span><svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+            }
             
             updateNotificationsMenu();
         });
 
         /* =========================================================================
+           9. WIZARD CONFIGURATION LOGIC (3-TIER DRY SYSTEM)
+           ========================================================================= */
+        function renderWizardTables() {
+            SEASONS.forEach(season => {
+                const container = getEl(`wizard-${season}-table`);
+                if(!container) return;
+                
+                container.innerHTML = `
+                <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 mb-3 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
+                    <div class="text-left">Punto</div><div>Finde/Fest.</div><div>Diario</div>
+                </div>
+                ${SITES.map(s => {
+                    const isM = s === 'Morra';
+                    const cName = s === 'Bajo de Dentro' ? 'Dentro' : s;
+                    const weVal = sysConfig.capacities[season].weekend[s];
+                    const wdVal = isM ? 0 : sysConfig.capacities[season].weekday[s];
+                    return `
+                    <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 items-center mb-2 bg-white p-2 rounded border border-slate-100 text-center shadow-sm">
+                        <div class="text-xs font-bold text-slate-700 text-left">${cName}</div>
+                        <input type="number" id="cap-${season}-we-${s}" value="${weVal}" class="w-full text-center p-1.5 border border-slate-200 rounded bg-slate-50 font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none" min="0">
+                        <input type="number" id="cap-${season}-wd-${s}" value="${wdVal}" class="w-full text-center p-1.5 border border-slate-200 rounded font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none ${isM ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-50'}" min="0" ${isM ? 'disabled title="Cerrado en diario"' : ''}>
+                    </div>`;
+                }).join('')}`;
+            });
+        }
+
+        function openConfigWizard() {
+            renderWizardTables();
+            showEl('config-wizard-modal');
+        }
+
+        async function saveConfigWizard() {
+            const btn = getEl('btn-save-config');
+            btn.innerHTML = 'Guardando...'; btn.disabled = true;
+
+            const newCaps = { peak: { weekend: {}, weekday: {} }, high: { weekend: {}, weekday: {} }, low: { weekend: {}, weekday: {} } };
+
+            SEASONS.forEach(season => {
+                SITES.forEach(s => {
+                    newCaps[season].weekend[s] = parseInt(getEl(`cap-${season}-we-${s}`).value) || 0;
+                    newCaps[season].weekday[s] = s === 'Morra' ? 0 : (parseInt(getEl(`cap-${season}-wd-${s}`).value) || 0);
+                });
+            });
+
+            try {
+                await db.collection("config").doc("capacities").set({
+                    peakSeasonMonths: sysConfig.peakSeasonMonths,
+                    highSeasonMonths: sysConfig.highSeasonMonths,
+                    capacities: newCaps
+                }, { merge: true });
+                hideEl('config-wizard-modal');
+                showNotification('Configuración Guardada', 'Los cupos se han actualizado y aplicado correctamente.');
+            } catch(e) {
+                console.error(e);
+                showNotification('Error', 'No se pudo guardar la configuración.', true);
+            } finally {
+                btn.innerHTML = 'Guardar Plazas'; btn.disabled = false;
+            }
+        }
+
+        /* =========================================================================
            4. UTILITIES & UI CONTROLLERS
            ========================================================================= */
-        function formatDateString(dateObj) { return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`; }
-        function getMonday(d) { d = new Date(d); var day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
         function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
         function getDateOfISOWeek(w, y) { var simple = new Date(y, 0, 1 + (w - 1) * 7); var ISOweekStart = simple; if (simple.getDay() <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); return ISOweekStart; }
         
@@ -793,39 +1016,56 @@
             const sidebar = getEl('sidebar-calendario');
             const periodSelectors = getEl('toolbar-period-selectors');
 
-            getEl('global-filter-bar').classList.toggle('hidden', v === 'estadisticas');
-            getEl('main-content-area').classList.toggle('hidden', v === 'estadisticas' || v === 'historial');
+            const gBar = getEl('global-filter-bar');
+            if (gBar) gBar.classList.toggle('hidden', v === 'estadisticas');
+            
+            const mainCont = getEl('main-content-area');
+            if (mainCont) mainCont.classList.toggle('hidden', v === 'estadisticas' || v === 'historial');
             
             const histWrap = getEl('history-month-filter-wrapper');
             if (histWrap) { histWrap.classList.toggle('hidden', v !== 'historial'); histWrap.classList.toggle('flex', v === 'historial'); }
 
-            sidebar.classList.toggle('hidden', v !== 'diario');
-            sidebar.classList.toggle('flex', v === 'diario');
-            sidebar.classList.toggle('lg:flex', v === 'diario');
+            if (sidebar) {
+                sidebar.classList.toggle('hidden', v !== 'diario');
+                sidebar.classList.toggle('flex', v === 'diario');
+                sidebar.classList.toggle('lg:flex', v === 'diario');
+            }
             
-            periodSelectors.classList.toggle('hidden', v === 'diario' || v === 'estadisticas' || v === 'historial');
-            getEl('toolbar-week').classList.toggle('hidden', v !== 'semanal');
-            getEl('toolbar-month').classList.toggle('hidden', v !== 'mensual');
+            if (periodSelectors) periodSelectors.classList.toggle('hidden', v === 'diario' || v === 'estadisticas' || v === 'historial');
+            
+            const tWeek = getEl('toolbar-week');
+            if (tWeek) tWeek.classList.toggle('hidden', v !== 'semanal');
+            
+            const tMonth = getEl('toolbar-month');
+            if (tMonth) tMonth.classList.toggle('hidden', v !== 'mensual');
 
             renderAll();
         }
 
-        function setStatsUnit(unit) { statsUnit = unit; getEl('unit-dropdown-text').textContent = unit === 'barcos' ? 'Barcos (Salidas)' : 'Plazas (Buceadores)'; renderStats(); }
+        function setStatsUnit(unit) { statsUnit = unit; const udTxt = getEl('unit-dropdown-text'); if(udTxt) udTxt.textContent = unit === 'barcos' ? 'Barcos (Salidas)' : 'Plazas (Buceadores)'; renderStats(); }
 
         function initFilters() {
-            const c = getEl('filter-container'); c.innerHTML = '';
+            const c = getEl('filter-container'); 
+            if (!c) return;
+            c.innerHTML = '';
             Object.keys(CENTERS).forEach(k => {
                 const cn = CENTERS[k], ck = selectedCenters.includes(k);
                 const l = document.createElement('label'); l.className = 'flex items-center gap-3 p-2 hover:bg-slate-50 rounded-md transition-colors cursor-pointer';
                 l.innerHTML = `<input type="checkbox" ${ck ? 'checked' : ''} onchange="toggleCenter('${k}')" class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"><span class="w-6 h-6 rounded ${cn.color} ${cn.text} flex items-center justify-center text-[10px] font-black">${k}</span><span class="text-sm font-semibold text-slate-700">${cn.name}</span>`;
                 c.appendChild(l);
             });
-            getEl('filter-button-text').textContent = selectedCenters.length === Object.keys(CENTERS).length ? 'TODOS LOS CENTROS' : `${selectedCenters.length} SELECCIONADOS`;
+            const fbText = getEl('filter-button-text');
+            if (fbText) fbText.textContent = selectedCenters.length === Object.keys(CENTERS).length ? 'TODOS LOS CENTROS' : `${selectedCenters.length} SELECCIONADOS`;
         }
 
         function initSelectors() {
             let mH = ''; for(let i=0; i<12; i++) mH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
-            getEl('month-selector-sidebar').innerHTML = mH; getEl('month-selector-main').innerHTML = mH;
+            
+            const msSidebar = getEl('month-selector-sidebar');
+            if (msSidebar) msSidebar.innerHTML = mH;
+            
+            const msMain = getEl('month-selector-main');
+            if (msMain) msMain.innerHTML = mH;
             
             const mContainer = getEl('month-filter-container');
             if (mContainer) {
@@ -842,10 +1082,13 @@
                 for(let i=0; i<12; i++) createOption(i, `${MONTHS_ES[i]} 2026`);
             }
 
-            const w = getEl('week-selector'); w.innerHTML = '';
-            for(let i=1; i<=52; i++) {
-                const s = getDateOfISOWeek(i, 2026), e = new Date(s); e.setDate(s.getDate() + 6);
-                w.innerHTML += `<option value="${i}">Semana ${i} (${s.getDate()} ${MONTHS_SHORT[s.getMonth()]} - ${e.getDate()} ${MONTHS_SHORT[e.getMonth()]})</option>`;
+            const w = getEl('week-selector'); 
+            if (w) {
+                w.innerHTML = '';
+                for(let i=1; i<=52; i++) {
+                    const s = getDateOfISOWeek(i, 2026), e = new Date(s); e.setDate(s.getDate() + 6);
+                    w.innerHTML += `<option value="${i}">Semana ${i} (${s.getDate()} ${MONTHS_SHORT[s.getMonth()]} - ${e.getDate()} ${MONTHS_SHORT[e.getMonth()]})</option>`;
+                }
             }
         }
 
@@ -859,7 +1102,8 @@
         function selectHistoryMonth(val, text) {
             selectedHistoryMonth = val;
             historyCurrentPage = 1;
-            getEl('month-filter-button-text').textContent = text;
+            const mfBtn = getEl('month-filter-button-text');
+            if (mfBtn) mfBtn.textContent = text;
             hideEl('month-dropdown-panel');
             initSelectors(); renderHistory();
         }
@@ -904,7 +1148,7 @@
                 const codeKey = USER_CENTER_KEYS[log.centerKey];
                 const isCenterSelected = selectedCenters.includes(codeKey);
                 let isMonthSelected = true;
-                if (selectedHistoryMonth !== 'all') isMonthSelected = new Date(log.details.date).getMonth() === parseInt(selectedHistoryMonth);
+                if (selectedHistoryMonth !== 'all') isMonthSelected = parseDateT00(log.details.date).getMonth() === parseInt(selectedHistoryMonth);
                 return isCenterSelected && isMonthSelected;
             });
 
@@ -928,7 +1172,7 @@
                     const d = log.timestamp.toDate();
                     logDateStr = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
                 }
-                const targetDObj = new Date(log.details.date);
+                const targetDObj = parseDateT00(log.details.date);
                 const targetDateStr = `${targetDObj.getDate()} de ${MONTHS_SHORT[targetDObj.getMonth()]}`;
 
                 if (log.actionType === 'swap') {
@@ -1001,7 +1245,19 @@
                     let c = rs[i].split(','); if (c.length < 5) c = rs[i].split(';'); if (c.length < 5) c = rs[i].split('\t'); if (c.length < 5) continue;
                     
                     const clean = (str) => str ? str.replace(/['"\r\n]+/g, '').trim() : '';
-                    const rawDate = clean(c[0]), centerName = clean(c[1]).toUpperCase(), site = clean(c[2]), rawTime = clean(c[3]), pax = parseInt(clean(c[4]), 10);
+                    const rawDate = clean(c[0]), centerName = clean(c[1]).toUpperCase(), rawSite = clean(c[2]), rawTime = clean(c[3]), pax = parseInt(clean(c[4]), 10);
+                    
+                    // Normalize site to match exactly the SITES array (fixes case and spelling variations)
+                    let site = rawSite;
+                    const siteUpper = rawSite.toUpperCase();
+                    if (siteUpper.includes('BAJO')) site = 'Bajo de Dentro';
+                    else if (siteUpper.includes('TESTA')) site = 'Testa';
+                    else if (siteUpper.includes('MORRA')) site = 'Morra';
+                    else if (siteUpper.includes('PILES')) {
+                        if (siteUpper.includes('II') || siteUpper.includes('2')) site = 'Piles II';
+                        else if (siteUpper.includes('I') || siteUpper.includes('1')) site = 'Piles I';
+                    }
+
                     const normalizedDate = normalizeCSVDate(rawDate), normalizedTime = normalizeCSVTime(rawTime), cKey = safeCenterMap[centerName];
 
                     if(cKey && !isNaN(pax)) {
@@ -1036,7 +1292,7 @@
         }
 
         /* =========================================================================
-           7. EXPORT FUNCTIONALITY (CSV & TRUE-VECTOR PDF)
+           7. EXPORT & BACKUP FUNCTIONALITY (CSV & TRUE-VECTOR PDF)
            ========================================================================= */
         function selectExportFormat(format) {
             getEl('export-format').value = format;
@@ -1079,8 +1335,29 @@
                 const l = document.createElement("a"); 
                 l.setAttribute("href", "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv)); 
                 l.setAttribute("download", `Planificacion_${centerVal}_${monthVal}.csv`); 
-                l.click(); closePrintModal();
+                document.body.appendChild(l);
+                l.click(); 
+                document.body.removeChild(l);
+                closePrintModal();
             } catch (error) { showNotification('Error', 'Hubo un problema al exportar el CSV.', true); }
+        }
+
+        function backupAllToCSV() {
+            if (!allocations || allocations.length === 0) return;
+            try {
+                let csv = "Fecha,Centro,Punto,Hora,Plazas\n";
+                let sorted = [...allocations].sort((a, b) => a.date !== b.date ? a.date.localeCompare(b.date) : a.time.localeCompare(b.time));
+                sorted.forEach(a => { 
+                    let cName = CENTERS[a.center] ? CENTERS[a.center].name : a.center;
+                    csv += `${a.date},${cName},${a.site},${a.time},${a.pax}\n`; 
+                });
+                const l = document.createElement("a"); 
+                l.setAttribute("href", "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv)); 
+                l.setAttribute("download", `Backup_Completo_${getStrYMD(new Date())}.csv`); 
+                document.body.appendChild(l);
+                l.click(); 
+                document.body.removeChild(l);
+            } catch(e) { console.error("Error creating full backup CSV:", e); }
         }
 
         function executePrintPDF() {
@@ -1130,7 +1407,7 @@
         }
 
         function drawDayBlock(doc, dateStr, dateItems, centerDailyPax, totalDailyPax, startX, startY) {
-            const dObj = new Date(dateStr), dayName = DAYS_ES[dObj.getDay()].substring(0,3).toUpperCase();
+            const dObj = parseDateT00(dateStr), dayName = DAYS_ES[dObj.getDay()].substring(0,3).toUpperCase();
             const dateTitle = `${dayName}. ${dObj.getDate()}-${MONTHS_SHORT[dObj.getMonth()].toUpperCase()}`;
             const timeLabels = ['09:00 - 10:30', '10:30 - 12:00', '12:00 - 13:30', '13:30 - 15:00', '15:00 - 16:30', '16:30 - 18:00', '18:00 - 19:00'];
             const timeKeys = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00'];
@@ -1152,11 +1429,13 @@
 
             let currentY = startY;
 
+            const dayTotalCap = SITES.reduce((sum, s) => sum + getDailyCapacity(dateStr, s), 0);
+
             drawBox(startX, currentY, 80, rowH, colorLightGray, dateTitle, '#000', 'bold', 8);
-            drawBox(startX + 80, currentY, 360, rowH, colorPink, '270 PLAZAS', '#fff', 'bold', 10);
+            drawBox(startX + 80, currentY, 360, rowH, colorPink, `${dayTotalCap} PLAZAS`, '#fff', 'bold', 10);
             currentY += rowH;
 
-            drawBox(startX, currentY, 55, rowH, colorYellow, '270', '#000', 'bold', 8);
+            drawBox(startX, currentY, 55, rowH, colorYellow, dayTotalCap.toString(), '#000', 'bold', 8);
             drawBox(startX + 55, currentY, 25, rowH, colorYellow, 'S4', '#000', 'bold', 8);
             
             let currentX = startX + 80;
@@ -1170,7 +1449,8 @@
             drawBox(startX, currentY, 80, rowH, colorPink, '', '#fff', 'bold', 8);
             currentX = startX + 80;
             SITES.forEach(s => {
-                drawBox(currentX, currentY, 36, rowH, colorPink, SITE_CAPACITY[s], '#000', 'bold', 8); 
+                const cap = getDailyCapacity(dateStr, s);
+                drawBox(currentX, currentY, 36, rowH, colorPink, cap, '#000', 'bold', 8); 
                 drawBox(currentX + 36, currentY, 36, rowH, colorPink, siteColumnTotals[s], '#000', 'bold', 8); 
                 currentX += 72;
             });
@@ -1216,8 +1496,9 @@
             drawBox(startX, currentY, 80, rowH, colorYellow, '', '#000', 'bold', 8);
             currentX = startX + 80;
             SITES.forEach(s => {
-                const diff = SITE_CAPACITY[s] - siteColumnTotals[s];
-                drawBox(currentX, currentY, 72, rowH, '#ffffff', diff >= 0 ? `+${diff}` : diff.toString(), diff >= 0 ? '#2563eb' : '#dc2626', 'normal', 8);
+                const cap = getDailyCapacity(dateStr, s);
+                const diff = cap - siteColumnTotals[s];
+                drawBox(currentX, currentY, 72, rowH, '#ffffff', cap === 0 ? '-' : (diff >= 0 ? `+${diff}` : diff.toString()), cap === 0 ? '#94a3b8' : (diff >= 0 ? '#2563eb' : '#dc2626'), 'normal', 8);
                 currentX += 72;
             });
 
@@ -1234,13 +1515,14 @@
         }
 
         function promptEmptyData() {
-            try { exportCSV(); } catch(e) {}
+            try { backupAllToCSV(); } catch(e) { console.error(e); }
             setTimeout(() => showEl('empty-confirm-modal'), 800);
         }
 
         async function executeEmptyData() {
             const btnConfirm = getEl('btn-confirm-empty'), btnCancel = getEl('btn-cancel-empty');
-            btnConfirm.textContent = "Borrando..."; btnConfirm.disabled = true; btnCancel.disabled = true;
+            if(btnConfirm) { btnConfirm.textContent = "Borrando..."; btnConfirm.disabled = true; }
+            if(btnCancel) btnCancel.disabled = true;
 
             try {
                 const snapshot = await db.collection("reservations_monthly").get();
@@ -1257,7 +1539,8 @@
             } catch (error) {
                 hideEl('empty-confirm-modal'); showNotification('Error', 'Hubo un problema al vaciar los datos.', true);
             } finally {
-                btnConfirm.textContent = "Sí, vaciar"; btnConfirm.disabled = false; btnCancel.disabled = false;
+                if(btnConfirm) { btnConfirm.textContent = "Sí, vaciar"; btnConfirm.disabled = false; }
+                if(btnCancel) btnCancel.disabled = false;
             }
         }
 
@@ -1265,10 +1548,13 @@
            8. DRAG & DROP + SWAPS + DOUBLE CLICK (THE BRAIN)
            ========================================================================= */
         let draggedItemId = null, pendingDrop = null, pendingNewSalidaWA = null, pendingSwapIntent = null, isProcessingDrop = false; 
+        let pendingSwapInit = null, pendingSwapTargets = [], pendingSwapIsAdmin = false, pendingNewSalida = null, pendingPartialSwap = null;
 
         function cancelWhatsAppDrop() {
-            hideEl('whatsapp-confirm-modal'); hideEl('swap-choice-modal');
-            pendingDrop = null; pendingSwapIntent = null; pendingNewSalidaWA = null; isProcessingDrop = false; renderAll(); 
+            hideEl('whatsapp-confirm-modal'); hideEl('swap-choice-modal'); hideEl('partial-swap-modal');
+            pendingDrop = null; pendingSwapIntent = null; pendingNewSalidaWA = null; isProcessingDrop = false; 
+            pendingSwapInit = null; pendingSwapTargets = []; pendingSwapIsAdmin = false; pendingNewSalida = null; pendingPartialSwap = null;
+            renderAll(); 
         }
 
         async function confirmWhatsAppAction() {
@@ -1319,8 +1605,8 @@
                 const batch = db.batch();
                 if (month1 === month2) {
                     batch.update(db.collection("reservations_monthly").doc(month1), {
-                        [`allocations.${initId}.time`]: targetItem.time, [`allocations.${initId}.site`]: targetItem.site, [`allocations.${initId}.subslot`]: targetItem.subslot || 1,
-                        [`allocations.${targetId}.time`]: initItem.time, [`allocations.${targetId}.site`]: initItem.site, [`allocations.${targetId}.subslot`]: initItem.subslot || 2
+                        [`allocations.${initId}.time`]: targetItem.time, [`allocations.${initId}.site`]: targetItem.site, [`allocations.${initId}.subslot`]: targetItem.subslot || 1, [`allocations.${initId}.pax`]: initItem.pax,
+                        [`allocations.${targetId}.time`]: initItem.time, [`allocations.${targetId}.site`]: initItem.site, [`allocations.${targetId}.subslot`]: initItem.subslot || 2, [`allocations.${targetId}.pax`]: targetItem.pax
                     });
                 } else {
                     const new_iItem = { ...initItem, time: targetItem.time, site: targetItem.site, subslot: targetItem.subslot || 1 };
@@ -1363,7 +1649,7 @@
             if (pendingForMe.length === 0) listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-6">No tienes solicitudes pendientes.</p>`;
             else {
                 pendingForMe.forEach(req => {
-                    const initName = CENTERS[req.initiatorCenter].name, d = new Date(req.initiatorData.date);
+                    const initName = CENTERS[req.initiatorCenter].name, d = parseDateT00(req.initiatorData.date);
                     const dStr = `${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
                     
                     listEl.innerHTML += `
@@ -1372,8 +1658,8 @@
                             <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 text-xs">🔄</span>
                             <div>
                                 <p class="text-sm font-bold text-slate-800"><span class="text-blue-600">${initName}</span> te propone un cambio:</p>
-                                <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} a las ${req.initiatorData.time}</b> el ${dStr}.</p>
-                                <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} a las ${req.targetData.time}</b>.</p>
+                                <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} a las ${req.initiatorData.time}</b> el ${dStr} (${req.initiatorData.pax} pax).</p>
+                                <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} a las ${req.targetData.time}</b> (${req.targetData.pax} pax).</p>
                             </div>
                         </div>
                         <div class="flex gap-2 mt-3">
@@ -1395,7 +1681,7 @@
             try {
                 await performSwap(req.initiatorId, req.initiatorData, req.targetId, req.targetData, swapId);
                 const targetInfo = getCenterInfoSafe(req.targetData.center), initInfo = getCenterInfoSafe(req.initiatorCenter);
-                const d = new Date(req.initiatorData.date);
+                const d = parseDateT00(req.initiatorData.date);
                 
                 const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *INTERCAMBIO ACEPTADO* - ${initInfo.name} y ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, intercambiaron *${req.initiatorData.site} (${req.initiatorData.time})* por *${req.targetData.site} (${req.targetData.time})*.`;
                 await sendSilentWebhook(msg);
@@ -1408,7 +1694,7 @@
 
         function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
             const targetInfo = getCenterInfoSafe(targetItem.center), initInfo = getCenterInfoSafe(initItem.center);
-            const d = new Date(initItem.date);
+            const d = parseDateT00(initItem.date);
             const msg = `🤖 *AVISO AUTOMÁTICO*\n🔀 *SOLICITUD DE INTERCAMBIO* - ${initInfo.name} a ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ofrece *${initItem.site} (${initItem.time})* por *${targetItem.site} (${targetItem.time})*. Entrad al visor para confirmar.`;
             
             pendingSwapIntent = { initId, initItem, targetId, targetItem, msg };
@@ -1431,14 +1717,72 @@
             showEl('swap-choice-modal');
         }
 
+        function cancelPartialSwap() {
+            hideEl('partial-swap-modal');
+            pendingPartialSwap = null;
+            isProcessingDrop = false;
+            renderAll();
+        }
+
+        function confirmPartialSwap() {
+            hideEl('partial-swap-modal');
+            if(!pendingPartialSwap) return;
+            const { initId, initItem, targetId, targetItem, safeInitPax, safeTargetPax, isAdmin } = pendingPartialSwap;
+            pendingPartialSwap = null;
+
+            const adjustedInitItem = { ...initItem, pax: safeInitPax };
+            const adjustedTargetItem = { ...targetItem, pax: safeTargetPax };
+
+            executeProceedWithSwap(initId, adjustedInitItem, targetId, adjustedTargetItem, isAdmin);
+        }
+
+        function executeProceedWithSwap(initId, initItem, targetId, targetItem, isAdmin) {
+            if (isAdmin) { 
+                adminInstantSwap({ initiatorId: initId, targetId: targetId, initiatorData: initItem, targetData: targetItem }); 
+                isProcessingDrop = false; 
+            } else { 
+                triggerSwapConfirmation(initId, initItem, targetId, targetItem); 
+            }
+        }
+
         async function selectSwapTarget(targetId) {
             hideEl('swap-choice-modal');
             const targetItem = pendingSwapTargets.find(t => t.id === targetId);
             const { initId, initItem } = pendingSwapInit, isAdmin = pendingSwapIsAdmin;
             pendingSwapInit = null; pendingSwapTargets = []; pendingSwapIsAdmin = false;
             
-            if (isAdmin) { await adminInstantSwap({ initiatorId: initId, targetId: targetId, initiatorData: initItem, targetData: targetItem }); isProcessingDrop = false; } 
-            else { triggerSwapConfirmation(initId, initItem, targetId, targetItem); }
+            const itemsInTargetSiteToday = allocations.filter(a => a.date === initItem.date && a.site === targetItem.site);
+            const currentPaxTargetSite = itemsInTargetSiteToday.reduce((sum, a) => sum + a.pax, 0);
+            const targetSiteCap = getDailyCapacity(initItem.date, targetItem.site);
+            const maxAllowedInTarget = targetSiteCap - currentPaxTargetSite + targetItem.pax;
+
+            const itemsInInitSiteToday = allocations.filter(a => a.date === initItem.date && a.site === initItem.site);
+            const currentPaxInitSite = itemsInInitSiteToday.reduce((sum, a) => sum + a.pax, 0);
+            const initSiteCap = getDailyCapacity(initItem.date, initItem.site);
+            const maxAllowedInInit = initSiteCap - currentPaxInitSite + initItem.pax;
+
+            let safeInitPax = Math.min(initItem.pax, maxAllowedInTarget);
+            let safeTargetPax = Math.min(targetItem.pax, maxAllowedInInit);
+
+            if (initItem.pax > maxAllowedInTarget || targetItem.pax > maxAllowedInInit) {
+                if (safeInitPax <= 0 || safeTargetPax <= 0) {
+                    showNotification('Error de Cupo', 'No hay plazas suficientes en absoluto para realizar este intercambio. El punto está totalmente lleno.', true);
+                    isProcessingDrop = false;
+                    return;
+                }
+                
+                pendingPartialSwap = { initId, initItem, targetId, targetItem, safeInitPax, safeTargetPax, isAdmin };
+                let msg = `El punto de destino casi ha alcanzado su límite diario. No puedes intercambiar los barcos con el 100% de las plazas intactas.\n\n`;
+                if (initItem.pax > maxAllowedInTarget) msg += `Tu barco de ${initItem.pax} plazas se reducirá forzosamente a ${safeInitPax} plazas.\n`;
+                if (targetItem.pax > maxAllowedInInit) msg += `El barco objetivo de ${targetItem.pax} plazas se reducirá forzosamente a ${safeTargetPax} plazas.\n`;
+                msg += `\n(Nota: Las plazas sobrantes se descartarán). ¿Aceptas continuar con este ajuste automático?`;
+                
+                getEl('partial-swap-msg').innerText = msg;
+                showEl('partial-swap-modal');
+                return;
+            }
+
+            executeProceedWithSwap(initId, initItem, targetId, targetItem, isAdmin);
         }
 
         document.addEventListener('dragstart', (e) => {
@@ -1462,7 +1806,7 @@
             document.querySelectorAll('.bg-blue-50, .bg-purple-50').forEach(el => { if (el !== e.target.closest('.dropzone')) el.classList.remove('bg-blue-50', 'bg-purple-50'); });
 
             const dropzone = e.target.closest('.dropzone'); if (!dropzone) return;
-            const newTime = dropzone.dataset.time, newSite = dropzone.dataset.site, ds = formatDateString(currentDate);
+            const newTime = dropzone.dataset.time, newSite = dropzone.dataset.site, ds = getStrYMD(currentDate);
             const existing = allocations.filter(a => a.date === ds && a.time === newTime && a.site === newSite && String(a.id) !== String(draggedItemId));
             if (existing.length >= 2) dropzone.classList.add('bg-purple-50'); else dropzone.classList.add('bg-blue-50');
         });
@@ -1488,9 +1832,10 @@
             const existingItemsInSlot = allocations.filter(a => a.date === initItem.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
 
             if (existingItemsInSlot.length < 2) {
+                // Free Space logic
                 const itemsInNewSiteToday = allocations.filter(a => a.date === initItem.date && a.site === newSite && String(a.id) !== String(id));
                 const currentPaxNewSite = itemsInNewSiteToday.reduce((sum, a) => sum + a.pax, 0);
-                const remainingCapacity = SITE_CAPACITY[newSite] - currentPaxNewSite;
+                const remainingCapacity = getDailyCapacity(initItem.date, newSite) - currentPaxNewSite;
 
                 if (initItem.pax > remainingCapacity) {
                     showNotification('Cupo Lleno', `No puedes mover la salida aquí. El punto tiene ${remainingCapacity} plazas libres y tu barco tiene ${initItem.pax}.`, true);
@@ -1498,31 +1843,49 @@
                 }
 
                 if (currentUserKey !== 'admin') {
-                    const d = new Date(initItem.date), centerInfo = getCenterInfoSafe(initItem.center);
+                    const d = parseDateT00(initItem.date), centerInfo = getCenterInfoSafe(initItem.center);
                     const msg = `🤖 *AVISO AUTOMÁTICO*\n➡️ *CAMBIO DE HORARIO* - ${centerInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, movió su salida de *${initItem.site} (${initItem.time})* a *${newSite} (${newTime})*.`;
                     pendingDrop = { id, item: initItem, newTime, newSite, msg };
                     getEl('wa-action-type').textContent = "Cambio de Horario/Punto"; getEl('confirm-whatsapp-msg').innerText = msg; showEl('whatsapp-confirm-modal');
                 } else { await executeDrop(id, initItem, newTime, newSite); isProcessingDrop = false; }
             } else {
+                // Swap logic (Slot is full)
                 if (currentUserKey !== 'admin') {
                     const targets = existingItemsInSlot.filter(t => t.center !== initItem.center);
                     if (targets.length === 0) { showNotification('Acción Bloqueada', 'Ambos barcos en este horario son tuyos. No puedes hacer un intercambio.', true); isProcessingDrop = false; return; } 
-                    if (targets.length === 1) triggerSwapConfirmation(id, initItem, targets[0].id, targets[0]);
-                    else showSwapChoiceModal(id, initItem, targets);
-                } else { showSwapChoiceModal(id, initItem, existingItemsInSlot, true); }
+                    
+                    if (targets.length === 1) {
+                        pendingSwapInit = { initId: id, initItem: initItem }; 
+                        pendingSwapTargets = targets; 
+                        pendingSwapIsAdmin = false;
+                        selectSwapTarget(targets[0].id);
+                    } else { 
+                        showSwapChoiceModal(id, initItem, targets, false); 
+                    }
+                } else { 
+                    const targets = existingItemsInSlot;
+                    if (targets.length === 1) {
+                        pendingSwapInit = { initId: id, initItem: initItem }; 
+                        pendingSwapTargets = targets; 
+                        pendingSwapIsAdmin = true;
+                        selectSwapTarget(targets[0].id);
+                    } else {
+                        showSwapChoiceModal(id, initItem, targets, true); 
+                    }
+                }
             }
         });
 
         function handleSlotDoubleClick(time, site) {
             if (isGuestMode || isProcessingDrop) return;
 
-            const ds = formatDateString(currentDate);
+            const ds = getStrYMD(currentDate);
             const existingItemsInSlot = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
             if (existingItemsInSlot.length >= 2) { showNotification('Horario Completo', 'Ya hay 2 barcos asignados en este horario.', true); return; }
 
             const itemsInSiteToday = allocations.filter(a => a.date === ds && a.site === site);
             const currentPax = itemsInSiteToday.reduce((sum, a) => sum + a.pax, 0);
-            const remainingCapacity = SITE_CAPACITY[site] - currentPax;
+            const remainingCapacity = getDailyCapacity(ds, site) - currentPax;
 
             if (remainingCapacity <= 0) { showNotification('Cupo Lleno', 'No quedan plazas disponibles para este punto de buceo hoy.', true); return; }
             const allowedMax = Math.min(11, remainingCapacity);
@@ -1532,7 +1895,10 @@
             getEl('new-salida-avail').textContent = `Plazas disponibles en el punto: ${remainingCapacity} (Máx por barco: ${allowedMax})`;
             
             const paxInput = getEl('new-salida-pax'); paxInput.value = ''; paxInput.max = allowedMax;
-            getEl('new-salida-center-container').classList.toggle('hidden', currentUserKey !== 'admin');
+            
+            const centerSelector = getEl('new-salida-center-container');
+            if (centerSelector) centerSelector.classList.toggle('hidden', currentUserKey !== 'admin');
+            
             showEl('new-salida-modal');
         }
 
@@ -1548,7 +1914,7 @@
             if (currentUserKey === 'admin') {
                 await executeNewSalida(pendingNewSalida, pax, getEl('new-salida-center').value);
             } else {
-                const { date, time, site } = pendingNewSalida, dObj = new Date(date), centerInfo = getCenterInfoSafe(currentUserKey);
+                const { date, time, site } = pendingNewSalida, dObj = parseDateT00(date), centerInfo = getCenterInfoSafe(currentUserKey);
                 const msg = `🤖 *AVISO AUTOMÁTICO*\n➕ *NUEVA SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, añadió una salida a *${site} (${time})* de ${pax} plazas.`;
                 pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: currentUserKey, msg: msg };
                 getEl('wa-action-type').textContent = "Nueva Salida"; getEl('confirm-whatsapp-msg').innerText = msg; showEl('whatsapp-confirm-modal');
@@ -1560,21 +1926,41 @@
            ========================================================================= */
         function renderDaily() {
             if(activeViewMode !== 'diario') return;
-            const ds = formatDateString(currentDate);
+            const ds = getStrYMD(currentDate);
+            const activeSites = getDailySites(ds);
+            
             getEl('daily-date-header').textContent = `${DAYS_ES[currentDate.getDay()]}, ${currentDate.getDate()} DE ${MONTHS_ES[currentDate.getMonth()]} DE ${currentDate.getFullYear()}`;
-            const grid = getEl('schedule-grid'); grid.innerHTML = '';
-            const t = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0 };
+            
+            let maxDailyCap = activeSites.reduce((sum, s) => sum + getDailyCapacity(ds, s), 0);
+            getEl('daily-max-header').textContent = maxDailyCap;
+
+            const gridColsClass = `grid-cols-[76px_28px_repeat(${activeSites.length},1fr)]`;
+            const footerColsClass = `grid-cols-[104px_repeat(${activeSites.length},1fr)]`;
+
+            let headerHtml = `<div class="grid ${gridColsClass} border-b-2 border-slate-200 bg-slate-50 text-[9px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                <div class="p-3 text-slate-500 border-r border-slate-100 flex items-center justify-center">Hora</div>
+                <div class="p-3 text-slate-400 border-r border-slate-200 flex items-center justify-center" title="Posición">P.</div>`;
+            
+            activeSites.forEach(s => {
+                let cleanName = s === 'Bajo de Dentro' ? 'Bajo de Dentro' : s;
+                headerHtml += `<div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">${cleanName}</div>`;
+            });
+            headerHtml += `</div>`;
+
+            let gridBodyHtml = '';
+            const t = {};
+            activeSites.forEach(s => t[s] = 0);
             let totalFilteredPax = 0;
 
             TIMES.forEach(time => {
                 if (time === '13:30') {
-                    grid.innerHTML += `<div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b border-slate-200 bg-red-50/60 min-h-[40px]"><div class="flex items-center justify-center border-r border-slate-200 font-black text-red-400 text-[10px] col-span-2">13:30</div><div class="col-span-5 flex items-center justify-center text-red-500 font-black italic text-[10px] tracking-[0.5em] opacity-80 uppercase">Descanso</div></div>`;
+                    gridBodyHtml += `<div class="grid ${gridColsClass} border-b border-slate-200 bg-red-50/60 min-h-[40px]"><div class="flex items-center justify-center border-r border-slate-200 font-black text-red-400 text-[10px] col-span-2">13:30</div><div class="col-span-${activeSites.length} flex items-center justify-center text-red-500 font-black italic text-[10px] tracking-[0.5em] opacity-80 uppercase">Descanso</div></div>`;
                     return;
                 }
 
                 let subRow1 = ''; let subRow2 = '';
 
-                SITES.forEach(site => {
+                activeSites.forEach(site => {
                     const siteItems = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
                     const renderedItems = siteItems.filter(item => selectedCenters.includes(item.center));
                     
@@ -1607,16 +1993,28 @@
                     subRow2 += `<div class="border-r border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${html2}</div>`;
                 });
 
-                grid.innerHTML += `<div class="grid grid-cols-[76px_28px_repeat(5,1fr)] border-b border-slate-200">
+                gridBodyHtml += `<div class="grid ${gridColsClass} border-b border-slate-200">
                     <div class="row-span-2 flex items-center justify-center border-r border-slate-200 font-black italic text-slate-500 text-sm bg-slate-50/20">${time}</div>
                     <div class="flex items-center justify-center border-r border-b border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">1</div>${subRow1}
                     <div class="flex items-center justify-center border-r border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">2</div>${subRow2}</div>`;
             });
             
             getEl('total-pax-header').textContent = totalFilteredPax;
-            SITES.forEach(s => {
-                getEl({'Bajo de Dentro':'cap-bajo', 'Piles II':'cap-piles2', 'Piles I':'cap-piles1', 'Testa':'cap-testa', 'Morra':'cap-morra'}[s]).innerHTML = `<div class="flex flex-col items-center"><span class="${t[s] > SITE_CAPACITY[s] ? 'text-red-600' : 'text-green-600'} font-black text-lg leading-none">${t[s]}</span><div class="w-8 border-t border-slate-300 my-0.5"></div><span class="text-slate-500 font-bold leading-none">${SITE_CAPACITY[s]} ${t[s] > SITE_CAPACITY[s] ? '❌' : '✅'}</span></div>`;
+
+            let footerHtml = `<div class="grid ${footerColsClass} bg-slate-50 border-t-2 border-slate-200 text-xs font-bold text-slate-500 text-center items-center shrink-0">
+                <div class="p-4 flex justify-start border-r border-slate-200 italic pl-6 tracking-widest text-[10px]">OCUPACIÓN:</div>`;
+            
+            activeSites.forEach(s => {
+                const cap = getDailyCapacity(ds, s);
+                const assigned = t[s];
+                const color = assigned > cap ? 'text-red-600' : 'text-green-600';
+                const icon = assigned > cap ? '❌' : '✅';
+                footerHtml += `<div class="p-4 border-r border-slate-200"><div class="flex flex-col items-center"><span class="${color} font-black text-lg leading-none">${assigned}</span><div class="w-8 border-t border-slate-300 my-0.5"></div><span class="text-slate-500 font-bold leading-none">${cap} ${icon}</span></div></div>`;
             });
+            footerHtml += `</div>`;
+
+            getEl('daily-grid-container').innerHTML = headerHtml + `<div id="schedule-grid">${gridBodyHtml}</div>`;
+            getEl('daily-footer-container').innerHTML = footerHtml;
         }
 
         function renderMega() {
@@ -1632,8 +2030,8 @@
             SITES.forEach(() => TIMES.forEach(tm => h += `<div class="sticky top-[40px] z-30 border-r border-b-2 border-slate-300 h-8 flex items-center justify-center font-bold ${tm === '13:30' ? 'bg-red-50 text-red-400' : 'bg-slate-50 text-slate-500'}">${tm}</div>`));
             
             for (let i = 0; i < num; i++) {
-                const d = new Date(start); d.setDate(start.getDate() + i); const ds = formatDateString(d);
-                const isD = d.getDay() === 0 || d.getDay() === 6 || FESTIVOS.includes(ds);
+                const d = new Date(start); d.setDate(start.getDate() + i); const ds = getStrYMD(d);
+                const isD = isRedCalendarDay(ds);
                 h += `<div class="sticky left-0 bg-white border-r-2 border-b border-slate-200 flex flex-col justify-center items-center z-10 py-1 shadow-sm cursor-pointer hover:bg-blue-50" onclick="setDate('${ds}'); switchView('diario');">
                     <span class="font-bold text-[8px] ${isD ? 'text-red-400' : 'text-slate-400'}">${DAYS_ES[d.getDay()].substring(0,3)}</span><span class="text-xs font-black ${isD ? 'text-red-600' : 'text-slate-800'}">${d.getDate()}</span></div>`;
                 SITES.forEach(s => TIMES.forEach(tm => {
@@ -1702,15 +2100,23 @@
 
         function renderCalendar() {
             const grid = getEl('calendar-grid'); grid.innerHTML = '';
-            const y = currentDate.getFullYear(), m = currentDate.getMonth(), dsToday = formatDateString(currentDate);
-            getEl('month-selector-sidebar').value = m; getEl('month-selector-main').value = m; getEl('week-selector').value = getWeekNumber(currentDate);
+            const y = currentDate.getFullYear(), m = currentDate.getMonth(), dsToday = getStrYMD(currentDate);
+            
+            const selSidebar = getEl('month-selector-sidebar');
+            if (selSidebar) selSidebar.value = m;
+            
+            const selMain = getEl('month-selector-main');
+            if (selMain) selMain.value = m;
+            
+            const selWeek = getEl('week-selector');
+            if (selWeek) selWeek.value = getWeekNumber(currentDate);
             
             const first = new Date(y, m, 1).getDay(), off = first === 0 ? 6 : first - 1;
             for (let i = 0; i < off; i++) grid.appendChild(document.createElement('div'));
             
             for (let d = 1; d <= new Date(y, m+1, 0).getDate(); d++) {
-                const dt = new Date(y, m, d), ds = formatDateString(dt);
-                const isD = dt.getDay() === 0 || dt.getDay() === 6 || FESTIVOS.includes(ds);
+                const dt = new Date(y, m, d), ds = getStrYMD(dt);
+                const isD = isRedCalendarDay(ds);
                 const el = document.createElement('div'); el.textContent = d; el.onclick = () => setDate(ds);
                 el.className = `py-1.5 transition-colors text-xs ${ds === dsToday ? 'calendar-day-active shadow-md' : 'calendar-day-inactive ' + (isD ? 'text-red-500 font-bold' : 'text-slate-600')}`;
                 grid.appendChild(el);
@@ -1722,9 +2128,11 @@
         /* =========================================================================
            11. INITIALIZATION EXECUTION
            ========================================================================= */
-        initSelectors(); 
-        initFilters(); 
-        renderAll();
+        document.addEventListener('DOMContentLoaded', () => {
+            initSelectors(); 
+            initFilters(); 
+            renderAll();
+        });
 
     </script>
 </body>
