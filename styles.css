@@ -1,49 +1,151 @@
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; }
-        
-        /* Drag & Drop Core */
-        .draggable-item { 
-            -webkit-user-drag: element; 
-            user-select: none; 
-            -webkit-user-select: none;
-        }
-        
-        .boat-block { transition: opacity 0.2s ease, outline 0.1s ease, box-shadow 0.1s ease; }
-        .boat-block * { pointer-events: none; }
-        
-        .dropzone { height: 100%; min-height: 38px; user-select: none; -webkit-user-select: none; transition: background-color 0.1s ease; }
-        
-        /* Visual cues for Drag intent */
-        .bg-blue-50 { background-color: #eff6ff !important; }
-        .bg-purple-50 { background-color: #faf5ff !important; }
+/**
+ * @file styles.css
+ * @description Global stylesheet for the Visor Reserva Interior application.
+ * While Tailwind CSS handles the majority of the utility-first styling directly 
+ * in the HTML, this file contains essential custom overrides, animation states, 
+ * and specific pseudo-selector styling (like scrollbars) that are difficult or 
+ * messy to implement inline.
+ */
 
-        .pending-swap-ghost {
-            opacity: 0.45 !important;
-            filter: grayscale(100%);
-            border: 2px dashed #94a3b8 !important;
-        }
+/* =========================================================================
+   1. TYPOGRAPHY & GLOBAL DEFAULTS
+   ========================================================================= */
 
-        /* Layout Scrollbar Styling */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Tab States */
-        .tab-active { background-color: white; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 0.5rem; }
-        .tab-inactive { color: #64748b; }
-        .tab-inactive:hover { color: #334155; }
-        
-        /* Calendar Styles */
-        .calendar-day-active { background-color: #2563eb; color: white; font-weight: bold; border-radius: 0.375rem; }
-        .calendar-day-inactive:hover { background-color: #f1f5f9; border-radius: 0.375rem; cursor: pointer; }
+/* Import the 'Inter' font family for a clean, modern UI aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-        /* Mega Grid Styles */
-        .mega-grid {
-            display: grid;
-            grid-template-columns: 60px repeat(35, 34px);
-            width: max-content;
-        }
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #f4f7f6; 
+}
 
-        /* Stats Table Custom Padding */
-        .stats-table th, .stats-table td { padding: 12px 8px; }
+/* =========================================================================
+   2. HTML5 DRAG & DROP CORE MECHANICS
+   ========================================================================= */
+
+/* * Required for native HTML5 drag-and-drop to function reliably across browsers 
+ * (especially Safari/Webkit). Prevents text-highlighting while dragging.
+ */
+.draggable-item { 
+    -webkit-user-drag: element; 
+    user-select: none; 
+    -webkit-user-select: none;
+}
+
+/* Smooth visual feedback when a boat block is picked up or dropped */
+.boat-block { 
+    transition: opacity 0.2s ease, outline 0.1s ease, box-shadow 0.1s ease; 
+}
+
+/* Forces drag events to ignore child elements (like text) inside the block */
+.boat-block * { 
+    pointer-events: none; 
+}
+
+/* Defines the valid target areas where a boat can be released */
+.dropzone { 
+    height: 100%; 
+    min-height: 38px; 
+    user-select: none; 
+    -webkit-user-select: none; 
+    transition: background-color 0.1s ease; 
+}
+
+/* =========================================================================
+   3. UI STATE FEEDBACK (DRAGGING & SWAPPING)
+   ========================================================================= */
+
+/* Highlights an empty/valid dropzone when hovering with a dragged item */
+.bg-blue-50 { 
+    background-color: #eff6ff !important; 
+}
+
+/* Highlights a dropzone that is already full, indicating a "Swap" intent */
+.bg-purple-50 { 
+    background-color: #faf5ff !important; 
+}
+
+/* * Visual treatment for a boat that is currently locked in a pending 
+ * swap request. Grayscales the block and adds a dashed border.
+ */
+.pending-swap-ghost {
+    opacity: 0.45 !important;
+    filter: grayscale(100%);
+    border: 2px dashed #94a3b8 !important;
+}
+
+/* =========================================================================
+   4. CUSTOM SCROLLBAR OVERRIDES
+   ========================================================================= */
+
+::-webkit-scrollbar { 
+    width: 8px; 
+    height: 8px; 
+}
+
+::-webkit-scrollbar-track { 
+    background: #f1f5f9; 
+    border-radius: 4px; 
+}
+
+::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 4px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+    background: #94a3b8; 
+}
+
+/* =========================================================================
+   5. NAVIGATION & CALENDAR STATES
+   ========================================================================= */
+
+/* Active vs Inactive styling for the main viewport navigation tabs */
+.tab-active { 
+    background-color: white; 
+    color: #2563eb; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+    border-radius: 0.5rem; 
+}
+
+.tab-inactive { 
+    color: #64748b; 
+}
+
+.tab-inactive:hover { 
+    color: #334155; 
+}
+
+/* Active vs Inactive styling for the left-sidebar calendar widget */
+.calendar-day-active { 
+    background-color: #2563eb; 
+    color: white; 
+    font-weight: bold; 
+    border-radius: 0.375rem; 
+}
+
+.calendar-day-inactive:hover { 
+    background-color: #f1f5f9; 
+    border-radius: 0.375rem; 
+    cursor: pointer; 
+}
+
+/* =========================================================================
+   6. COMPLEX GRID & TABLE STRUCTURES
+   ========================================================================= */
+
+/* * Explicit CSS Grid definition for the "Semanal/Mensual" mega-view. 
+ * Creates a fixed 60px column for the date, followed by 35 strict 34px columns
+ * to perfectly align the 5 sites * 7 time slots.
+ */
+.mega-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(35, 34px);
+    width: max-content;
+}
+
+/* Ensures tight, consistent padding for the analytics data tables */
+.stats-table th, .stats-table td { 
+    padding: 12px 8px; 
+}

@@ -4,21 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visor Reserva Interior - Professional Edition</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Firebase Authentication & Firestore Libraries -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
-    <!-- jsPDF for Native True-Vector PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="p-4 md:p-6 text-slate-800 flex flex-col h-screen overflow-hidden">
 
-    <!-- Firebase Login Modal -->
     <div id="password-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
             <div class="flex items-center gap-3 mb-2">
@@ -60,7 +58,6 @@
         </div>
     </div>
 
-    <!-- Print PDF Modal -->
     <div id="print-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
             <div class="flex items-center gap-3 mb-4">
@@ -95,7 +92,6 @@
         </div>
     </div>
 
-    <!-- Help Modal -->
     <div id="help-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-200 transform transition-all max-h-[90vh] overflow-y-auto">
             <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
@@ -143,7 +139,6 @@
         </div>
     </div>
 
-    <!-- Empty DB Modal -->
     <div id="empty-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
             <div class="mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-red-100 text-red-600">
@@ -158,7 +153,6 @@
         </div>
     </div>
 
-    <!-- Config Wizard Modal (Minimalist 3-Tier Profile System) -->
     <div id="config-wizard-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-10 w-full max-w-5xl border border-slate-200 transform transition-all max-h-[95vh] overflow-y-auto flex flex-col">
             
@@ -179,19 +173,16 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pb-4">
-                <!-- PICO COLUMN -->
                 <div class="border-2 border-rose-100 rounded-xl overflow-hidden h-max">
                     <div class="bg-rose-50 text-rose-800 font-black text-center py-3 border-b border-rose-100 uppercase tracking-widest">Temporada Pico</div>
                     <div class="p-4" id="wizard-peak-table"></div>
                 </div>
 
-                <!-- ALTA COLUMN -->
                 <div class="border-2 border-amber-100 rounded-xl overflow-hidden h-max">
                     <div class="bg-amber-50 text-amber-800 font-black text-center py-3 border-b border-amber-100 uppercase tracking-widest">Temporada Alta</div>
                     <div class="p-4" id="wizard-high-table"></div>
                 </div>
 
-                <!-- BAJA COLUMN -->
                 <div class="border-2 border-slate-200 rounded-xl overflow-hidden h-max">
                     <div class="bg-slate-100 text-slate-700 font-black text-center py-3 border-b border-slate-200 uppercase tracking-widest">Temporada Baja</div>
                     <div class="p-4" id="wizard-low-table"></div>
@@ -205,7 +196,6 @@
         </div>
     </div>
 
-    <!-- WhatsApp Confirmation Modal -->
     <div id="whatsapp-confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
             <div class="flex items-center gap-4 mb-5">
@@ -230,7 +220,6 @@
         </div>
     </div>
 
-    <!-- Swap Choice Modal -->
     <div id="swap-choice-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
             <div class="flex items-center gap-4 mb-5">
@@ -248,7 +237,6 @@
         </div>
     </div>
 
-    <!-- Partial Action Modal (Used for both Moves and Swaps) -->
     <div id="partial-action-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md border border-slate-100 transform transition-all">
             <div class="flex items-center gap-4 mb-5">
@@ -268,7 +256,6 @@
         </div>
     </div>
 
-    <!-- Notifications Modal -->
     <div id="notifications-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-slate-100 transform transition-all max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4 shrink-0">
@@ -289,7 +276,6 @@
         </div>
     </div>
 
-    <!-- New Salida Modal -->
     <div id="new-salida-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
             <div class="flex items-center gap-3 mb-4">
@@ -330,7 +316,6 @@
         </div>
     </div>
 
-    <!-- Generic Notification Modal -->
     <div id="notification-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
             <div id="notification-icon" class="mx-auto w-12 h-12 rounded-full mb-4 flex items-center justify-center"></div>
@@ -340,7 +325,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
         <div class="flex items-center gap-4">
             <div class="bg-blue-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md">
@@ -356,7 +340,6 @@
             </div>
         </div>
         
-        <!-- Navigation Tabs -->
         <div class="flex bg-slate-100 p-1.5 rounded-xl text-xs font-bold uppercase tracking-wider overflow-x-auto">
             <button onclick="switchView('diario')" id="tab-diario" class="px-5 py-2.5 tab-active flex items-center gap-2 transition-all">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> Diario
@@ -372,7 +355,6 @@
             </button>
         </div>
 
-        <!-- RIGHT SIDE HEADER CONTROLS -->
         <div class="flex items-center gap-3 relative">
             <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleImport(event)" />
             
@@ -410,7 +392,6 @@
         </div>
     </header>
 
-    <!-- Global Filter Bar -->
     <div id="global-filter-bar" class="bg-white rounded-xl shadow-sm border border-slate-200 px-5 py-3 mb-4 shrink-0 flex items-center gap-5 relative z-40 transition-all">
         <div id="toolbar-period-selectors" class="hidden items-center gap-4 border-r border-slate-200 pr-5">
             <div id="toolbar-week" class="hidden items-center gap-2">
@@ -452,7 +433,6 @@
         <div class="text-[10px] text-slate-400 font-bold italic tracking-widest hidden md:block ml-auto uppercase">PLANIFICACIÓN CONSOLIDADA 2026</div>
     </div>
 
-    <!-- Main Layout -->
     <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden relative z-10">
         
         <aside id="sidebar-calendario" class="w-full lg:w-72 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col shrink-0 overflow-y-auto">
@@ -477,13 +457,8 @@
                     </div>
                 </div>
                 
-                <div id="daily-grid-container" class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs">
-                    <!-- Header and Grid generated dynamically based on date limits -->
-                </div>
-                
-                <div id="daily-footer-container" class="shrink-0">
-                    <!-- Footer capacities generated dynamically based on date limits -->
-                </div>
+                <div id="daily-grid-container" class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs"></div>
+                <div id="daily-footer-container" class="shrink-0"></div>
             </main>
 
             <main id="view-mega" class="hidden flex-col h-full overflow-hidden bg-white">
@@ -519,6 +494,7 @@
                     </div>
                 </div>
             </div>
+            
             <div id="safe-main-table-container"></div>
             <div id="stats-monthly-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8"></div>
         </main>
@@ -528,11 +504,9 @@
                 <h2 class="text-3xl font-black italic tracking-tighter text-white">HISTORIAL DE CAMBIOS</h2>
                 <p class="text-[10px] font-bold text-slate-400 tracking-widest mt-1.5 uppercase">Registro de Actividad en Tiempo Real</p>
             </div>
-            <div id="history-list" class="space-y-4">
-                <!-- Logs injected here -->
-            </div>
             
-            <!-- Pagination Controls -->
+            <div id="history-list" class="space-y-4"></div>
+            
             <div id="history-pagination" class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 shadow-sm hidden shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-bold text-slate-500">Mostrar:</span>
@@ -550,6 +524,14 @@
             </div>
         </main>
     </div>
+
+    <script src="utils.js"></script>
+    <script src="config.js"></script>
+    <script src="state.js"></script>
+
+    <script src="firebase-service.js"></script>
+    <script src="export.js"></script>
+    <script src="ui.js"></script>
 
     <script src="app.js"></script>
 </body>
