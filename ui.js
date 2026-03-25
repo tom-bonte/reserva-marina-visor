@@ -20,7 +20,7 @@ function renderDaily() {
     
     getEl('daily-date-header').textContent = `${DAYS_ES[currentDate.getDay()]}, ${currentDate.getDate()} DE ${MONTHS_ES[currentDate.getMonth()]} DE ${currentDate.getFullYear()}`;
     
-    let maxDailyCap = activeSites.reduce((sum, s) => sum + getDailyCapacity(ds, s), 0);
+    let maxDailyCap = activeSites.reduce((sum, s) => sum + getDailyCapacity(ds, s), 0) + 20; // +20 from Palomas
     getEl('daily-max-header').textContent = maxDailyCap;
 
     const gridColsClass = `grid-cols-[76px_28px_repeat(${activeSites.length},1fr)]`;
@@ -42,7 +42,6 @@ function renderDaily() {
     let totalFilteredPax = 0;
 
     TIMES.forEach(time => {
-        // Intercept 13:30 to render the visual 'Break' row instead of usable slots
         if (time === '13:30') {
             gridBodyHtml += `<div class="grid ${gridColsClass} border-b border-slate-200 bg-red-50/60 min-h-[40px]"><div class="flex items-center justify-center border-r border-slate-200 font-black text-red-400 text-[10px] col-span-2">13:30</div><div class="col-span-${activeSites.length} flex items-center justify-center text-red-500 font-black italic text-[10px] tracking-[0.5em] opacity-80 uppercase">Descanso</div></div>`;
             return;
@@ -56,7 +55,6 @@ function renderDaily() {
             
             let item1 = renderedItems.find(i => i.subslot === 1), item2 = renderedItems.find(i => i.subslot === 2);
 
-            // Coerce orphaned items into slots cleanly to prevent visual tearing
             if (renderedItems.length === 1) { item1 = renderedItems[0]; item2 = null; } 
             else if (renderedItems.length === 2) {
                 if (!item1 && !item2) { item1 = renderedItems[0]; item2 = renderedItems[1]; } 
@@ -64,7 +62,6 @@ function renderDaily() {
                 else if (!item1 && item2) { item1 = renderedItems.find(i => String(i.id) !== String(item2.id)); }
             }
 
-            // Sub-closure: Assembles the visual block for a specific boat allocation
             const createBlockHTML = (item) => {
                 t[site] += item.pax; totalFilteredPax += item.pax;
                 const c = CENTERS[item.center];
@@ -72,18 +69,17 @@ function renderDaily() {
                 const ghostClass = isPending ? 'pending-swap-ghost' : '';
                 const canDragBlock = !isPending && !isGuestMode && (currentUserKey === 'admin' || item.center === USER_CENTER_KEYS[currentUserKey]);
                 
-                // Toggle native HTML5 drag attributes based on user authority
                 const dragAttrs = canDragBlock ? `draggable="true" data-drag-id="${item.id}"` : `draggable="false" data-drag-id="${item.id}"`;
                 const cursorClass = canDragBlock ? `cursor-grab active:cursor-grabbing hover:opacity-90 draggable-item` : `cursor-default opacity-90`;
 
-                return `<div ${dragAttrs} class="boat-block w-full h-[34px] rounded-[4px] px-2 py-1.5 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
+                // Note: We added ondblclick="handleBoatDoubleClick(event, '${item.id}')" directly to the boat block
+                return `<div ${dragAttrs} ondblclick="handleBoatDoubleClick(event, '${item.id}')" class="boat-block w-full h-[34px] rounded-[4px] px-2 py-1.5 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
                     <div class="truncate flex items-center gap-1.5 pointer-events-none"><span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span><span>${c.name} ${isPending ? '🔄' : ''}</span></div>
                     <span class="bg-black/20 px-1.5 py-0.5 rounded-sm pointer-events-none">${item.pax}</span>
                 </div>`;
             };
 
             let html1 = item1 ? createBlockHTML(item1) : '', html2 = item2 ? createBlockHTML(item2) : '';
-            // Define explicitly targetable dropzones with attached metadata coordinates
             subRow1 += `<div class="border-r border-b border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${html1}</div>`;
             subRow2 += `<div class="border-r border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${html2}</div>`;
         });
@@ -96,7 +92,6 @@ function renderDaily() {
     
     getEl('total-pax-header').textContent = totalFilteredPax;
 
-    // Build the dynamic footer evaluating absolute occupancy vs capacities
     let footerHtml = `<div class="grid ${footerColsClass} bg-slate-50 border-t-2 border-slate-200 text-xs font-bold text-slate-500 text-center items-center shrink-0">
         <div class="p-4 flex justify-start border-r border-slate-200 italic pl-6 tracking-widest text-[10px]">OCUPACIÓN:</div>`;
     
@@ -113,11 +108,6 @@ function renderDaily() {
     getEl('daily-footer-container').innerHTML = footerHtml;
 }
 
-/**
- * Renders the Mega-Grid view (used for Weekly and Monthly overviews).
- * Constructs a massive dense CSS Grid utilizing minimized data representations.
- * @returns {void}
- */
 function renderMega() {
     if(activeViewMode !== 'semanal' && activeViewMode !== 'mensual') return;
     const isW = activeViewMode === 'semanal';
@@ -149,20 +139,26 @@ function renderMega() {
     getEl('mega-grid-container').innerHTML = h + `</div>`;
 }
 
-/**
- * Calculates metrics and renders the analytics dashboards (Estadísticas).
- * Dynamically toggles aggregation unit between Boats vs Passengers based on user selection.
- * @returns {void}
- */
 function renderStats() {
     if(activeViewMode !== 'estadisticas') return;
     const anchor = `<svg class="w-3.5 h-3.5 inline mr-1.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>`;
-    const isBarcos = statsUnit === 'barcos', filteredAllocations = allocations.filter(a => selectedCenters.includes(a.center));
-    const cStats = {}, gTot = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 };
+    const isBarcos = statsUnit === 'barcos';
+    const filteredAllocations = allocations.filter(a => selectedCenters.includes(a.center));
+    
+    // 1. Core Mathematical Aggregation
+    const cStats = {}; 
+    const gTot = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 };
     
     Object.keys(CENTERS).forEach(k => { cStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 }; });
-    filteredAllocations.forEach(a => { const val = isBarcos ? 1 : a.pax; cStats[a.center][a.site] += val; cStats[a.center].total += val; gTot[a.site] += val; gTot.total += val; });
+    filteredAllocations.forEach(a => { 
+        const val = isBarcos ? 1 : a.pax; 
+        cStats[a.center][a.site] += val; 
+        cStats[a.center].total += val; 
+        gTot[a.site] += val; 
+        gTot.total += val; 
+    });
 
+    // 2. Build the Global Table
     let tableHtml = `<div class="w-full overflow-x-auto rounded-xl border border-slate-200 shadow-sm mb-12 bg-white"><table class="w-full text-left min-w-[900px] stats-table"><thead><tr class="border-b border-slate-200 bg-white"><th class="px-5 py-4 align-bottom border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 w-56" rowspan="2">Centro</th>`;
     SITES.forEach(s => tableHtml += `<th class="pt-5 pb-3 px-2 text-center border-r border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-600" colspan="2"><div class="flex items-center justify-center gap-1.5">${anchor}<span>${s}</span></div></th>`);
     tableHtml += `<th class="px-5 py-4 text-center align-middle bg-[#111827] text-white text-[10px] font-black uppercase tracking-widest" rowspan="2">Total Real</th></tr><tr class="border-b border-slate-200 bg-white">`;
@@ -185,36 +181,40 @@ function renderStats() {
     tableHtml += `<td class="px-5 py-4 text-center bg-[#3b82f6] text-white font-bold text-lg tracking-wide italic">${gTot.total.toLocaleString('en-US')} <span class="not-italic text-[10px] font-normal tracking-widest ml-1 opacity-90">${isBarcos ? 'SAL.' : 'BUC.'}</span></td></tr></tfoot></table></div>`;
 
     getEl('safe-main-table-container').innerHTML = tableHtml;
-    
-    // Sub-render loop for the monthly breakdowns below the primary matrix
-    const mGrid = getEl('stats-monthly-grid'); mGrid.innerHTML = '';
-    for(let m = 0; m < 12; m++) {
-        const mAlloc = filteredAllocations.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === m);
-        if (mAlloc.length === 0) continue; 
-        
-        const mStats = {}; Object.keys(CENTERS).forEach(k => mStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 });
-        mAlloc.forEach(a => { const val = isBarcos ? 1 : a.pax; mStats[a.center][a.site] += val; mStats[a.center].total += val; });
 
-        let cHtml = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-7 hover:shadow-md transition-shadow"><div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3"><h4 class="font-black italic text-lg md:text-xl uppercase tracking-tight text-slate-900">${MONTHS_ES[m]} 2026</h4><span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded tracking-widest uppercase border border-emerald-100">${statsUnit}</span></div><div class="overflow-x-auto"><table class="w-full text-left text-xs min-w-[400px]"><thead><tr class="text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 text-[9px]"><th class="pb-2 font-bold">Centro</th><th class="pb-2 text-center">Bajo</th><th class="pb-2 text-center">Piles</th><th class="pb-2 text-center">Piles</th><th class="pb-2 text-center">Testa</th><th class="pb-2 text-center">Morra</th><th class="pb-2 text-center font-black text-slate-800 bg-slate-50 px-2 rounded-t-lg">Total</th></tr></thead><tbody>`;
-        Object.keys(CENTERS).forEach(k => {
-            const st = mStats[k]; if(st.total === 0) return; const c = CENTERS[k];
-            cHtml += `<tr class="border-b border-slate-50 hover:bg-slate-50/50"><td class="py-2.5 font-bold flex items-center gap-2 text-slate-700 text-[10px]"><span class="w-3.5 h-3.5 rounded-sm ${c.color} ${c.text} flex items-center justify-center text-[7px] font-black">${k}</span> ${c.name}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Bajo de Dentro'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles II'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles I'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Testa'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Morra'].toLocaleString('en-US')}</td><td class="py-2.5 text-center font-black text-slate-900 bg-slate-50 px-2">${st.total.toLocaleString('en-US')}</td></tr>`;
-        });
-        cHtml += `</tbody></table></div></div>`;
-        mGrid.innerHTML += cHtml;
+    // 3. Render the Specific Selected Month
+    const mGrid = getEl('stats-monthly-grid'); 
+    mGrid.innerHTML = '';
+    
+    const monthSelector = getEl('stats-month-selector');
+    if (!monthSelector || monthSelector.value === 'none') return; // Exit early if hidden
+    
+    const m = parseInt(monthSelector.value, 10);
+    const mAlloc = filteredAllocations.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === m);
+    
+    if (mAlloc.length === 0) {
+        mGrid.innerHTML = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center text-slate-500 italic">No hay datos para ${MONTHS_ES[m]}.</div>`;
+        return;
     }
+    
+    const mStats = {}; 
+    Object.keys(CENTERS).forEach(k => mStats[k] = { 'Bajo de Dentro': 0, 'Piles II': 0, 'Piles I': 0, 'Testa': 0, 'Morra': 0, total: 0 });
+    mAlloc.forEach(a => { const val = isBarcos ? 1 : a.pax; mStats[a.center][a.site] += val; mStats[a.center].total += val; });
+
+    let cHtml = `<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-7 hover:shadow-md transition-shadow"><div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3"><h4 class="font-black italic text-lg md:text-xl uppercase tracking-tight text-slate-900">${MONTHS_ES[m]} 2026</h4><span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded tracking-widest uppercase border border-emerald-100">${statsUnit}</span></div><div class="overflow-x-auto"><table class="w-full text-left text-xs min-w-[400px]"><thead><tr class="text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 text-[9px]"><th class="pb-2 font-bold">Centro</th><th class="pb-2 text-center">Bajo</th><th class="pb-2 text-center">Piles</th><th class="pb-2 text-center">Piles</th><th class="pb-2 text-center">Testa</th><th class="pb-2 text-center">Morra</th><th class="pb-2 text-center font-black text-slate-800 bg-slate-50 px-2 rounded-t-lg">Total</th></tr></thead><tbody>`;
+    Object.keys(CENTERS).forEach(k => {
+        const st = mStats[k]; if(st.total === 0) return; const c = CENTERS[k];
+        cHtml += `<tr class="border-b border-slate-50 hover:bg-slate-50/50"><td class="py-2.5 font-bold flex items-center gap-2 text-slate-700 text-[10px]"><span class="w-3.5 h-3.5 rounded-sm ${c.color} ${c.text} flex items-center justify-center text-[7px] font-black">${k}</span> ${c.name}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Bajo de Dentro'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles II'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Piles I'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Testa'].toLocaleString('en-US')}</td><td class="py-2.5 text-center text-slate-600 font-medium">${st['Morra'].toLocaleString('en-US')}</td><td class="py-2.5 text-center font-black text-slate-900 bg-slate-50 px-2">${st.total.toLocaleString('en-US')}</td></tr>`;
+    });
+    cHtml += `</tbody></table></div></div>`;
+    
+    mGrid.innerHTML = cHtml;
 }
 
-/**
- * Builds the interactive calendar widget for the left sidebar.
- * Automatically synchronizes with the active month in the toolbar dropdowns.
- * @returns {void}
- */
 function renderCalendar() {
     const grid = getEl('calendar-grid'); grid.innerHTML = '';
     const y = currentDate.getFullYear(), m = currentDate.getMonth(), dsToday = getStrYMD(currentDate);
     
-    // Sync state to UI dropdowns
     const selSidebar = getEl('month-selector-sidebar');
     if (selSidebar) selSidebar.value = m;
     
@@ -236,11 +236,6 @@ function renderCalendar() {
     }
 }
 
-/**
- * Parses the active activity logs array, handles pagination math, and paints the 
- * chronological feed for the "Historial" view.
- * @returns {void}
- */
 function renderHistory() {
     if (activeViewMode !== 'historial') return;
     const listEl = getEl('history-list');
@@ -280,7 +275,13 @@ function renderHistory() {
         const targetDObj = parseDateT00(log.details.date);
         const targetDateStr = `${targetDObj.getDate()} de ${MONTHS_SHORT[targetDObj.getMonth()]}`;
 
-        if (log.actionType === 'swap') {
+        // Render logic mapped to the 5 possible action types
+        if (log.actionType === 'donation') {
+            icon = '🤲';
+            const targetInfo = getCenterInfoSafe(log.centerKey), initInfo = getCenterInfoSafe(log.details.targetCenter);
+            headerPills = `<span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${targetInfo.color} ${targetInfo.text}">${targetInfo.name}</span><span class="text-slate-400 text-xs mx-1">➡️</span><span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${initInfo.color} ${initInfo.text}">${initInfo.name}</span>`;
+            text = `Cedió ${log.details.pax} plazas en <b>${log.details.site} (${log.details.time})</b> el ${targetDateStr}.`;
+        } else if (log.actionType === 'swap') {
             icon = '🔀';
             const initInfo = getCenterInfoSafe(log.details.initCenter || log.centerKey), targetInfo = getCenterInfoSafe(log.details.targetCenter);
             headerPills = `<span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${initInfo.color} ${initInfo.text}">${initInfo.name}</span><span class="text-slate-400 text-xs mx-1">🤝</span><span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${targetInfo.color} ${targetInfo.text}">${targetInfo.name}</span>`;
@@ -289,10 +290,15 @@ function renderHistory() {
         } else {
             const cInfo = getCenterInfoSafe(log.centerKey);
             headerPills = `<span class="px-2.5 py-1.5 rounded-[4px] text-[10px] font-black uppercase tracking-widest shadow-sm ${cInfo.color} ${cInfo.text}">${cInfo.name}</span>`;
+            
             if (log.actionType === 'add') {
                 icon = '➕'; text = `Añadió una salida a <b>${log.details.site}</b> a las <b>${log.details.time}</b> el ${targetDateStr} (${log.details.pax} plazas).`;
             } else if (log.actionType === 'move') {
                 icon = '➡️'; text = `Movió su barco del ${targetDateStr} de <b>${log.details.oldSite} (${log.details.oldTime})</b> a <b>${log.details.newSite} (${log.details.newTime})</b>.`;
+            } else if (log.actionType === 'edit') {
+                icon = '✏️'; text = `Modificó las plazas de su salida en <b>${log.details.site} (${log.details.time})</b> el ${targetDateStr} (de ${log.details.oldPax} a ${log.details.newPax} plazas).`;
+            } else if (log.actionType === 'delete') {
+                icon = '🗑️'; text = `Eliminó su salida en <b>${log.details.site} (${log.details.time})</b> el ${targetDateStr} (${log.details.pax} plazas).`;
             }
         }
 
@@ -314,40 +320,6 @@ function renderHistory() {
     }
 }
 
-/**
- * Fetches the current capacity configuration limits from the State and builds out 
- * the interactive inputs for the Admin Configuration Modal.
- * @returns {void}
- */
-function renderWizardTables() {
-    SEASONS.forEach(season => {
-        const container = getEl(`wizard-${season}-table`);
-        if(!container) return;
-        
-        container.innerHTML = `
-        <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 mb-3 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
-            <div class="text-left">Punto</div><div>Finde/Fest.</div><div>Diario</div>
-        </div>
-        ${SITES.map(s => {
-            const isM = s === 'Morra';
-            const cName = s === 'Bajo de Dentro' ? 'Dentro' : s;
-            const weVal = sysConfig.capacities[season].weekend[s];
-            const wdVal = isM ? 0 : sysConfig.capacities[season].weekday[s];
-            return `
-            <div class="grid grid-cols-[1fr_1fr_1fr] gap-2 items-center mb-2 bg-white p-2 rounded border border-slate-100 text-center shadow-sm">
-                <div class="text-xs font-bold text-slate-700 text-left">${cName}</div>
-                <input type="number" id="cap-${season}-we-${s}" value="${weVal}" class="w-full text-center p-1.5 border border-slate-200 rounded bg-slate-50 font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none" min="0">
-                <input type="number" id="cap-${season}-wd-${s}" value="${wdVal}" class="w-full text-center p-1.5 border border-slate-200 rounded font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none ${isM ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-50'}" min="0" ${isM ? 'disabled title="Cerrado en diario"' : ''}>
-            </div>`;
-        }).join('')}`;
-    });
-}
-
-/**
- * Universal refresh trigger. Calls all UI renderers simultaneously. Used heavily by 
- * Firestore snapshot listeners to repaint the interface when data changes.
- * @returns {void}
- */
 function renderAll() { 
     renderCalendar(); 
     renderDaily(); 
@@ -356,15 +328,6 @@ function renderAll() {
     renderHistory(); 
 }
 
-/* =========================================================================
-   2. DOM MANIPULATORS & UI CONTROLLERS
-   ========================================================================= */
-
-/**
- * Handles toggling DOM visibility states to flip between the major interface views.
- * @param {string} v - The view target ('diario', 'semanal', 'mensual', 'estadisticas', 'historial')
- * @returns {void}
- */
 function switchView(v) {
     activeViewMode = v;
     ['diario', 'mega', 'estadisticas', 'historial'].forEach(id => {
@@ -413,7 +376,6 @@ function switchView(v) {
     renderAll();
 }
 
-/** @param {string} unit - 'barcos' or 'plazas' */
 function setStatsUnit(unit) { 
     statsUnit = unit; 
     const udTxt = getEl('unit-dropdown-text'); 
@@ -421,10 +383,6 @@ function setStatsUnit(unit) {
     renderStats(); 
 }
 
-/**
- * Dynamically builds the checkboxes for the top Global Filter toolbar.
- * @returns {void}
- */
 function initFilters() {
     const c = getEl('filter-container'); 
     if (!c) return;
@@ -441,10 +399,6 @@ function initFilters() {
     if (fbText) fbText.textContent = selectedCenters.length === Object.keys(CENTERS).length ? 'TODOS LOS CENTROS' : `${selectedCenters.length} SELECCIONADOS`;
 }
 
-/**
- * Dynamically builds all dropdown <select> elements populated with 2026 dates.
- * @returns {void}
- */
 function initSelectors() {
     let mH = ''; 
     for(let i=0; i<12; i++) mH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
@@ -478,9 +432,16 @@ function initSelectors() {
             w.innerHTML += `<option value="${i}">Semana ${i} (${s.getDate()} ${MONTHS_SHORT[s.getMonth()]} - ${e.getDate()} ${MONTHS_SHORT[e.getMonth()]})</option>`;
         }
     }
+
+    const msStats = getEl('stats-month-selector');
+    if (msStats) {
+        let statsH = '<option value="none">Ocultar detalle mensual</option>';
+        for(let i=0; i<12; i++) statsH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
+        msStats.innerHTML = statsH;
+        msStats.value = 'none';
+    }
 }
 
-// Controller wrappers to modify state and queue immediate repaints
 function toggleCenter(k) { selectedCenters = selectedCenters.includes(k) ? selectedCenters.filter(x => x !== k) : [...selectedCenters, k]; historyCurrentPage = 1; initFilters(); renderAll(); }
 function setAllFilters(s) { selectedCenters = s ? Object.keys(CENTERS) : []; historyCurrentPage = 1; initFilters(); renderAll(); }
 function changeMonth(i) { currentDate.setMonth(parseInt(i)); currentDate.setDate(1); renderAll(); }
@@ -499,12 +460,6 @@ function selectHistoryMonth(val, text) {
     renderHistory();
 }
 
-/**
- * Universal alert modal toggler. Can format as either Success (green) or Error (red).
- * @param {string} title 
- * @param {string} message 
- * @param {boolean} [isError=false] 
- */
 function showNotification(title, message, isError = false) {
     const iconEl = getEl('notification-icon'), titleEl = getEl('notification-title');
     if(isError) {
@@ -527,8 +482,62 @@ function closeLoginModal() { hideEl('password-modal'); }
 function openHelpModal() { showEl('help-modal'); }
 
 /**
- * Toggles the password input field between masked (bullet points) and readable text.
+ * Builds and renders the active swap requests UI list targeted at the current user.
+ * @returns {void}
  */
+function openNotificationsModal() {
+    const myCode = USER_CENTER_KEYS[currentUserKey];
+    const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
+    const listEl = getEl('notifications-list'); 
+    listEl.innerHTML = '';
+    
+    if (pendingForMe.length === 0) {
+        listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-6">No tienes solicitudes pendientes.</p>`;
+    } else {
+        pendingForMe.forEach(req => {
+            const initName = CENTERS[req.initiatorCenter].name, d = parseDateT00(req.targetData ? req.targetData.date : req.initiatorData.date);
+            const dStr = `${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
+            
+            if (req.type === 'donation') {
+                const reqText = req.isFull ? 'el barco completo' : `${req.requestedPax} plazas`;
+                listEl.innerHTML += `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div class="flex gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold shrink-0 text-xs">🤲</span>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800"><span class="text-emerald-600">${initName}</span> te pide una donación para el <span class="uppercase border-b border-slate-300 pb-0.5">${dStr}</span>:</p>
+                            <p class="text-xs text-slate-600 mt-1">Petición: <b>${reqText}</b> de tu salida en <b>${req.targetData.site} (${req.targetData.time})</b>.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="rejectSwap('${req.id}')" class="flex-1 px-3 py-2 bg-white border border-slate-200 hover:bg-red-50 text-red-600 text-xs font-bold rounded-lg transition-colors">Denegar</button>
+                        <button onclick="acceptDonation('${req.id}')" class="flex-1 px-3 py-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white text-xs font-bold rounded-lg transition-colors shadow-sm">Ceder Plazas</button>
+                    </div>
+                </div>`;
+            } else {
+                const initPaxStr = req.initiatorData.originalPax && req.initiatorData.originalPax > req.initiatorData.pax ? `<span class="text-amber-600 font-bold bg-amber-50 px-1 rounded ml-1">(reducido a ${req.initiatorData.pax} pax)</span>` : `(${req.initiatorData.pax} pax)`;
+                const targetPaxStr = req.targetData.originalPax && req.targetData.originalPax > req.targetData.pax ? `<span class="text-red-500 font-bold bg-red-50 px-1 rounded ml-1">(Se reducirá a ${req.targetData.pax} pax)</span>` : `(${req.targetData.pax} pax)`;
+                listEl.innerHTML += `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div class="flex gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 text-xs">🔄</span>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800"><span class="text-blue-600">${initName}</span> te propone un cambio para el <span class="uppercase border-b border-slate-300 pb-0.5">${dStr}</span>:</p>
+                            <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} a las ${req.initiatorData.time}</b> ${initPaxStr}.</p>
+                            <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} a las ${req.targetData.time}</b> ${targetPaxStr}.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="rejectSwap('${req.id}')" class="flex-1 px-3 py-2 bg-white border border-slate-200 hover:bg-red-50 text-red-600 text-xs font-bold rounded-lg transition-colors">Rechazar</button>
+                        <button onclick="acceptSwap('${req.id}')" class="flex-1 px-3 py-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white text-xs font-bold rounded-lg transition-colors shadow-sm">Aceptar Cambio</button>
+                    </div>
+                </div>`;
+            }
+        });
+    }
+    showEl('notifications-modal');
+}
+
 function togglePassword() {
     const pwdInput = getEl('login-password');
     const eyeIcon = getEl('eye-icon');
@@ -541,24 +550,16 @@ function togglePassword() {
     }
 }
 
-/**
- * Constructs the contextual dropdown menu for the user badge in the header.
- * Conditionally renders Admin or Center-specific tools.
- * @returns {void}
- */
 function buildUserMenu() {
     let html = '';
     const myCode = USER_CENTER_KEYS[currentUserKey];
     const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
     
-    // Inject notification button if the user has pending swaps awaiting their approval
     if (pendingForMe.length > 0 && !isGuestMode && currentUserKey !== 'admin') {
         html += `<button onclick="openNotificationsModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center justify-between"><div class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg> Notificaciones</div> <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">${pendingForMe.length}</span></button><div class="h-px bg-slate-100 my-1"></div>`;
     }
     
-    // Inject god-mode toolkit if user is Root Admin
     if (currentUserKey === 'admin') {
-        html += `<button onclick="openConfigWizard(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Configurar Cupos</button>`;
         html += `<button onclick="triggerImport(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar CSV</button>`;
         html += `<button onclick="promptEmptyData(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Vaciar Datos</button><div class="h-px bg-slate-100 my-1"></div>`;
     }
@@ -569,11 +570,6 @@ function buildUserMenu() {
     if (ud) ud.innerHTML = html;
 }
 
-/**
- * Re-evaluates pending swap requests to determine if the red notification 
- * ping bubble on the user badge needs to be displayed or hidden.
- * @returns {void}
- */
 function updateNotificationsMenu() {
     const myCode = USER_CENTER_KEYS[currentUserKey];
     const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);

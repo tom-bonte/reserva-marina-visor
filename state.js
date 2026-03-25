@@ -11,12 +11,6 @@
    GLOBAL STATE VARIABLES (The Application's Memory)
    ========================================================================= */
 
-/** * @type {Object} 
- * The active capacity configuration matrix. Initialized with DEFAULT_CAPS from config.js,
- * but dynamically overwritten by Firebase if an admin has customized the seasons or caps.
- */
-let sysConfig = JSON.parse(JSON.stringify(DEFAULT_CAPS));
-
 /** * @type {Date} 
  * The currently selected date in the application. Drives the rendering of the 
  * Diario, Semanal, and Mensual views. Defaults to March 29, 2026.
@@ -81,70 +75,53 @@ let historyItemsPerPage = 20;
    ========================================================================= */
 
 /**
- * Determines if a given date string falls on a weekend or an official holiday.
- * @param {string} dStr - The date string in YYYY-MM-DD format.
- * @returns {boolean} True if the date is a Saturday, Sunday, or exists in the FESTIVOS set.
+ * Determina si el día tiene cupo de Fin de Semana (Sábado, Domingo, o Festivo Capitanía)
  */
 const isWH = dStr => {
     const day = parseDateT00(dStr).getDay();
-    // 0 = Sunday, 6 = Saturday
-    return day === 0 || day === 6 || FESTIVOS.has(dStr);
+    // 0 = Domingo, 6 = Sábado
+    return day === 0 || day === 6 || FESTIVOS_CAPITANIA.has(dStr);
 };
 
 /**
- * Determines if a date should be painted red on the calendar UI. 
- * A red day is either a weekend/holiday OR falls within a Special Period (like Semana Santa).
- * @param {string} dStr - The date string in YYYY-MM-DD format.
- * @returns {boolean} True if the date requires red highlighting.
+ * Determina si el día debe pintarse en rojo en el calendario UI.
+ * Pintamos los fines de semana, festivos y los bloques de temporada especial.
  */
 const isRedCalendarDay = dStr => {
     if (isWH(dStr)) return true;
     const t = parseDateT00(dStr).getTime();
-    // Check if the timestamp falls within any defined SPECIAL_PERIODS ranges
-    return SPECIAL_PERIODS.some(p => t >= p.start && t <= p.end);
+    return PERIODOS_ESPECIALES.some(p => t >= p.start && t <= p.end);
 };
 
 /**
- * Evaluates a given date against the system configuration to determine its 
- * seasonal profile for capacity planning.
- * @param {string} dStr - The date string in YYYY-MM-DD format.
- * @returns {string} The season profile key: 'peak', 'high', or 'low'.
+ * Averigua qué temporada aplica para un día específico.
+ * Primero comprueba si la fecha cae en un "Periodo Especial". Si no, mira el mes.
  */
 const getSeasonProfile = dStr => {
-    const d = parseDateT00(dStr);
-    const t = d.getTime();
-    const m = d.getMonth();
-    
-    if (sysConfig.peakSeasonMonths.includes(m)) return 'peak';
-    
-    // High season includes designated months AND any Special Periods (even if in a Low month)
-    if (sysConfig.highSeasonMonths.includes(m) || SPECIAL_PERIODS.some(p => t >= p.start && t <= p.end)) return 'high';
-    
+    const dObj = parseDateT00(dStr);
+    const t = dObj.getTime();
+    const m = dObj.getMonth();
+
+    // 1. Prioridad: ¿Es un periodo especial? (Semana Santa, Navidad, etc.)
+    const special = PERIODOS_ESPECIALES.find(p => t >= p.start && t <= p.end);
+    if (special) return special.season;
+
+    // 2. Si no, aplicar temporada por defecto del mes
+    if (CAPACITY_RULES.seasons.peak.includes(m)) return 'peak';
+    if (CAPACITY_RULES.seasons.high.includes(m)) return 'high';
     return 'low';
 };
 
 /**
- * Pure declarative logic function: Calculates the absolute maximum number of 
- * divers allowed at a specific site on a specific date.
- * Relies on the intersection of Season, Day Type (Weekend vs Weekday), and Site rules.
- * @param {string} dStr - The date string in YYYY-MM-DD format.
- * @param {string} site - The name of the dive site.
- * @returns {number} The maximum allowed passenger capacity.
+ * Devuelve el límite estricto de plazas basándose en el punto, día y temporada.
  */
 const getDailyCapacity = (dStr, site) => {
     const isWe = isWH(dStr);
-    
-    // Strict business rule: Morra is always closed (0 capacity) on standard weekdays.
     if (site === 'Morra' && !isWe) return 0; 
-    
-    // Traverse the 3-tier matrix: Matrix[Season][DayType][Site]
-    return sysConfig.capacities[getSeasonProfile(dStr)][isWe ? 'weekend' : 'weekday'][site] || 0;
+    return CAPACITY_RULES.caps[getSeasonProfile(dStr)][isWe ? 'weekend' : 'weekday'][site] || 0;
 };
 
 /**
- * Determines which dive sites are open and active on a given date.
- * Morra is excluded from the array on standard weekdays.
- * @param {string} dStr - The date string in YYYY-MM-DD format.
- * @returns {string[]} Array of active dive site names.
+ * Filtra los puntos de buceo inactivos (Elimina Morra en días laborables)
  */
 const getDailySites = dStr => isWH(dStr) ? SITES : ['Bajo de Dentro', 'Piles II', 'Piles I', 'Testa'];

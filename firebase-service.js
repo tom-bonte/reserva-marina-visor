@@ -15,7 +15,6 @@ const db = firebase.firestore();
 let unsubscribeSnapshot = null; 
 let unsubscribeSwaps = null; 
 let unsubscribeHistory = null; 
-let unsubscribeConfig = null;
 
 /**
  * Boots up real-time listeners attached to specific Firestore collections.
@@ -27,30 +26,6 @@ function startFirestoreListener() {
     if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
     if (unsubscribeSwaps) { unsubscribeSwaps(); unsubscribeSwaps = null; }
     if (unsubscribeHistory) { unsubscribeHistory(); unsubscribeHistory = null; }
-    if (unsubscribeConfig) { unsubscribeConfig(); unsubscribeConfig = null; }
-
-    // 1. Listen for global capacity configuration changes
-    unsubscribeConfig = db.collection("config").doc("capacities").onSnapshot((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            sysConfig = {
-                peakSeasonMonths: data.peakSeasonMonths || DEFAULT_CAPS.peakSeasonMonths,
-                highSeasonMonths: data.highSeasonMonths || DEFAULT_CAPS.highSeasonMonths,
-                capacities: {
-                    peak: data.capacities?.peak || DEFAULT_CAPS.capacities.peak,
-                    high: data.capacities?.high || DEFAULT_CAPS.capacities.high,
-                    low:  data.capacities?.low  || DEFAULT_CAPS.capacities.low
-                }
-            };
-            // FORCE PATCH: Overwrite old ghost values if they erroneously exist in the DB
-            if (sysConfig.capacities.peak.weekend['Piles II'] === 50) {
-                sysConfig.capacities.peak.weekend = { ...DEFAULT_CAPS.capacities.peak.weekend };
-            }
-        } else {
-            sysConfig = JSON.parse(JSON.stringify(DEFAULT_CAPS));
-        }
-        renderAll();
-    });
 
     // 2. Listen for core reservation allocations (Boats)
     unsubscribeSnapshot = db.collection("reservations_monthly").onSnapshot((snapshot) => {
@@ -86,7 +61,7 @@ function startFirestoreListener() {
  * Pushes a new chronological activity log to Firestore.
  * Bypasses logging if the user is an Admin or Guest to keep metrics focused on Center activity.
  * @async
- * @param {string} actionType - 'move', 'swap', or 'add'
+ * @param {string} actionType - 'move', 'swap', 'add', 'edit', 'delete'
  * @param {Object} details - Payload of data related to the specific action.
  * @returns {Promise<void>}
  */
@@ -231,6 +206,39 @@ async function executeNewSalida(info, pax, userKeyChoice) {
 }
 
 /**
+ * Modifies the pax count of an existing reservation in the database.
+ * @async
+ * @param {string} id - The unique ID of the reservation.
+ * @param {Object} item - The current reservation object payload.
+ * @param {number} newPax - The new passenger count.
+ * @returns {Promise<void>}
+ */
+async function executeEditSalida(id, item, newPax) {
+    const monthKey = item.date.substring(0, 7);
+    try {
+        await db.collection("reservations_monthly").doc(monthKey).update({
+            [`allocations.${id}.pax`]: newPax
+        });
+    } catch(error) { showNotification('Error', 'No se pudo editar en la nube.', true); }
+}
+
+/**
+ * Deletes a reservation from the database.
+ * @async
+ * @param {string} id - The unique ID of the reservation.
+ * @param {Object} item - The current reservation object payload.
+ * @returns {Promise<void>}
+ */
+async function executeDeleteSalida(id, item) {
+    const monthKey = item.date.substring(0, 7);
+    try {
+        await db.collection("reservations_monthly").doc(monthKey).update({
+            [`allocations.${id}`]: firebase.firestore.FieldValue.delete()
+        });
+    } catch(error) { showNotification('Error', 'No se pudo eliminar de la nube.', true); }
+}
+
+/**
  * Destroys a pending swap request document from the cloud when denied by the target center.
  * @async
  * @param {string} swapId - The unique ID of the swap request to destroy.
@@ -321,5 +329,78 @@ async function acceptSwap(swapId) {
         });
     } catch(e) { 
         showNotification('Error', 'Hubo un fallo al realizar el intercambio.', true); 
+    }
+}
+
+/**
+ * Executa de manera segura la transferencia de plazas entre centros cuando se acepta una donación.
+ * @async
+ */
+async function acceptDonation(requestId) {
+    const req = swapRequests.find(s => s.id === requestId); 
+    if (!req) return;
+    hideEl('notifications-modal');
+
+    const liveTargetItem = allocations.find(a => String(a.id) === String(req.targetId));
+    if (!liveTargetItem) {
+        showNotification('Error', 'El barco original ya no existe. Petición cancelada.', true);
+        db.collection("swaps").doc(requestId).delete();
+        return;
+    }
+
+    const monthKey = liveTargetItem.date.substring(0, 7);
+    const batch = db.batch();
+    const monthRef = db.collection("reservations_monthly").doc(monthKey);
+    const itemsInSlot = allocations.filter(a => a.date === liveTargetItem.date && a.time === liveTargetItem.time && a.site === liveTargetItem.site);
+    const initiatorExistingBoat = itemsInSlot.find(a => a.center === req.initiatorCenter);
+
+    try {
+        if (req.isFull) {
+            if (initiatorExistingBoat) {
+                batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: initiatorExistingBoat.pax + liveTargetItem.pax });
+                batch.update(monthRef, { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
+            } else {
+                batch.update(monthRef, { [`allocations.${req.targetId}.center`]: req.initiatorCenter });
+            }
+        } else {
+            const newTargetPax = liveTargetItem.pax - req.requestedPax;
+            if (newTargetPax <= 0) {
+                if (initiatorExistingBoat) {
+                    batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: initiatorExistingBoat.pax + liveTargetItem.pax });
+                    batch.update(monthRef, { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
+                } else {
+                    batch.update(monthRef, { [`allocations.${req.targetId}.center`]: req.initiatorCenter });
+                }
+            } else {
+                if (!initiatorExistingBoat && itemsInSlot.length >= 2) {
+                    showNotification('Acción Bloqueada', 'El horario ya tiene 2 barcos. Solo puedes aceptar si le cedes el barco completo para no romper el cupo de barcos.', true);
+                    return; 
+                }
+                batch.update(monthRef, { [`allocations.${req.targetId}.pax`]: newTargetPax });
+                
+                if (initiatorExistingBoat) {
+                    batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: initiatorExistingBoat.pax + req.requestedPax });
+                } else {
+                    const uniqueId = `boat_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+                    const finalSubslot = liveTargetItem.subslot === 1 ? 2 : 1;
+                    const newItem = { date: liveTargetItem.date, time: liveTargetItem.time, site: liveTargetItem.site, center: req.initiatorCenter, pax: req.requestedPax, subslot: finalSubslot };
+                    batch.update(monthRef, { [`allocations.${uniqueId}`]: newItem });
+                }
+            }
+        }
+        
+        batch.delete(db.collection("swaps").doc(requestId));
+        await batch.commit();
+
+        const targetInfo = getCenterInfoSafe(req.targetCenter);
+        const initInfo = getCenterInfoSafe(req.initiatorCenter);
+        const d = parseDateT00(liveTargetItem.date);
+        const reqText = req.isFull ? 'el barco completo' : `${req.requestedPax} plazas`;
+        const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *DONACIÓN ACEPTADA* - ${targetInfo.name} a ${initInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ha cedido ${reqText} en *${liveTargetItem.site} (${liveTargetItem.time})*.`;
+        
+        await sendSilentWebhook(msg);
+        logHistory('donation', { date: liveTargetItem.date, targetCenter: req.initiatorCenter, site: liveTargetItem.site, time: liveTargetItem.time, pax: req.isFull ? liveTargetItem.pax : req.requestedPax });
+    } catch(e) {
+        showNotification('Error', 'Hubo un fallo al procesar la donación.', true);
     }
 }

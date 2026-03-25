@@ -7,16 +7,9 @@
  */
 
 /* =========================================================================
-   1. CORE DATA, UTILITIES & INITIALIZATION ENGINE
+   1. EXTERNAL SERVICES
    ========================================================================= */
 
-/**
- * Dispatches an automated message to the Cabo de Palos WhatsApp group via a Make.com webhook.
- * Fails silently if the webhook URL is missing or the message is empty.
- * @async
- * @param {string} msg - The pre-formatted text message to send.
- * @returns {Promise<void>}
- */
 async function sendSilentWebhook(msg) {
     if (!WHATSAPP_WEBHOOK_URL || !msg || msg.trim() === "") return;
     try {
@@ -31,14 +24,9 @@ async function sendSilentWebhook(msg) {
 }
 
 /* =========================================================================
-   3. AUTHENTICATION & UI MENU
+   2. AUTHENTICATION & UI MENU
    ========================================================================= */
 
-/**
- * Authenticates a dive center user against Firebase Auth.
- * Automatically handles UI toggles upon success or displays an error message.
- * @returns {void}
- */
 function verifyLogin() {
     const userKey = getEl('login-user').value;
     const password = getEl('login-password').value;
@@ -52,28 +40,27 @@ function verifyLogin() {
         .catch(() => showEl('password-error'));
 }
 
-/**
- * Signs the current user out of Firebase and returns to Guest Mode.
- * @returns {void}
- */
 function logout() { 
     auth.signOut(); 
 }
 
-// Global click listener to handle clicking outside of custom dropdown menus to close them.
 document.addEventListener('click', function(e) {
+    // Optimization: Skip checks if interacting with a high-priority modal
+    if (e.target.closest('#password-modal')) return;
+
     const checks = [
         { wrap: 'user-menu-wrapper', panel: 'user-dropdown' },
         { wrap: 'center-filter-dropdown-wrapper', panel: 'filter-dropdown-panel' },
         { wrap: 'history-month-filter-wrapper', panel: 'month-dropdown-panel' }
     ];
+    
     checks.forEach(c => {
         const w = getEl(c.wrap), p = getEl(c.panel);
+        // If the wrapper exists, the click was outside the wrapper, and the panel exists
         if (w && !w.contains(e.target) && p) hideEl(c.panel);
     });
 });
 
-// Primary Firebase Auth State Listener. Re-initializes data streams on login/logout.
 auth.onAuthStateChanged((user) => {
     isGuestMode = !user;
     currentUserKey = user ? (Object.keys(EMAIL_MAP).find(k => EMAIL_MAP[k] === user.email) || 'admin') : 'guest';
@@ -85,7 +72,6 @@ auth.onAuthStateChanged((user) => {
     const userMenuWrapper = getEl('user-menu-wrapper');
     if (userMenuWrapper) userMenuWrapper.classList.toggle('hidden', isGuestMode);
     
-    // Reboot listeners to fetch proper access-level data
     startFirestoreListener();
     
     const badgeInfo = BADGE_INFO[currentUserKey] || { name: 'Invitado', color: 'bg-slate-200', text: 'text-slate-600' };
@@ -101,68 +87,9 @@ auth.onAuthStateChanged((user) => {
 });
 
 /* =========================================================================
-   9. WIZARD CONFIGURATION LOGIC (3-TIER DRY SYSTEM)
+   4. HISTORY LOGGER & PAGINATION
    ========================================================================= */
 
-/**
- * Triggers the display of the Admin Config Wizard to adjust seasonal capacities.
- * @returns {void}
- */
-function openConfigWizard() {
-    renderWizardTables();
-    showEl('config-wizard-modal');
-}
-
-/**
- * Scrapes the input values from the Config Wizard DOM elements and pushes
- * the newly assembled capacity matrices to Firestore.
- * @async
- * @returns {Promise<void>}
- */
-async function saveConfigWizard() {
-    const btn = getEl('btn-save-config');
-    btn.innerHTML = 'Guardando...'; 
-    btn.disabled = true;
-
-    // Initialize an empty matrix conforming to the 3-tier system
-    const newCaps = { peak: { weekend: {}, weekday: {} }, high: { weekend: {}, weekday: {} }, low: { weekend: {}, weekday: {} } };
-
-    SEASONS.forEach(season => {
-        SITES.forEach(s => {
-            newCaps[season].weekend[s] = parseInt(getEl(`cap-${season}-we-${s}`).value) || 0;
-            // Enforce Morra strict closure rule on weekdays regardless of input
-            newCaps[season].weekday[s] = s === 'Morra' ? 0 : (parseInt(getEl(`cap-${season}-wd-${s}`).value) || 0);
-        });
-    });
-
-    try {
-        await db.collection("config").doc("capacities").set({
-            peakSeasonMonths: sysConfig.peakSeasonMonths,
-            highSeasonMonths: sysConfig.highSeasonMonths,
-            capacities: newCaps
-        }, { merge: true });
-        
-        hideEl('config-wizard-modal');
-        showNotification('Configuración Guardada', 'Los cupos se han actualizado y aplicado correctamente.');
-    } catch(e) {
-        console.error(e);
-        showNotification('Error', 'No se pudo guardar la configuración.', true);
-    } finally {
-        btn.innerHTML = 'Guardar Plazas'; 
-        btn.disabled = false;
-    }
-}
-
-/* =========================================================================
-   5. HISTORY LOGGER & PAGINATION
-   ========================================================================= */
-
-/**
- * Utility function to retrieve center metadata safely, falling back to a default
- * style if the key or code is unrecognized.
- * @param {string} keyOrCode - The center's internal key or short code.
- * @returns {Object} Center configuration object containing name, color, and text style.
- */
 function getCenterInfoSafe(keyOrCode) {
     if (!keyOrCode) return { name: 'Otro centro', color: 'bg-slate-200', text: 'text-slate-800' };
     if (CENTERS[keyOrCode]) return CENTERS[keyOrCode];
@@ -170,21 +97,11 @@ function getCenterInfoSafe(keyOrCode) {
     return (code && CENTERS[code]) ? CENTERS[code] : { name: keyOrCode, color: 'bg-slate-200', text: 'text-slate-800' };
 }
 
-/**
- * Adjusts the current pagination index for the History View and triggers a re-render.
- * @param {number} dir - Direction to move (-1 for previous, 1 for next).
- * @returns {void}
- */
 function changeHistoryPage(dir) {
     historyCurrentPage += dir;
     renderHistory();
 }
 
-/**
- * Adjusts the amount of log items displayed per page in the History View.
- * @param {string} val - The new items per page count from the dropdown.
- * @returns {void}
- */
 function changeHistoryItemsPerPage(val) {
     historyItemsPerPage = parseInt(val, 10);
     historyCurrentPage = 1;
@@ -192,45 +109,37 @@ function changeHistoryItemsPerPage(val) {
 }
 
 /* =========================================================================
-   6. NOTIFICATIONS & DATA OPS
+   5. DATA OPS (IMPORT/EMPTY)
    ========================================================================= */
 
-/**
- * Simulates a click on the hidden file input to trigger a CSV import sequence.
- * @returns {void}
- */
 function triggerImport() { 
     getEl('csv-upload').click(); 
 }
 
-/**
- * Parses an uploaded CSV file, normalizes the data, groups it by month, 
- * and pushes batch updates to Firestore.
- * @async
- * @param {Event} e - The DOM file upload change event.
- * @returns {Promise<void>}
- */
-function handleImport(e) {
+async function handleImport(e) {
     const f = e.target.files[0]; 
     if(!f) return;
     
     const btn = getEl('user-badge-button'); 
     const originalBtnHtml = btn.innerHTML;
-    // Inject loading spinner
     btn.innerHTML = `<svg class="animate-spin h-3 w-3 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="tracking-wide">Cargando CSV...</span>`;
     
-    const r = new FileReader();
-    r.onload = async (ev) => {
-        const rs = ev.target.result.split('\n'), loaded = [];
+    try {
+        const text = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = ev => resolve(ev.target.result);
+            reader.onerror = err => reject(err);
+            reader.readAsText(f);
+        });
+
+        const rs = text.split('\n');
+        const loaded = [];
         const safeCenterMap = {}; 
         Object.keys(CENTERS).forEach(k => safeCenterMap[CENTERS[k].name.toUpperCase()] = k);
         const slotTracker = {}; 
 
-        // Skip header row (i=1)
         for(let i=1; i<rs.length; i++) {
             if(!rs[i].trim()) continue;
-            
-            // Try standard delimiters
             let c = rs[i].split(','); 
             if (c.length < 5) c = rs[i].split(';'); 
             if (c.length < 5) c = rs[i].split('\t'); 
@@ -239,7 +148,6 @@ function handleImport(e) {
             const clean = (str) => str ? str.replace(/['"\r\n]+/g, '').trim() : '';
             const rawDate = clean(c[0]), centerName = clean(c[1]).toUpperCase(), rawSite = clean(c[2]), rawTime = clean(c[3]), pax = parseInt(clean(c[4]), 10);
             
-            // Normalize site to match exactly the SITES array (fixes case and spelling variations)
             let site = rawSite;
             const siteUpper = rawSite.toUpperCase();
             if (siteUpper.includes('BAJO')) site = 'Bajo de Dentro';
@@ -255,7 +163,6 @@ function handleImport(e) {
             const cKey = safeCenterMap[centerName];
 
             if(cKey && !isNaN(pax)) {
-                // Track how many boats exist in a specific slot to assign subslot (1 or 2)
                 const trackKey = `${normalizedDate}-${normalizedTime}-${site}`;
                 if (!slotTracker[trackKey]) slotTracker[trackKey] = 1; else slotTracker[trackKey]++;
                 loaded.push({ date: normalizedDate, center: cKey, site: site, time: normalizedTime, pax: pax, subslot: slotTracker[trackKey] });
@@ -263,53 +170,38 @@ function handleImport(e) {
         }
         
         if(loaded.length) { 
-            try {
-                // Group the flattened array into objects keyed by month (YYYY-MM)
-                const monthlyData = {};
-                loaded.forEach((item) => {
-                    const monthKey = item.date.substring(0, 7);
-                    if (!monthlyData[monthKey]) monthlyData[monthKey] = {};
-                    monthlyData[monthKey][generateId(item.date, item.time, item.site, item.center, item.subslot)] = item;
-                });
-                
-                const batch = db.batch();
-                for (const [month, dataMap] of Object.entries(monthlyData)) {
-                    batch.set(db.collection("reservations_monthly").doc(month), { allocations: dataMap }, { merge: true });
-                }
-                await batch.commit();
-                
-                showNotification('Importación Exitosa', `Se ha procesado y guardado la planificación completa (${loaded.length} reservas).`); 
-                if(loaded[0] && loaded[0].date) setDate(loaded[0].date);
-            } catch(err) {
-                showNotification('Error', 'Hubo un problema de red al guardar en la nube.', true);
-            } finally { 
-                btn.innerHTML = originalBtnHtml; 
+            const monthlyData = {};
+            loaded.forEach((item) => {
+                const monthKey = item.date.substring(0, 7);
+                if (!monthlyData[monthKey]) monthlyData[monthKey] = {};
+                monthlyData[monthKey][generateId(item.date, item.time, item.site, item.center, item.subslot)] = item;
+            });
+            
+            const batch = db.batch();
+            for (const [month, dataMap] of Object.entries(monthlyData)) {
+                batch.set(db.collection("reservations_monthly").doc(month), { allocations: dataMap }, { merge: true });
             }
+            await batch.commit();
+            
+            showNotification('Importación Exitosa', `Se ha procesado y guardado la planificación completa (${loaded.length} reservas).`); 
+            if(loaded[0] && loaded[0].date) setDate(loaded[0].date);
         } else {
             showNotification('Error de Formato', 'No se encontraron datos válidos. Comprueba el archivo.', true); 
-            btn.innerHTML = originalBtnHtml;
         }
-    };
-    r.readAsText(f); 
-    e.target.value = '';
+    } catch(err) {
+        console.error("Import error:", err);
+        showNotification('Error', 'Hubo un problema al procesar el archivo o guardar en la nube.', true);
+    } finally {
+        btn.innerHTML = originalBtnHtml;
+        e.target.value = ''; 
+    }
 }
 
-/**
- * Triggers an immediate full CSV backup of all current allocations in memory,
- * then cues the warning modal to empty the database.
- * @returns {void}
- */
 function promptEmptyData() {
     try { backupAllToCSV(); } catch(e) { console.error(e); }
     setTimeout(() => showEl('empty-confirm-modal'), 800);
 }
 
-/**
- * Permanently deletes all documents from reservations, swaps, and history collections.
- * Only executable by the Root Admin.
- * @async
- * @returns {Promise<void>}
- */
 async function executeEmptyData() {
     const btnConfirm = getEl('btn-confirm-empty');
     const btnCancel = getEl('btn-cancel-empty');
@@ -339,10 +231,9 @@ async function executeEmptyData() {
 }
 
 /* =========================================================================
-   8. DRAG & DROP + SWAPS + DOUBLE CLICK (THE BRAIN)
+   6. DRAG & DROP + SWAPS + DOUBLE CLICK (THE BRAIN)
    ========================================================================= */
 
-// Drag and Action state buffers
 let draggedItemId = null;
 let pendingDrop = null;
 let pendingNewSalidaWA = null;
@@ -351,14 +242,17 @@ let isProcessingDrop = false;
 let pendingSwapInit = null;
 let pendingSwapTargets = [];
 let pendingSwapIsAdmin = false;
+let pendingSwapHueco = null; // Buffer to hold hueco parameters during choice modal
 let pendingNewSalida = null;
 let pendingPartialSwap = null;
 let pendingPartialMove = null;
 
-/**
- * Clears all pending action buffers and closes related confirmation modals.
- * @returns {void}
- */
+let pendingEditSalida = null;
+let pendingEditSalidaWA = null;
+let pendingDeleteSalidaWA = null;
+let pendingDonationRequest = null;
+let pendingDonationWA = null;
+
 function cancelWhatsAppDrop() {
     hideEl('whatsapp-confirm-modal'); 
     hideEl('swap-choice-modal'); 
@@ -371,19 +265,17 @@ function cancelWhatsAppDrop() {
     pendingSwapInit = null; 
     pendingSwapTargets = []; 
     pendingSwapIsAdmin = false; 
+    pendingSwapHueco = null;
     pendingNewSalida = null; 
     pendingPartialSwap = null; 
     pendingPartialMove = null;
-    
+    pendingEditSalidaWA = null;
+    pendingDeleteSalidaWA = null;
+    pendingDonationWA = null;
+
     renderAll(); 
 }
 
-/**
- * Routes the confirmed user action to the appropriate execution function 
- * (Move, Swap Request, or New Addition) and triggers the webhook.
- * @async
- * @returns {Promise<void>}
- */
 async function confirmWhatsAppAction() {
     hideEl('whatsapp-confirm-modal'); 
     getEl('btn-confirm-wa').disabled = true; 
@@ -391,7 +283,6 @@ async function confirmWhatsAppAction() {
     if (pendingDrop) {
         const drop = pendingDrop; 
         pendingDrop = null; 
-        
         await sendSilentWebhook(drop.msg); 
         await executeDrop(drop.id, drop.item, drop.newTime, drop.newSite, drop.newSubslot);
         logHistory('move', { date: drop.item.date, oldTime: drop.item.time, oldSite: drop.item.site, newTime: drop.newTime, newSite: drop.newSite, pax: drop.item.pax });
@@ -399,7 +290,6 @@ async function confirmWhatsAppAction() {
     else if (pendingSwapIntent) {
         const swap = pendingSwapIntent; 
         pendingSwapIntent = null; 
-        
         await sendSilentWebhook(swap.msg);
         try {
             await db.collection("swaps").add({ 
@@ -420,193 +310,43 @@ async function confirmWhatsAppAction() {
     else if (pendingNewSalidaWA) {
         const newSalida = pendingNewSalidaWA; 
         pendingNewSalidaWA = null; 
-        
         await sendSilentWebhook(newSalida.msg); 
         await executeNewSalida(newSalida.data, newSalida.pax, newSalida.centerKey);
         logHistory('add', { date: newSalida.data.date, time: newSalida.data.time, site: newSalida.data.site, pax: newSalida.pax });
     }
+    else if (pendingEditSalidaWA) {
+        const edit = pendingEditSalidaWA; 
+        pendingEditSalidaWA = null;
+        await sendSilentWebhook(edit.msg);
+        await executeEditSalida(edit.id, edit.item, edit.newPax);
+        logHistory('edit', { date: edit.item.date, time: edit.item.time, site: edit.item.site, oldPax: edit.item.pax, newPax: edit.newPax });
+    }
+    else if (pendingDeleteSalidaWA) {
+        const del = pendingDeleteSalidaWA; 
+        pendingDeleteSalidaWA = null;
+        await sendSilentWebhook(del.msg);
+        await executeDeleteSalida(del.id, del.item);
+        logHistory('delete', { date: del.item.date, time: del.item.time, site: del.item.site, pax: del.item.pax });
+    }
+
+    else if (pendingDonationWA) {
+        const req = pendingDonationWA; 
+        pendingDonationWA = null;
+        await sendSilentWebhook(req.msg);
+        try {
+            await db.collection("swaps").add({
+                type: 'donation', targetId: req.targetId, targetCenter: req.targetItem.center, targetData: req.targetItem,
+                initiatorCenter: USER_CENTER_KEYS[currentUserKey], requestedPax: req.requestedPax, isFull: req.isFull, status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification('Solicitud Enviada', 'La petición ha sido enviada al centro.');
+        } catch(e) { showNotification('Error', 'Hubo un fallo al solicitar la donación.', true); }
+    }
+    
     getEl('btn-confirm-wa').disabled = false; 
     isProcessingDrop = false;
 }
 
-/**
- * Directly updates a reservation document in Firestore after a drag/drop move.
- * Automatically resolves subslot collisions (1 vs 2).
- * @async
- * @param {string} id - The unique ID of the reservation.
- * @param {Object} item - The current reservation object.
- * @param {string} newTime - The target time slot.
- * @param {string} newSite - The target dive site.
- * @returns {Promise<void>}
- */
-async function executeDrop(id, item, newTime, newSite) {
-    const monthKey = item.date.substring(0, 7); 
-    try {
-        const updates = {}; 
-        let finalSubslot = 1;
-        
-        // Ensure the old slot is cleaned up correctly if a boat remains
-        const remainingOld = allocations.filter(a => a.date === item.date && a.time === item.time && a.site === item.site && String(a.id) !== String(id));
-        if (remainingOld.length === 1 && remainingOld[0].subslot !== 1) updates[`allocations.${remainingOld[0].id}.subslot`] = 1;
-
-        // Assign correct subslot at the target
-        const existingNew = allocations.filter(a => a.date === item.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
-        if (existingNew.length === 1) {
-            finalSubslot = 2; 
-            if (existingNew[0].subslot !== 1) updates[`allocations.${existingNew[0].id}.subslot`] = 1; 
-        }
-
-        updates[`allocations.${id}.time`] = newTime; 
-        updates[`allocations.${id}.site`] = newSite; 
-        updates[`allocations.${id}.subslot`] = finalSubslot;
-        
-        if (item.pax !== undefined) {
-            updates[`allocations.${id}.pax`] = item.pax;
-        }
-        
-        await db.collection("reservations_monthly").doc(monthKey).update(updates);
-    } catch(error) { 
-        showNotification('Error', 'No se pudo guardar en la nube.', true); 
-    }
-}
-
-/**
- * Executes an atomic batch write to swap two reservation documents.
- * Handles both intra-month and cross-month swaps.
- * @async
- * @param {string} initId - Initiating reservation ID.
- * @param {Object} initItem - Initiating reservation data object.
- * @param {string} targetId - Target reservation ID.
- * @param {Object} targetItem - Target reservation data object.
- * @param {string|null} swapDocId - Optional ID of the swap request to delete upon success.
- * @returns {Promise<void>}
- */
-async function performSwap(initId, initItem, targetId, targetItem, swapDocId = null) {
-    const month1 = initItem.date.substring(0, 7), month2 = targetItem.date.substring(0, 7); 
-    try {
-        const batch = db.batch();
-        if (month1 === month2) {
-            batch.update(db.collection("reservations_monthly").doc(month1), {
-                [`allocations.${initId}.time`]: targetItem.time, 
-                [`allocations.${initId}.site`]: targetItem.site, 
-                [`allocations.${initId}.subslot`]: targetItem.subslot || 1, 
-                [`allocations.${initId}.pax`]: initItem.pax,
-                [`allocations.${targetId}.time`]: initItem.time, 
-                [`allocations.${targetId}.site`]: initItem.site, 
-                [`allocations.${targetId}.subslot`]: initItem.subslot || 2, 
-                [`allocations.${targetId}.pax`]: targetItem.pax
-            });
-        } else {
-            // Highly unlikely but architecture supports it: Cross-month swap logic
-            const new_iItem = { ...initItem, time: targetItem.time, site: targetItem.site, subslot: targetItem.subslot || 1 };
-            const new_tItem = { ...targetItem, time: initItem.time, site: initItem.site, subslot: initItem.subslot || 2 };
-            batch.update(db.collection("reservations_monthly").doc(month1), { [`allocations.${initId}`]: firebase.firestore.FieldValue.delete() });
-            batch.update(db.collection("reservations_monthly").doc(month2), { [`allocations.${targetId}`]: firebase.firestore.FieldValue.delete() });
-            batch.set(db.collection("reservations_monthly").doc(month2), { allocations: { [initId]: new_iItem } }, { merge: true });
-            batch.set(db.collection("reservations_monthly").doc(month1), { allocations: { [targetId]: new_tItem } }, { merge: true });
-        }
-        
-        if (swapDocId) batch.delete(db.collection("swaps").doc(swapDocId));
-        await batch.commit();
-    } catch(e) { 
-        console.error(e); 
-        throw e; 
-    }
-}
-
-/**
- * Commits a newly created reservation to Firestore via the double-click modal.
- * @async
- * @param {Object} info - Object containing date, time, and site details.
- * @param {number} pax - Number of places reserved.
- * @param {string} userKeyChoice - Target center code (defaults to current user).
- * @returns {Promise<void>}
- */
-async function executeNewSalida(info, pax, userKeyChoice) {
-    const { date, time, site } = info;
-    const centerCode = USER_CENTER_KEYS[userKeyChoice] || USER_CENTER_KEYS[currentUserKey];
-    const monthKey = date.substring(0, 7);
-    
-    try {
-        const updates = {}; 
-        let finalSubslot = 1;
-        const existingInSlot = allocations.filter(a => a.date === date && a.time === time && a.site === site);
-        
-        if (existingInSlot.length === 1) {
-            finalSubslot = 2; 
-            if (existingInSlot[0].subslot !== 1) updates[`allocations.${existingInSlot[0].id}.subslot`] = 1; 
-        }
-
-        const uniqueId = `boat_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-        const newItem = { date, time, site, center: centerCode, pax, subslot: finalSubslot };
-        updates[`allocations.${uniqueId}`] = newItem;
-
-        try { 
-            await db.collection("reservations_monthly").doc(monthKey).update(updates); 
-        } catch(e) { 
-            // Fallback if the month document does not exist yet
-            await db.collection("reservations_monthly").doc(monthKey).set({ allocations: { [uniqueId]: newItem } }, { merge: true }); 
-        }
-    } catch(e) { 
-        showNotification('Error', 'Hubo un problema guardando en la nube.', true); 
-    }
-}
-
-/**
- * Builds and renders the active swap requests UI list targeted at the current user.
- * @returns {void}
- */
-function openNotificationsModal() {
-    const myCode = USER_CENTER_KEYS[currentUserKey];
-    const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
-    const listEl = getEl('notifications-list'); 
-    listEl.innerHTML = '';
-    
-    if (pendingForMe.length === 0) {
-        listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-6">No tienes solicitudes pendientes.</p>`;
-    } else {
-        pendingForMe.forEach(req => {
-            const initName = CENTERS[req.initiatorCenter].name, d = parseDateT00(req.initiatorData.date);
-            const dStr = `${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
-            
-            // Format UX hints if the swap requires a forced reduction due to strict capacity
-            const initPaxStr = req.initiatorData.originalPax && req.initiatorData.originalPax > req.initiatorData.pax 
-                ? `<span class="text-amber-600 font-bold bg-amber-50 px-1 rounded ml-1">(reducido a ${req.initiatorData.pax} pax)</span>` 
-                : `(${req.initiatorData.pax} pax)`;
-                
-            const targetPaxStr = req.targetData.originalPax && req.targetData.originalPax > req.targetData.pax 
-                ? `<span class="text-red-500 font-bold bg-red-50 px-1 rounded ml-1">(Se reducirá a ${req.targetData.pax} pax por límite del cupo)</span>` 
-                : `(${req.targetData.pax} pax)`;
-
-            listEl.innerHTML += `
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm">
-                <div class="flex gap-3 mb-3">
-                    <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0 text-xs">🔄</span>
-                    <div>
-                        <p class="text-sm font-bold text-slate-800"><span class="text-blue-600">${initName}</span> te propone un cambio para el <span class="uppercase border-b border-slate-300 pb-0.5">${dStr}</span>:</p>
-                        <p class="text-xs text-slate-600 mt-1">Te ofrecen: <b>${req.initiatorData.site} a las ${req.initiatorData.time}</b> ${initPaxStr}.</p>
-                        <p class="text-xs text-slate-600">A cambio de tu: <b>${req.targetData.site} a las ${req.targetData.time}</b> ${targetPaxStr}.</p>
-                    </div>
-                </div>
-                <div class="flex gap-2 mt-3">
-                    <button onclick="rejectSwap('${req.id}')" class="flex-1 px-3 py-2 bg-white border border-slate-200 hover:bg-red-50 text-red-600 text-xs font-bold rounded-lg transition-colors">Rechazar</button>
-                    <button onclick="acceptSwap('${req.id}')" class="flex-1 px-3 py-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white text-xs font-bold rounded-lg transition-colors shadow-sm">Aceptar Cambio</button>
-                </div>
-            </div>`;
-        });
-    }
-    showEl('notifications-modal');
-}
-
-/**
- * Triggers the pre-flight confirmation modal outlining the exact consequences
- * of requesting a boat swap to another center.
- * @param {string} initId - Initiating reservation ID.
- * @param {Object} initItem - Initiating reservation data.
- * @param {string} targetId - Target reservation ID.
- * @param {Object} targetItem - Target reservation data.
- * @returns {void}
- */
 function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
     const targetInfo = getCenterInfoSafe(targetItem.center);
     const initInfo = getCenterInfoSafe(initItem.center);
@@ -635,36 +375,57 @@ function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
 }
 
 /**
- * Displays an intermediate modal if a user drags a boat onto a fully occupied slot,
- * asking them which specific boat they want to initiate a swap with.
- * @param {string} initId - Initiating reservation ID.
- * @param {Object} initItem - Initiating reservation data.
- * @param {Array} targets - Array of target reservation objects residing in the slot.
- * @param {boolean} [isAdmin=false] - Flag indicating if Root Admin bypasses confirmation.
- * @returns {void}
+ * Modified to support both swapping with an existing boat AND taking an empty space (hueco).
  */
-function showSwapChoiceModal(initId, initItem, targets, isAdmin = false) {
+function showSwapChoiceModal(initId, initItem, targets, isAdmin, allowHueco = false, newTime = null, newSite = null, huecoCapacity = 0) {
     pendingSwapInit = { initId, initItem }; 
     pendingSwapTargets = targets; 
     pendingSwapIsAdmin = isAdmin;
+    pendingSwapHueco = { allowHueco, newTime, newSite, huecoCapacity };
     
     const container = getEl('swap-choice-buttons'); 
     container.innerHTML = '';
     
+    getEl('swap-choice-title').innerText = allowHueco ? "Elige una Acción" : "Elegir Intercambio";
+    getEl('swap-choice-subtitle').innerText = allowHueco ? "Hay un barco en este horario, pero queda un hueco libre." : "Hay dos barcos en este horario. ¿Con cuál quieres proponer el intercambio?";
+
+    if (allowHueco) {
+        const btnHueco = document.createElement('button');
+        btnHueco.className = `w-full px-4 py-4 mb-2 rounded-xl text-sm font-bold shadow-sm border-2 border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex items-center justify-between`;
+        btnHueco.innerHTML = `<span><span class="text-lg mr-2">✅</span> Ocupar Hueco Libre</span> <span class="bg-emerald-200 px-2 py-1 rounded-md text-xs">${huecoCapacity} Plazas max</span>`;
+        btnHueco.onclick = () => selectTakeHueco();
+        container.appendChild(btnHueco);
+    }
+    
     targets.forEach(target => {
-        const cInfo = CENTERS[target.center], btn = document.createElement('button');
-        btn.className = `w-full px-4 py-4 rounded-xl text-sm font-bold shadow-sm border border-slate-200 hover:shadow-md transition-all flex items-center justify-between ${cInfo.color} ${cInfo.text}`;
-        btn.innerHTML = `<span>${cInfo.name}</span> <span class="bg-black/20 px-2 py-1 rounded-md">${target.pax} Plazas</span>`;
+        const cInfo = CENTERS[target.center];
+        const btn = document.createElement('button');
+        btn.className = `w-full px-4 py-4 rounded-xl text-sm font-bold shadow-sm border border-slate-200 hover:shadow-md transition-all flex items-center justify-between ${cInfo.color} ${cInfo.text} mt-2`;
+        btn.innerHTML = `<span><span class="text-lg mr-2">🔀</span> Intercambiar con ${cInfo.name}</span> <span class="bg-black/20 px-2 py-1 rounded-md">${target.pax} Plazas</span>`;
         btn.onclick = () => selectSwapTarget(target.id);
         container.appendChild(btn);
     });
+
     showEl('swap-choice-modal');
 }
 
 /**
- * Clears the partial action buffers required when enforcing a strict site capacity reduction.
- * @returns {void}
+ * Fires if the user chooses the Hueco option when dropping onto a slot with 1 boat.
  */
+function selectTakeHueco() {
+    hideEl('swap-choice-modal');
+    const { initId, initItem } = pendingSwapInit;
+    const { newTime, newSite, huecoCapacity } = pendingSwapHueco;
+    
+    pendingSwapInit = null; pendingSwapTargets = []; pendingSwapHueco = null;
+
+    if (initItem.pax > huecoCapacity) {
+        promptPartialMove(initId, initItem, newTime, newSite, huecoCapacity);
+    } else {
+        executeProceedWithMove(initId, initItem, newTime, newSite);
+    }
+}
+
 function cancelPartialAction() {
     hideEl('partial-action-modal');
     pendingPartialSwap = null;
@@ -673,11 +434,16 @@ function cancelPartialAction() {
     renderAll();
 }
 
-/**
- * Confirms user consent to a strict capacity reduction during a swap or move,
- * routing to the final step in the action chain.
- * @returns {void}
- */
+function promptPartialMove(id, item, newTime, newSite, maxPax) {
+    const dObj = parseDateT00(item.date);
+    const dStr = `${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()]}`;
+    pendingPartialMove = { id, item, newTime, newSite, newPax: maxPax };
+    const msg = `Para el **${dStr}**, el punto de destino solo tiene ${maxPax} plazas libres.\n\nTu barco de ${item.pax} plazas se reducirá forzosamente a ${maxPax} plazas si realizas el movimiento.\n\n¿Aceptas continuar con este ajuste automático?`;
+    
+    getEl('partial-action-msg').innerText = msg;
+    showEl('partial-action-modal');
+}
+
 function confirmPartialAction() {
     hideEl('partial-action-modal');
     
@@ -702,16 +468,6 @@ function confirmPartialAction() {
     }
 }
 
-/**
- * God-mode override allowing Admin Root to bypass center approval and instantly
- * execute a swap request.
- * @async
- * @param {string} initId - Initiating reservation ID.
- * @param {Object} initItem - Initiating reservation data.
- * @param {string} targetId - Target reservation ID.
- * @param {Object} targetItem - Target reservation data.
- * @returns {Promise<void>}
- */
 async function acceptAdminInstantSwap(initId, initItem, targetId, targetItem) {
     try { 
         await performSwap(initId, initItem, targetId, targetItem); 
@@ -721,15 +477,6 @@ async function acceptAdminInstantSwap(initId, initItem, targetId, targetItem) {
     isProcessingDrop = false;
 }
 
-/**
- * The core logic engine that evaluates a selected swap target. It actively calculates 
- * the real-time capacity constraints of both the origin and target dive sites to ensure
- * a swap does not accidentally overbook a site. Triggers intermediate modals if
- * reservations must be strictly shrunk to comply with constraints.
- * @async
- * @param {string} targetId - The target reservation ID to swap with.
- * @returns {Promise<void>}
- */
 async function selectSwapTarget(targetId) {
     hideEl('swap-choice-modal');
     const targetItem = pendingSwapTargets.find(t => t.id === targetId);
@@ -739,14 +486,13 @@ async function selectSwapTarget(targetId) {
     pendingSwapInit = null; 
     pendingSwapTargets = []; 
     pendingSwapIsAdmin = false;
+    pendingSwapHueco = null;
     
-    // Dynamic constraint evaluation for the target site
     const itemsInTargetSiteToday = allocations.filter(a => a.date === initItem.date && a.site === targetItem.site);
     const currentPaxTargetSite = itemsInTargetSiteToday.reduce((sum, a) => sum + a.pax, 0);
     const targetSiteCap = getDailyCapacity(initItem.date, targetItem.site);
     const maxAllowedInTarget = targetSiteCap - currentPaxTargetSite + targetItem.pax;
 
-    // Dynamic constraint evaluation for the origin site
     const itemsInInitSiteToday = allocations.filter(a => a.date === initItem.date && a.site === initItem.site);
     const currentPaxInitSite = itemsInInitSiteToday.reduce((sum, a) => sum + a.pax, 0);
     const initSiteCap = getDailyCapacity(initItem.date, initItem.site);
@@ -755,15 +501,12 @@ async function selectSwapTarget(targetId) {
     let safeInitPax = Math.min(initItem.pax, maxAllowedInTarget);
     let safeTargetPax = Math.min(targetItem.pax, maxAllowedInInit);
 
-    // Hard block if either site is absolutely exhausted
     if (safeInitPax <= 0 || safeTargetPax <= 0) {
         showNotification('Error de Cupo', 'No hay plazas suficientes para realizar este intercambio. El punto está totalmente lleno.', true);
         isProcessingDrop = false;
         return;
     }
 
-    // Only block and warn the initiating user if THEIR boat needs to shrink.
-    // If the target boat needs to shrink, that is the target user's problem. They will be warned during the acceptSwap step.
     if (initItem.pax > maxAllowedInTarget) {
         const dObj = parseDateT00(initItem.date);
         const dStr = `${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()]}`;
@@ -786,15 +529,6 @@ async function selectSwapTarget(targetId) {
     }
 }
 
-/**
- * Pre-flight handler that builds the action trace for a successful drop onto a valid slot.
- * Enqueues the webhook transmission.
- * @param {string} id - The ID of the reservation moving.
- * @param {Object} item - The payload data for the item.
- * @param {string} newTime - Target time slot.
- * @param {string} newSite - Target dive site.
- * @returns {void}
- */
 function executeProceedWithMove(id, item, newTime, newSite) {
     if (currentUserKey !== 'admin') {
         const d = parseDateT00(item.date);
@@ -831,14 +565,12 @@ document.addEventListener('dragstart', (e) => {
         e.dataTransfer.effectAllowed = 'move'; 
     } catch (err) { }
     
-    // Defer opacity shift slightly so drag ghost generates at full opacity
     setTimeout(() => block.classList.add('opacity-50'), 0);
 });
 
 document.addEventListener('dragend', (e) => {
     const block = e.target.closest('.draggable-item'); 
     if (!block) return;
-    
     draggedItemId = null; 
     block.classList.remove('opacity-50');
     document.querySelectorAll('.dropzone').forEach(el => el.classList.remove('bg-blue-50', 'bg-purple-50'));
@@ -850,7 +582,6 @@ document.addEventListener('dragover', (e) => {
     
     if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
     
-    // Clear styles from sibling dropzones to avoid ghost trails
     document.querySelectorAll('.bg-blue-50, .bg-purple-50').forEach(el => { 
         if (el !== e.target.closest('.dropzone')) el.classList.remove('bg-blue-50', 'bg-purple-50'); 
     });
@@ -858,13 +589,20 @@ document.addEventListener('dragover', (e) => {
     const dropzone = e.target.closest('.dropzone'); 
     if (!dropzone) return;
     
-    // Dynamically query target capacity state to tint the dropzone
-    const newTime = dropzone.dataset.time, newSite = dropzone.dataset.site, ds = getStrYMD(currentDate);
+    const newTime = dropzone.dataset.time;
+    const newSite = dropzone.dataset.site;
+    const ds = getStrYMD(currentDate);
+
+    const initItem = allocations.find(a => String(a.id) === String(draggedItemId));
+    if (initItem && initItem.time === newTime && initItem.site === newSite && initItem.date === ds) {
+        return; 
+    }
+
     const existing = allocations.filter(a => a.date === ds && a.time === newTime && a.site === newSite && String(a.id) !== String(draggedItemId));
     if (existing.length >= 2) {
-        dropzone.classList.add('bg-purple-50'); // Swap threshold
+        dropzone.classList.add('bg-purple-50'); 
     } else {
-        dropzone.classList.add('bg-blue-50');   // Free space threshold
+        dropzone.classList.add('bg-blue-50');   
     }
 });
 
@@ -873,7 +611,7 @@ document.addEventListener('dragleave', (e) => {
     if (dropzone && !dropzone.contains(e.relatedTarget)) dropzone.classList.remove('bg-blue-50', 'bg-purple-50');
 });
 
-// Primary drop interceptor. Contains the core logic for routing moves vs swaps.
+// PRIMARY DROP ROUTER
 document.addEventListener('drop', async (e) => {
     if (isGuestMode || isProcessingDrop) return;
     e.preventDefault(); 
@@ -899,70 +637,61 @@ document.addEventListener('drop', async (e) => {
     isProcessingDrop = true; 
     const existingItemsInSlot = allocations.filter(a => a.date === initItem.date && a.time === newTime && a.site === newSite && String(a.id) !== String(id));
 
-    if (existingItemsInSlot.length < 2) {
-        /* Route A: Empty Space -> Process Move */
-        const itemsInNewSiteToday = allocations.filter(a => a.date === initItem.date && a.site === newSite && String(a.id) !== String(id));
-        const currentPaxNewSite = itemsInNewSiteToday.reduce((sum, a) => sum + a.pax, 0);
-        const remainingCapacity = getDailyCapacity(initItem.date, newSite) - currentPaxNewSite;
+    // Evaluate absolute remaining capacity for taking a Hueco
+    const itemsInNewSiteToday = allocations.filter(a => a.date === initItem.date && a.site === newSite && String(a.id) !== String(id));
+    const currentPaxNewSite = itemsInNewSiteToday.reduce((sum, a) => sum + a.pax, 0);
+    const remainingCapacity = getDailyCapacity(initItem.date, newSite) - currentPaxNewSite;
 
-        if (initItem.pax > remainingCapacity) {
-            if (remainingCapacity <= 0) {
-                showNotification('Cupo Lleno', `No puedes mover la salida aquí. El punto está lleno.`, true);
-                isProcessingDrop = false; 
-                return;
-            }
-            
-            const dObj = parseDateT00(initItem.date);
-            const dStr = `${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()]}`;
-            
-            pendingPartialMove = { id, item: initItem, newTime, newSite, newPax: remainingCapacity };
-            const msg = `Para el **${dStr}**, el punto de destino solo tiene ${remainingCapacity} plazas libres.\n\nTu barco de ${initItem.pax} plazas se reducirá forzosamente a ${remainingCapacity} plazas si realizas el movimiento.\n\n¿Aceptas continuar con este ajuste automático?`;
-            
-            getEl('partial-action-msg').innerText = msg;
-            showEl('partial-action-modal');
-            return;
+    const canTakeHueco = existingItemsInSlot.length < 2 && remainingCapacity > 0;
+    const requiresShrinkForHueco = initItem.pax > remainingCapacity;
+
+    if (existingItemsInSlot.length === 0) {
+        // Scenario 1: Target slot is totally empty. Normal Move.
+        if (!canTakeHueco) {
+            showNotification('Cupo Lleno', 'No puedes mover la salida aquí. El punto está lleno.', true);
+            isProcessingDrop = false; return;
         }
-
-        executeProceedWithMove(id, initItem, newTime, newSite);
-    } else {
-        /* Route B: Slot Exhausted -> Process Swap */
-        if (currentUserKey !== 'admin') {
-            const targets = existingItemsInSlot.filter(t => t.center !== initItem.center);
-            if (targets.length === 0) { 
-                showNotification('Acción Bloqueada', 'Ambos barcos en este horario son tuyos. No puedes hacer un intercambio.', true); 
-                isProcessingDrop = false; 
-                return; 
-            } 
-            
-            if (targets.length === 1) {
-                pendingSwapInit = { initId: id, initItem: initItem }; 
-                pendingSwapTargets = targets; 
-                pendingSwapIsAdmin = false;
-                selectSwapTarget(targets[0].id);
-            } else { 
-                showSwapChoiceModal(id, initItem, targets, false); 
+        if (requiresShrinkForHueco) {
+            promptPartialMove(id, initItem, newTime, newSite, remainingCapacity);
+        } else {
+            executeProceedWithMove(id, initItem, newTime, newSite);
+        }
+    } 
+    else if (existingItemsInSlot.length === 1) {
+        // Scenario 2: Target slot has 1 boat. Might be a Swap OR a Hueco take.
+        const targets = existingItemsInSlot.filter(t => t.center !== initItem.center || currentUserKey === 'admin');
+        
+        if (targets.length === 0) {
+            // The existing boat is ours. Cannot swap. Only Hueco.
+            if (!canTakeHueco) {
+                showNotification('Cupo Lleno', 'El punto está lleno o no tienes con quién intercambiar.', true);
+                isProcessingDrop = false; return;
             }
-        } else { 
-            const targets = existingItemsInSlot;
-            if (targets.length === 1) {
-                pendingSwapInit = { initId: id, initItem: initItem }; 
-                pendingSwapTargets = targets; 
-                pendingSwapIsAdmin = true;
-                selectSwapTarget(targets[0].id);
+            if (requiresShrinkForHueco) {
+                promptPartialMove(id, initItem, newTime, newSite, remainingCapacity);
             } else {
-                showSwapChoiceModal(id, initItem, targets, true); 
+                executeProceedWithMove(id, initItem, newTime, newSite);
             }
+        } else {
+            // Target available. Ask user: Swap or Take Hueco?
+            showSwapChoiceModal(id, initItem, targets, currentUserKey === 'admin', canTakeHueco, newTime, newSite, remainingCapacity);
         }
+    } 
+    else {
+        // Scenario 3: Target slot has 2 boats. Forced Swap.
+        const targets = existingItemsInSlot.filter(t => t.center !== initItem.center || currentUserKey === 'admin');
+        if (targets.length === 0) {
+            showNotification('Acción Bloqueada', 'Ambos barcos son tuyos.', true);
+            isProcessingDrop = false; return;
+        }
+        showSwapChoiceModal(id, initItem, targets, currentUserKey === 'admin', false);
     }
 });
 
-/**
- * Handles explicit slot generation for empty spaces via a double-click event.
- * Rejects interaction if target slot holds two boats or site capacity is zero.
- * @param {string} time - The time slot invoked.
- * @param {string} site - The dive site invoked.
- * @returns {void}
- */
+/* -------------------------------------------------------------------------
+   DOUBLE CLICK LISTENERS (Add / Edit / Delete)
+   ------------------------------------------------------------------------- */
+
 function handleSlotDoubleClick(time, site) {
     if (isGuestMode || isProcessingDrop) return;
 
@@ -983,7 +712,6 @@ function handleSlotDoubleClick(time, site) {
         return; 
     }
     
-    // Global constraint logic per local legislation mandates 11 max pax per boat.
     const allowedMax = Math.min(11, remainingCapacity);
 
     pendingNewSalida = { date: ds, time, site, maxPax: remainingCapacity };
@@ -1001,21 +729,11 @@ function handleSlotDoubleClick(time, site) {
     showEl('new-salida-modal');
 }
 
-/**
- * Halts the New Salida interaction chain and drops the modal.
- * @returns {void}
- */
 function cancelNewSalida() { 
     hideEl('new-salida-modal'); 
     pendingNewSalida = null; 
 }
 
-/**
- * Validates user input from the Double Click modal and queues the database
- * save (and webhook dispatch if applicable).
- * @async
- * @returns {Promise<void>}
- */
 async function confirmNewSalida() {
     const pax = parseInt(getEl('new-salida-pax').value, 10);
     const allowedMax = Math.min(11, pendingNewSalida.maxPax);
@@ -1031,21 +749,159 @@ async function confirmNewSalida() {
 
     hideEl('new-salida-modal');
     
-    if (currentUserKey === 'admin') {
-        await executeNewSalida(pendingNewSalida, pax, getEl('new-salida-center').value);
-    } else {
-        const { date, time, site } = pendingNewSalida;
-        const dObj = parseDateT00(date);
-        const centerInfo = getCenterInfoSafe(currentUserKey);
-        
-        const msg = `🤖 *AVISO AUTOMÁTICO*\n➕ *NUEVA SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, añadió una salida a *${site} (${time})* de ${pax} plazas.`;
-        
-        pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: currentUserKey, msg: msg };
-        
+    const targetCenterKey = currentUserKey === 'admin' ? getEl('new-salida-center').value : currentUserKey;
+    const { date, time, site } = pendingNewSalida;
+    const dObj = parseDateT00(date);
+    const centerInfo = getCenterInfoSafe(targetCenterKey);
+    
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n➕ *NUEVA SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, añadió una salida a *${site} (${time})* de ${pax} plazas.`;
+    
+    if (currentUserKey !== 'admin') {
+        pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: targetCenterKey, msg: msg };
         getEl('wa-action-type').textContent = "Nueva Salida"; 
         getEl('confirm-whatsapp-msg').innerText = msg; 
         showEl('whatsapp-confirm-modal');
+    } else {
+        await executeNewSalida(pendingNewSalida, pax, targetCenterKey);
     }
+}
+
+/**
+ * Handles explicit edits or deletes via a double-click event on an existing boat.
+ */
+function handleBoatDoubleClick(e, id) {
+    e.stopPropagation(); // Prevents the dropzone double click from firing underneath
+    if (isGuestMode || isProcessingDrop) return;
+    
+    const item = allocations.find(a => String(a.id) === String(id));
+    if (!item) return;
+
+    if (currentUserKey !== 'admin' && item.center !== USER_CENTER_KEYS[currentUserKey]) {
+            promptDonationRequest(id, item);
+            return;
+    }
+
+    const itemsInSiteToday = allocations.filter(a => a.date === item.date && a.site === item.site && String(a.id) !== String(id));
+    const currentPaxOthers = itemsInSiteToday.reduce((sum, a) => sum + a.pax, 0);
+    const absoluteMax = getDailyCapacity(item.date, item.site);
+    const remainingCapacity = absoluteMax - currentPaxOthers;
+    const allowedMax = Math.min(11, remainingCapacity);
+
+    pendingEditSalida = { id, item, maxPax: allowedMax };
+
+    getEl('edit-salida-title').textContent = `${item.site} a las ${item.time}`;
+    getEl('edit-salida-avail').textContent = `Plazas máximas permitidas para este barco: ${allowedMax}`;
+    
+    const paxInput = getEl('edit-salida-pax');
+    paxInput.value = item.pax;
+    paxInput.max = allowedMax;
+
+    showEl('edit-salida-modal');
+}
+
+function cancelEditSalida() {
+    hideEl('edit-salida-modal');
+    pendingEditSalida = null;
+}
+
+async function confirmEditSalida() {
+    const pax = parseInt(getEl('edit-salida-pax').value, 10);
+    const allowedMax = pendingEditSalida.maxPax;
+
+    if (!pax || isNaN(pax) || pax <= 0) { showNotification('Error', 'Introduce un número válido.', true); return; }
+    if (pax > allowedMax) { showNotification('Límite excedido', `El máximo permitido es ${allowedMax} plazas.`, true); return; }
+
+    hideEl('edit-salida-modal');
+    
+    if (pax === pendingEditSalida.item.pax) {
+        pendingEditSalida = null; 
+        return; // No change made
+    }
+
+    const centerInfo = getCenterInfoSafe(pendingEditSalida.item.center);
+    const dObj = parseDateT00(pendingEditSalida.item.date);
+    const actionWord = pax > pendingEditSalida.item.pax ? 'aumentó' : 'redujo';
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n✏️ *MODIFICACIÓN DE SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, ${actionWord} su salida en *${pendingEditSalida.item.site} (${pendingEditSalida.item.time})* de ${pendingEditSalida.item.pax} a ${pax} plazas.`;
+
+    if (currentUserKey !== 'admin') {
+        pendingEditSalidaWA = { id: pendingEditSalida.id, item: pendingEditSalida.item, newPax: pax, msg };
+        getEl('wa-action-type').textContent = "Modificar Salida";
+        getEl('confirm-whatsapp-msg').innerText = msg;
+        showEl('whatsapp-confirm-modal');
+    } else {
+        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax);
+        pendingEditSalida = null;
+    }
+}
+
+function promptDeleteSalida() {
+    hideEl('edit-salida-modal');
+    showEl('delete-confirm-modal');
+}
+
+function cancelDeleteSalida() {
+    hideEl('delete-confirm-modal');
+    showEl('edit-salida-modal'); // Re-open the edit modal if they back out of deletion
+}
+
+async function confirmDeleteSalida() {
+    hideEl('delete-confirm-modal');
+    
+    const centerInfo = getCenterInfoSafe(pendingEditSalida.item.center);
+    const dObj = parseDateT00(pendingEditSalida.item.date);
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n🗑️ *SALIDA CANCELADA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, ha eliminado su salida en *${pendingEditSalida.item.site} (${pendingEditSalida.item.time})* (${pendingEditSalida.item.pax} plazas).`;
+
+    if (currentUserKey !== 'admin') {
+        pendingDeleteSalidaWA = { id: pendingEditSalida.id, item: pendingEditSalida.item, msg };
+        getEl('wa-action-type').textContent = "Eliminar Salida";
+        getEl('confirm-whatsapp-msg').innerText = msg;
+        showEl('whatsapp-confirm-modal');
+    } else {
+        await executeDeleteSalida(pendingEditSalida.id, pendingEditSalida.item);
+        pendingEditSalida = null;
+    }
+}
+
+function promptDonationRequest(id, item) {
+    pendingDonationRequest = { id, item };
+    const centerInfo = getCenterInfoSafe(item.center);
+    getEl('donation-title').textContent = `Solicitar a ${centerInfo.name}`;
+    getEl('donation-subtitle').textContent = `${item.site} a las ${item.time}`;
+    getEl('donation-pax-info').textContent = `El barco tiene ${item.pax} plazas ocupadas.`;
+    const paxInput = getEl('donation-pax');
+    paxInput.value = ''; paxInput.max = item.pax - 1;
+    showEl('donation-request-modal');
+}
+
+function cancelDonationRequest() {
+    hideEl('donation-request-modal');
+    pendingDonationRequest = null;
+}
+
+function confirmDonationRequest() {
+    const isFull = getEl('donation-type-full').checked;
+    const pax = parseInt(getEl('donation-pax').value, 10);
+    
+    if (!isFull && (!pax || isNaN(pax) || pax <= 0 || pax >= pendingDonationRequest.item.pax)) {
+        showNotification('Error', `Introduce un número válido (menor a ${pendingDonationRequest.item.pax}). Si quieres todo el barco, marca "Barco completo".`, true);
+        return;
+    }
+    hideEl('donation-request-modal');
+    
+    const requestedPax = isFull ? pendingDonationRequest.item.pax : pax;
+    const targetInfo = getCenterInfoSafe(pendingDonationRequest.item.center);
+    const myInfo = getCenterInfoSafe(currentUserKey);
+    const dObj = parseDateT00(pendingDonationRequest.item.date);
+    
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n🙏 *SOLICITUD DE DONACIÓN* - ${myInfo.name} a ${targetInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, solicita que le ceda ${isFull ? '*EL BARCO COMPLETO*' : `*${requestedPax} plazas*`} en *${pendingDonationRequest.item.site} (${pendingDonationRequest.item.time})*. Entrad al visor para confirmar.`;
+    
+    pendingDonationWA = {
+        targetId: pendingDonationRequest.id, targetItem: pendingDonationRequest.item,
+        requestedPax: requestedPax, isFull: isFull, msg: msg
+    };
+    getEl('wa-action-type').textContent = "Petición de Plazas";
+    getEl('confirm-whatsapp-msg').innerText = msg;
+    showEl('whatsapp-confirm-modal');
 }
 
 /* =========================================================================

@@ -241,8 +241,7 @@ function drawDayBlock(doc, dateStr, dateItems, centerDailyPax, totalDailyPax, st
     };
 
     let currentY = startY;
-    const dayTotalCap = SITES.reduce((sum, s) => sum + getDailyCapacity(dateStr, s), 0);
-
+    const dayTotalCap = SITES.reduce((sum, s) => sum + getDailyCapacity(dateStr, s), 0) + 20;
     // Render Table Header (Date and Global Capacity)
     drawBox(startX, currentY, 80, rowH, colorLightGray, dateTitle, '#000', 'bold', 8);
     drawBox(startX + 80, currentY, 360, rowH, colorPink, `${dayTotalCap} PLAZAS`, '#fff', 'bold', 10);
