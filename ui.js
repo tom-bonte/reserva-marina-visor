@@ -187,7 +187,7 @@ function renderStats() {
     mGrid.innerHTML = '';
     
     const monthSelector = getEl('stats-month-selector');
-    if (!monthSelector || monthSelector.value === 'none') return; // Exit early if hidden
+    if (!monthSelector) return;
     
     const m = parseInt(monthSelector.value, 10);
     const mAlloc = filteredAllocations.filter(a => parseInt(a.date.split('-')[1], 10) - 1 === m);
@@ -435,10 +435,10 @@ function initSelectors() {
 
     const msStats = getEl('stats-month-selector');
     if (msStats) {
-        let statsH = '<option value="none">Ocultar detalle mensual</option>';
-        for(let i=0; i<12; i++) statsH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
+        let statsH = '';
+        for(let i=2; i<12; i++) statsH += `<option value="${i}">${MONTHS_ES[i]} 2026</option>`;
         msStats.innerHTML = statsH;
-        msStats.value = 'none';
+        msStats.value = '2'; // Sets default to March
     }
 }
 
@@ -563,9 +563,13 @@ function buildUserMenu() {
         html += `<button onclick="triggerImport(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Importar CSV</button>`;
         html += `<button onclick="promptEmptyData(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Vaciar Datos</button><div class="h-px bg-slate-100 my-1"></div>`;
     }
+
+    if (!isGuestMode) {
+        html += `<button onclick="openChangePasswordModal(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"><svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-3.252a1 1 0 01.293-.707l8.96-8.96A6 6 0 0115 7z"></path></svg> Cambiar contraseña</button>`;
+    }
     
-    html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
-    
+    html += `<button onclick="logout(); toggleUserMenu();" class="text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2">Cerrar sesión</button>`;
+
     const ud = getEl('user-dropdown');
     if (ud) ud.innerHTML = html;
 }
@@ -587,4 +591,25 @@ function updateNotificationsMenu() {
 
 function toggleUserMenu() { 
     toggleVis('user-dropdown'); 
+}
+
+function openChangePasswordModal() {
+    getEl('new-password-input').value = '';
+    showEl('change-password-modal');
+}
+
+function closeChangePasswordModal() {
+    hideEl('change-password-modal');
+}
+
+function toggleNewPassword() {
+    const pwdInput = getEl('new-password-input');
+    const eyeIcon = getEl('new-eye-icon');
+    if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />`;
+    } else {
+        pwdInput.type = 'password';
+        eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+    }
 }

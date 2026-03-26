@@ -86,6 +86,33 @@ auth.onAuthStateChanged((user) => {
     updateNotificationsMenu();
 });
 
+async function executeChangePassword() {
+    const newPwd = getEl('new-password-input').value;
+    
+    if (!newPwd || newPwd.length < 6) {
+        showNotification('Contraseña Inválida', 'La contraseña debe tener al menos 6 caracteres.', true);
+        return;
+    }
+    
+    const user = auth.currentUser;
+    if (user) {
+        try {
+            await user.updatePassword(newPwd);
+            closeChangePasswordModal();
+            showNotification('Éxito', 'Tu contraseña ha sido actualizada correctamente. Usa esta nueva contraseña la próxima vez que inicies sesión.');
+        } catch (error) {
+            // Firebase requires "recent authentication" to change a password.
+            // If they've been logged in for a long time, it throws an error.
+            if (error.code === 'auth/requires-recent-login') {
+                closeChangePasswordModal();
+                showNotification('Por seguridad', 'Debes cerrar sesión y volver a entrar antes de cambiar tu contraseña.', true);
+            } else {
+                showNotification('Error', 'No se pudo cambiar la contraseña. Inténtalo de nuevo.', true);
+            }
+        }
+    }
+}
+
 /* =========================================================================
    4. HISTORY LOGGER & PAGINATION
    ========================================================================= */
