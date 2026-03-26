@@ -122,6 +122,7 @@
                         <li class="flex items-start gap-2"><span class="text-lg">➕</span><span><strong>Añadir nueva salida:</strong> Si hay un horario libre, haz <b>doble clic</b> en el espacio vacío para añadir una nueva salida (Máximo 11 pax).</span></li>
                         <li class="flex items-start gap-2"><span class="text-lg">✏️</span><span><strong>Editar o Eliminar:</strong> Haz <b>doble clic</b> sobre uno de *tus propios barcos* para modificar las plazas o borrar la salida.</span></li>
                         <li class="flex items-start gap-2"><span class="text-lg">🤲</span><span><strong>Pedir Donación:</strong> Haz <b>doble clic</b> sobre el barco de *otro centro* para enviarle una petición solicitando que te ceda plazas sueltas o el barco completo.</span></li>
+                        <li class="flex items-start gap-2"><span class="text-lg">🚫</span><span><strong>Cancelar Petición:</strong> Haz <b>doble clic</b> sobre uno de tus barcos bloqueados (en gris) para retirar una solicitud de donación o intercambio que enviaste a otro centro.</span></li>
                         <li class="flex items-start gap-2"><span class="text-lg">🕐</span><span><strong>Mover una salida:</strong> Arrastra tu bloque. Si el destino está vacío, ocuparás el hueco directamente.</span></li>
                         <li class="flex items-start gap-2"><span class="text-lg">🔄</span><span><strong>Intercambiar:</strong> Si arrastras tu barco a un horario ocupado, el sistema te preguntará si deseas ocupar el hueco restante (si lo hay) o proponer un intercambio con el otro centro.</span></li>
                     </ul>
@@ -349,6 +350,20 @@
             <div class="flex gap-3">
                 <button onclick="cancelDonationRequest()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Cancelar</button>
                 <button onclick="confirmDonationRequest()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">Solicitar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cancel-request-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 text-center transform transition-all">
+            <div class="mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center bg-slate-100 text-slate-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">¿Retirar Petición?</h3>
+            <p class="text-sm text-slate-500 mb-6">Esta salida tiene una solicitud pendiente enviada a otro centro. ¿Deseas cancelarla y liberar tu barco?</p>
+            <div class="flex gap-3">
+                <button onclick="closeCancelRequest()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors shadow-sm">Volver</button>
+                <button onclick="confirmCancelRequest()" class="w-1/2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-sm">Sí, retirar</button>
             </div>
         </div>
     </div>

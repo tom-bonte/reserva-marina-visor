@@ -252,6 +252,7 @@ let pendingEditSalidaWA = null;
 let pendingDeleteSalidaWA = null;
 let pendingDonationRequest = null;
 let pendingDonationWA = null;
+let pendingCancelSwapId = null;
 
 function cancelWhatsAppDrop() {
     hideEl('whatsapp-confirm-modal'); 
@@ -302,8 +303,7 @@ async function confirmWhatsAppAction() {
                 status: 'pending', 
                 timestamp: firebase.firestore.FieldValue.serverTimestamp() 
             });
-            showNotification('Solicitud Enviada', 'La propuesta de intercambio ha sido enviada al otro centro.');
-        } catch(e) { 
+        } catch(e) {
             showNotification('Error', 'Hubo un fallo al solicitar el intercambio.', true); 
         }
     }
@@ -339,7 +339,6 @@ async function confirmWhatsAppAction() {
                 initiatorCenter: USER_CENTER_KEYS[currentUserKey], requestedPax: req.requestedPax, isFull: req.isFull, status: 'pending',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            showNotification('Solicitud Enviada', 'La petición ha sido enviada al centro.');
         } catch(e) { showNotification('Error', 'Hubo un fallo al solicitar la donación.', true); }
     }
     
@@ -787,6 +786,22 @@ function handleBoatDoubleClick(e, id) {
     const item = allocations.find(a => String(a.id) === String(id));
     if (!item) return;
 
+    // NEW: Check if this boat is locked in a pending request
+    const pendingReq = swapRequests.find(s => String(s.initiatorId) === String(id) || String(s.targetId) === String(id));
+    
+    if (pendingReq) {
+        // If I am the initiator (or Admin), let me cancel it
+        if (currentUserKey === 'admin' || pendingReq.initiatorCenter === USER_CENTER_KEYS[currentUserKey]) {
+            promptCancelRequest(pendingReq.id);
+            return;
+        } else {
+            // If I am the target, block me and tell me to check notifications
+            showNotification('Reserva Bloqueada', 'Tienes una petición pendiente sobre este barco. Revisa tus Notificaciones.', false);
+            return;
+        }
+    }
+
+    // Existing Logic...
     if (currentUserKey !== 'admin' && item.center !== USER_CENTER_KEYS[currentUserKey]) {
             promptDonationRequest(id, item);
             return;
@@ -913,6 +928,28 @@ function confirmDonationRequest() {
     getEl('wa-action-type').textContent = "Petición de Plazas";
     getEl('confirm-whatsapp-msg').innerText = msg;
     showEl('whatsapp-confirm-modal');
+}
+
+function promptCancelRequest(swapId) {
+    pendingCancelSwapId = swapId;
+    showEl('cancel-request-modal');
+}
+
+function closeCancelRequest() {
+    hideEl('cancel-request-modal');
+    pendingCancelSwapId = null;
+}
+
+async function confirmCancelRequest() {
+    if (!pendingCancelSwapId) return;
+    hideEl('cancel-request-modal');
+    try {
+        await cancelSwapRequest(pendingCancelSwapId);
+        showNotification('Petición Retirada', 'La petición fue cancelada y tu barco ha sido desbloqueado exitosamente.');
+    } catch(e) {
+        // Handled in firebase-service
+    }
+    pendingCancelSwapId = null;
 }
 
 /* =========================================================================

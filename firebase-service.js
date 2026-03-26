@@ -404,3 +404,18 @@ async function acceptDonation(requestId) {
         showNotification('Error', 'Hubo un fallo al procesar la donación.', true);
     }
 }
+
+/**
+ * Destroys a pending swap/donation request when the initiator cancels it.
+ * @async
+ * @param {string} swapId - The unique ID of the request to destroy.
+ * @returns {Promise<void>}
+ */
+async function cancelSwapRequest(swapId) {
+    try {
+        await db.collection("swaps").doc(swapId).delete();
+    } catch(error) {
+        showNotification('Error', 'No se pudo retirar la petición de la nube.', true);
+        throw error;
+    }
+}
