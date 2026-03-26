@@ -387,8 +387,19 @@ function showSwapChoiceModal(initId, initItem, targets, isAdmin, allowHueco = fa
     container.innerHTML = '';
     
     getEl('swap-choice-title').innerText = allowHueco ? "Elige una Acción" : "Elegir Intercambio";
-    getEl('swap-choice-subtitle').innerText = allowHueco ? "Hay un barco en este horario, pero queda un hueco libre." : "Hay dos barcos en este horario. ¿Con cuál quieres proponer el intercambio?";
-
+    
+    let subtitleText = "";
+    if (allowHueco) {
+        subtitleText = "Hay un barco en este horario, pero queda un hueco libre.";
+    } else {
+        if (targets.length === 1) {
+            subtitleText = "El punto ha alcanzado su límite de plazas hoy. No puedes ocupar el hueco vacío, solo puedes proponer un intercambio.";
+        } else {
+            subtitleText = "Hay dos barcos en este horario. ¿Con cuál quieres proponer el intercambio?";
+        }
+    }
+    getEl('swap-choice-subtitle').innerText = subtitleText;
+    
     if (allowHueco) {
         const btnHueco = document.createElement('button');
         btnHueco.className = `w-full px-4 py-4 mb-2 rounded-xl text-sm font-bold shadow-sm border-2 border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex items-center justify-between`;
@@ -664,7 +675,7 @@ document.addEventListener('drop', async (e) => {
         if (targets.length === 0) {
             // The existing boat is ours. Cannot swap. Only Hueco.
             if (!canTakeHueco) {
-                showNotification('Cupo Lleno', 'El punto está lleno o no tienes con quién intercambiar.', true);
+                showNotification('Cupo Lleno', 'Este punto ha alcanzado su límite máximo de plazas hoy. No hay hueco libre.', true);
                 isProcessingDrop = false; return;
             }
             if (requiresShrinkForHueco) {
