@@ -345,7 +345,7 @@ async function confirmWhatsAppAction() {
         const edit = pendingEditSalidaWA; 
         pendingEditSalidaWA = null;
         await sendSilentWebhook(edit.msg);
-        await executeEditSalida(edit.id, edit.item, edit.newPax);
+        await executeEditSalida(edit.id, edit.item, edit.newPax, edit.newNote);
         logHistory('edit', { date: edit.item.date, time: edit.item.time, site: edit.item.site, oldPax: edit.item.pax, newPax: edit.newPax });
     }
     else if (pendingDeleteSalidaWA) {
@@ -848,6 +848,9 @@ function handleBoatDoubleClick(e, id) {
     const paxInput = getEl('edit-salida-pax');
     paxInput.value = item.pax;
     paxInput.max = allowedMax;
+    
+    const noteInput = getEl('edit-salida-note');
+    if (noteInput) noteInput.value = item.note || '';
 
     showEl('edit-salida-modal');
 }
@@ -866,7 +869,10 @@ async function confirmEditSalida() {
 
     hideEl('edit-salida-modal');
     
-    if (pax === pendingEditSalida.item.pax) {
+    const noteInput = getEl('edit-salida-note');
+    const note = noteInput ? noteInput.value.trim().substring(0, 200) : '';
+    
+    if (pax === pendingEditSalida.item.pax && note === (pendingEditSalida.item.note || '')) {
         pendingEditSalida = null; 
         return; // No change made
     }
@@ -877,12 +883,12 @@ async function confirmEditSalida() {
     const msg = `🤖 *AVISO AUTOMÁTICO*\n✏️ *MODIFICACIÓN DE SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, ${actionWord} su salida en *${pendingEditSalida.item.site} (${pendingEditSalida.item.time})* de ${pendingEditSalida.item.pax} a ${pax} plazas.`;
 
     if (currentUserKey !== 'admin') {
-        pendingEditSalidaWA = { id: pendingEditSalida.id, item: pendingEditSalida.item, newPax: pax, msg };
+        pendingEditSalidaWA = { id: pendingEditSalida.id, item: pendingEditSalida.item, newPax: pax, newNote: note, msg };
         getEl('wa-action-type').textContent = "Modificar Salida";
         getEl('confirm-whatsapp-msg').innerText = msg;
         showEl('whatsapp-confirm-modal');
     } else {
-        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax);
+        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax, note);
         pendingEditSalida = null;
     }
 }

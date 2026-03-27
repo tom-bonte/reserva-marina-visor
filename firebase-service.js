@@ -213,12 +213,17 @@ async function executeNewSalida(info, pax, userKeyChoice) {
  * @param {number} newPax - The new passenger count.
  * @returns {Promise<void>}
  */
-async function executeEditSalida(id, item, newPax) {
+async function executeEditSalida(id, item, newPax, newNote) {
     const monthKey = item.date.substring(0, 7);
     try {
-        await db.collection("reservations_monthly").doc(monthKey).update({
+        const updates = {
             [`allocations.${id}.pax`]: newPax
-        });
+        };
+        // Only update the note field if it was passed
+        if (newNote !== undefined) {
+            updates[`allocations.${id}.note`] = newNote;
+        }
+        await db.collection("reservations_monthly").doc(monthKey).update(updates);
     } catch(error) { showNotification('Error', 'No se pudo editar en la nube.', true); }
 }
 
