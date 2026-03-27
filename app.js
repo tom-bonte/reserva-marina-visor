@@ -872,11 +872,21 @@ async function confirmEditSalida() {
     const noteInput = getEl('edit-salida-note');
     const note = noteInput ? noteInput.value.trim().substring(0, 200) : '';
     
+    // CASO 1: No ha cambiado absolutamente nada (ni plazas, ni nota)
     if (pax === pendingEditSalida.item.pax && note === (pendingEditSalida.item.note || '')) {
         pendingEditSalida = null; 
-        return; // No change made
+        return; 
     }
 
+    // CASO 2: Solo ha cambiado la nota (las plazas siguen igual).
+    // Guardamos silenciosamente, sin WhatsApp y sin Historial.
+    if (pax === pendingEditSalida.item.pax && note !== (pendingEditSalida.item.note || '')) {
+        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax, note);
+        pendingEditSalida = null;
+        return;
+    }
+
+    // CASO 3: Han cambiado las plazas (con o sin nota). Sigue el flujo normal.
     const centerInfo = getCenterInfoSafe(pendingEditSalida.item.center);
     const dObj = parseDateT00(pendingEditSalida.item.date);
     const actionWord = pax > pendingEditSalida.item.pax ? 'aumentó' : 'redujo';

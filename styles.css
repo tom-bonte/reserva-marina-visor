@@ -149,3 +149,61 @@ body {
 .stats-table th, .stats-table td { 
     padding: 12px 8px; 
 }
+
+/* =========================================================================
+   7. CUSTOM POPOVER TOOLTIPS
+   ========================================================================= */
+.boat-block {
+    position: relative;
+}
+
+.boat-block:hover {
+    z-index: 50; /* Pulls the hovered boat above all other grid cells */
+}
+
+.custom-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 100%; /* Makes the tooltip drop downwards */
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 6px;
+    background-color: #1e293b; /* slate-800 */
+    color: white;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: normal;
+    z-index: 100;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none; /* Prevents interference with dragging */
+    white-space: nowrap;
+    text-align: left;
+}
+
+.custom-tooltip.note-tooltip {
+    white-space: normal;
+    width: max-content;
+    max-width: 180px;
+    padding: 8px 12px;
+}
+
+.custom-tooltip .note-title {
+    color: #facc15; /* yellow-400 */
+    font-weight: bold;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #475569; /* slate-600 */
+}
+
+.custom-tooltip .note-body {
+    line-height: 1.4;
+}
+
+/* Show the tooltip when hovering over the boat */
+.boat-block:hover .custom-tooltip {
+    visibility: visible;
+    opacity: 1;
+}

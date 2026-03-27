@@ -73,27 +73,23 @@ function renderDaily() {
                 const cursorClass = canDragBlock ? `cursor-grab active:cursor-grabbing hover:opacity-90 draggable-item` : `cursor-default opacity-90`;
 
                 const hasNote = item.note && item.note.trim() !== '';
-                // Sanitize note to prevent HTML breakage inside the custom tooltip
                 const safeNote = hasNote ? item.note.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
                 
                 const noteIndicator = hasNote 
                     ? `<span class="absolute -top-1 -right-1 flex h-3 w-3 z-10"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500 border border-white shadow-sm"></span></span>` 
                     : '';
                 
-                // Construct the custom HTML Popover (Tailwind group-hover)
+                // Uses our new native CSS classes instead of Tailwind group-hover
                 const customTooltip = hasNote
-                    ? `<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-slate-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60] pointer-events-none whitespace-normal break-words font-normal text-left">
-                        <p class="font-bold text-yellow-400 mb-1 border-b border-slate-600 pb-0.5">Nota adjunta</p>
-                        <p class="leading-relaxed">${safeNote}</p>
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                    ? `<div class="custom-tooltip note-tooltip">
+                        <div class="note-title">Nota adjunta</div>
+                        <div class="note-body">${safeNote}</div>
                        </div>`
-                    : `<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-800 text-white text-xs rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60] pointer-events-none whitespace-nowrap font-normal">
+                    : `<div class="custom-tooltip">
                         ${c.name} - ${item.pax} plazas
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
                        </div>`;
 
-                // Notice the addition of the 'group' class to trigger the child's visibility
-                return `<div ${dragAttrs} ondblclick="handleBoatDoubleClick(event, '${item.id}')" class="boat-block group relative w-full h-[34px] rounded-[4px] px-2 py-1.5 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
+                return `<div ${dragAttrs} ondblclick="handleBoatDoubleClick(event, '${item.id}')" class="boat-block w-full h-[34px] rounded-[4px] px-2 py-1.5 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
                     ${customTooltip}
                     ${noteIndicator}
                     <div class="truncate flex items-center gap-1.5 pointer-events-none"><span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span><span>${c.name} ${isPending ? '🔄' : ''}</span></div>
