@@ -89,14 +89,14 @@ const CAPACITY_RULES = {
  * and hex codes for jsPDF generation).
  */
 const CENTERS = {
-    'B': { name: 'Balky', color: 'bg-[#ef4444]', text: 'text-white', pdfBg: '#ef4444', pdfText: '#ffffff' }, 
-    'H': { name: 'Islas Hormigas', color: 'bg-[#0f172a]', text: 'text-white', pdfBg: '#000000', pdfText: '#ffffff' }, 
-    'M': { name: 'Mangamar', color: 'bg-[#22c55e]', text: 'text-white', pdfBg: '#00b050', pdfText: '#ffffff' }, 
-    'N': { name: 'Naranjito', color: 'bg-[#fbbf24]', text: 'text-slate-900', pdfBg: '#f59e0b', pdfText: '#000000' }, 
-    'P': { name: 'Planeta Azul', color: 'bg-[#3b82f6]', text: 'text-white', pdfBg: '#3b82f6', pdfText: '#ffffff' }, 
-    'D': { name: 'Divers', color: 'bg-[#6d28d9]', text: 'text-white', pdfBg: '#a855f7', pdfText: '#ffffff' }, 
-    'C': { name: 'CLUB', color: 'bg-[#64748b]', text: 'text-white', pdfBg: '#64748b', pdfText: '#ffffff' }, 
-    'X': { name: 'X La Manga', color: 'bg-[#cbd5e1]', text: 'text-slate-800', pdfBg: '#cbd5e1', pdfText: '#000000' } 
+    'B': { name: 'Balky', emoji: '🔴', color: 'bg-[#ef4444]', text: 'text-white', pdfBg: '#ef4444', pdfText: '#ffffff' }, 
+    'H': { name: 'Islas Hormigas', emoji: '⚫', color: 'bg-[#0f172a]', text: 'text-white', pdfBg: '#000000', pdfText: '#ffffff' }, 
+    'M': { name: 'Mangamar', emoji: '🟢', color: 'bg-[#22c55e]', text: 'text-white', pdfBg: '#00b050', pdfText: '#ffffff' }, 
+    'N': { name: 'Naranjito', emoji: '🟠', color: 'bg-[#fbbf24]', text: 'text-slate-900', pdfBg: '#f59e0b', pdfText: '#000000' }, 
+    'P': { name: 'Planeta Azul', emoji: '🔵', color: 'bg-[#3b82f6]', text: 'text-white', pdfBg: '#3b82f6', pdfText: '#ffffff' }, 
+    'D': { name: 'Divers', emoji: '🟣', color: 'bg-[#6d28d9]', text: 'text-white', pdfBg: '#a855f7', pdfText: '#ffffff' }, 
+    'C': { name: 'CLUB', emoji: '🔘', color: 'bg-[#64748b]', text: 'text-white', pdfBg: '#64748b', pdfText: '#ffffff' }, 
+    'X': { name: 'X La Manga', emoji: '⚪', color: 'bg-[#cbd5e1]', text: 'text-slate-800', pdfBg: '#cbd5e1', pdfText: '#000000' } 
 };
 
 /** @constant {string[]} Full Spanish names for days of the week, matching JS Date.getDay() index. */

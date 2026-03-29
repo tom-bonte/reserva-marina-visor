@@ -318,7 +318,7 @@ async function acceptSwap(swapId) {
         }
 
         // Fire confirmation webhook upon success
-        const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *INTERCAMBIO ACEPTADO* - ${initInfo.name} y ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, intercambiaron *${liveInitItem.site} (${liveInitItem.time})* (${finalInitPax} pax) por *${liveTargetItem.site} (${liveTargetItem.time})* (${finalTargetPax} pax).${paxNote}`;
+        const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *INTERCAMBIO ACEPTADO* - ${initInfo.emoji} ${initInfo.name} y ${targetInfo.emoji} ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, intercambiaron *${liveInitItem.site} (${liveInitItem.time})* (${finalInitPax} pax) por *${liveTargetItem.site} (${liveTargetItem.time})* (${finalTargetPax} pax).${paxNote}`;
         await sendSilentWebhook(msg);
         
         logHistory('swap', { 
@@ -401,8 +401,8 @@ async function acceptDonation(requestId) {
         const initInfo = getCenterInfoSafe(req.initiatorCenter);
         const d = parseDateT00(liveTargetItem.date);
         const reqText = req.isFull ? 'el barco completo' : `${req.requestedPax} plazas`;
-        const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *DONACIÓN ACEPTADA* - ${targetInfo.name} a ${initInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ha cedido ${reqText} en *${liveTargetItem.site} (${liveTargetItem.time})*.`;
-        
+        const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *DONACIÓN ACEPTADA* - ${targetInfo.emoji} ${targetInfo.name} a ${initInfo.emoji} ${initInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ha cedido ${reqText} en *${liveTargetItem.site} (${liveTargetItem.time})*.`;
+                
         await sendSilentWebhook(msg);
         logHistory('donation', { date: liveTargetItem.date, targetCenter: req.initiatorCenter, site: liveTargetItem.site, time: liveTargetItem.time, pax: req.isFull ? liveTargetItem.pax : req.requestedPax });
     } catch(e) {

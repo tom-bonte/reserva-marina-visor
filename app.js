@@ -118,10 +118,10 @@ async function executeChangePassword() {
    ========================================================================= */
 
 function getCenterInfoSafe(keyOrCode) {
-    if (!keyOrCode) return { name: 'Otro centro', color: 'bg-slate-200', text: 'text-slate-800' };
+    if (!keyOrCode) return { name: 'Otro centro', emoji: '🔘', color: 'bg-slate-200', text: 'text-slate-800' };
     if (CENTERS[keyOrCode]) return CENTERS[keyOrCode];
     const code = USER_CENTER_KEYS[keyOrCode];
-    return (code && CENTERS[code]) ? CENTERS[code] : { name: keyOrCode, color: 'bg-slate-200', text: 'text-slate-800' };
+    return (code && CENTERS[code]) ? CENTERS[code] : { name: keyOrCode, emoji: '🔘', color: 'bg-slate-200', text: 'text-slate-800' };
 }
 
 function changeHistoryPage(dir) {
@@ -392,8 +392,8 @@ function triggerSwapConfirmation(initId, initItem, targetId, targetItem) {
         targetNote += ` (${targetItem.pax} pax)`;
     }
 
-    const msg = `🤖 *AVISO AUTOMÁTICO*\n🔀 *SOLICITUD DE INTERCAMBIO* - ${initInfo.name} a ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ofrece ${initNote} por ${targetNote}. Entrad al visor para confirmar.`;
-    
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n🔀 *SOLICITUD DE INTERCAMBIO* - ${initInfo.emoji} ${initInfo.name} a ${targetInfo.emoji} ${targetInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ofrece ${initNote} por ${targetNote}. Entrad al visor para confirmar.`;
+
     pendingSwapIntent = { initId, initItem, targetId, targetItem, msg };
     getEl('wa-action-type').textContent = "Solicitud de Intercambio";
     getEl('confirm-whatsapp-msg').innerText = msg;
@@ -570,8 +570,8 @@ function executeProceedWithMove(id, item, newTime, newSite) {
     if (currentUserKey !== 'admin') {
         const d = parseDateT00(item.date);
         const centerInfo = getCenterInfoSafe(item.center);
-        let msg = `🤖 *AVISO AUTOMÁTICO*\n➡️ *CAMBIO DE HORARIO* - ${centerInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, movió su salida de *${item.site} (${item.time})* a *${newSite} (${newTime})* (${item.pax} pax).`;
-        
+        let msg = `🤖 *AVISO AUTOMÁTICO*\n➡️ *CAMBIO DE HORARIO* - ${centerInfo.emoji} ${centerInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, movió su salida de *${item.site} (${item.time})* a *${newSite} (${newTime})* (${item.pax} pax).`;
+
         const originalItem = allocations.find(a => String(a.id) === String(id));
         if (originalItem && item.pax < originalItem.pax) {
             msg += `\n⚠️ (Reducido a ${item.pax} plazas por límite de cupo).`;
@@ -791,8 +791,8 @@ async function confirmNewSalida() {
     const dObj = parseDateT00(date);
     const centerInfo = getCenterInfoSafe(targetCenterKey);
     
-    const msg = `🤖 *AVISO AUTOMÁTICO*\n➕ *NUEVA SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, añadió una salida a *${site} (${time})* de ${pax} plazas.`;
-    
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n➕ *NUEVA SALIDA* - ${centerInfo.emoji} ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, añadió una salida a *${site} (${time})* de ${pax} plazas.`;
+
     if (currentUserKey !== 'admin') {
         pendingNewSalidaWA = { data: pendingNewSalida, pax: pax, centerKey: targetCenterKey, msg: msg };
         getEl('wa-action-type').textContent = "Nueva Salida"; 
@@ -890,7 +890,7 @@ async function confirmEditSalida() {
     const centerInfo = getCenterInfoSafe(pendingEditSalida.item.center);
     const dObj = parseDateT00(pendingEditSalida.item.date);
     const actionWord = pax > pendingEditSalida.item.pax ? 'aumentó' : 'redujo';
-    const msg = `🤖 *AVISO AUTOMÁTICO*\n✏️ *MODIFICACIÓN DE SALIDA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, ${actionWord} su salida en *${pendingEditSalida.item.site} (${pendingEditSalida.item.time})* de ${pendingEditSalida.item.pax} a ${pax} plazas.`;
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n✏️ *MODIFICACIÓN DE SALIDA* - ${centerInfo.emoji} ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, ${actionWord} su salida en *${pendingEditSalida.item.site} (${pendingEditSalida.item.time})* de ${pendingEditSalida.item.pax} a ${pax} plazas.`;
 
     if (currentUserKey !== 'admin') {
         pendingEditSalidaWA = { id: pendingEditSalida.id, item: pendingEditSalida.item, newPax: pax, newNote: note, msg };
@@ -918,7 +918,7 @@ async function confirmDeleteSalida() {
     
     const centerInfo = getCenterInfoSafe(pendingEditSalida.item.center);
     const dObj = parseDateT00(pendingEditSalida.item.date);
-    const msg = `🤖 *AVISO AUTOMÁTICO*\n🗑️ *SALIDA CANCELADA* - ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, ha eliminado su salida en *${pendingEditSalida.item.site} (${pendingEditSalida.item.time})* (${pendingEditSalida.item.pax} plazas).`;
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n🗑️ *SALIDA CANCELADA* - ${centerInfo.emoji} ${centerInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, ha eliminado su salida en *${pendingEditSalida.item.site} (${pendingEditSalida.item.time})* (${pendingEditSalida.item.pax} plazas).`;
 
     if (currentUserKey !== 'admin') {
         pendingDeleteSalidaWA = { id: pendingEditSalida.id, item: pendingEditSalida.item, msg };
@@ -962,8 +962,8 @@ function confirmDonationRequest() {
     const myInfo = getCenterInfoSafe(currentUserKey);
     const dObj = parseDateT00(pendingDonationRequest.item.date);
     
-    const msg = `🤖 *AVISO AUTOMÁTICO*\n🙏 *SOLICITUD DE DONACIÓN* - ${myInfo.name} a ${targetInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, solicita que le ceda ${isFull ? '*EL BARCO COMPLETO*' : `*${requestedPax} plazas*`} en *${pendingDonationRequest.item.site} (${pendingDonationRequest.item.time})*. Entrad al visor para confirmar.`;
-    
+    const msg = `🤖 *AVISO AUTOMÁTICO*\n🙏 *SOLICITUD DE DONACIÓN* - ${myInfo.emoji} ${myInfo.name} a ${targetInfo.emoji} ${targetInfo.name}\nPara el ${dObj.getDate()} de ${MONTHS_ES[dObj.getMonth()].toUpperCase()}, solicita que le ceda ${isFull ? '*EL BARCO COMPLETO*' : `*${requestedPax} plazas*`} en *${pendingDonationRequest.item.site} (${pendingDonationRequest.item.time})*. Entrad al visor para confirmar.`;
+        
     pendingDonationWA = {
         targetId: pendingDonationRequest.id, targetItem: pendingDonationRequest.item,
         requestedPax: requestedPax, isFull: isFull, msg: msg
