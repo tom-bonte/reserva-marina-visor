@@ -15,7 +15,7 @@
  * The currently selected date in the application. Drives the rendering of the 
  * Diario, Semanal, and Mensual views. Defaults to March 29, 2026.
  */
-let currentDate = new Date(2026, 2, 29); 
+let currentDate = new Date(); 
 
 /** * @type {Array<Object>} 
  * The active array of all boat reservations (allocations) fetched from Firestore 

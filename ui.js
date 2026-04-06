@@ -465,6 +465,8 @@ function setAllFilters(s) { selectedCenters = s ? Object.keys(CENTERS) : []; his
 function changeMonth(i) { currentDate.setMonth(parseInt(i)); currentDate.setDate(1); renderAll(); }
 function changeWeek(n) { currentDate = getDateOfISOWeek(parseInt(n), 2026); renderAll(); }
 function setDate(s) { const p = s.split('-'); currentDate = new Date(p[0], p[1]-1, p[2]); renderAll(); }
+function setToday() { currentDate = new Date(); renderAll(); }
+function changeDay(delta) { currentDate.setDate(currentDate.getDate() + delta); renderAll(); }
 function toggleFilterDropdown() { toggleVis('filter-dropdown-panel'); }
 function toggleMonthDropdown() { toggleVis('month-dropdown-panel'); }
 
