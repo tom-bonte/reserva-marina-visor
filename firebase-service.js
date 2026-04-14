@@ -359,38 +359,48 @@ async function acceptDonation(requestId) {
     const itemsInSlot = allocations.filter(a => a.date === liveTargetItem.date && a.time === liveTargetItem.time && a.site === liveTargetItem.site);
     const initiatorExistingBoat = itemsInSlot.find(a => a.center === req.initiatorCenter);
 
+    const initiatorPax = initiatorExistingBoat ? initiatorExistingBoat.pax : 0;
+    const requestedPax = req.isFull ? liveTargetItem.pax : req.requestedPax;
+    const targetRemainingPax = liveTargetItem.pax - requestedPax;
+    const newInitiatorPax = initiatorPax + requestedPax;
+
+    const initiatorBoatsNeeded = Math.ceil(newInitiatorPax / 11);
+    const targetBoatsNeeded = Math.ceil(targetRemainingPax / 11);
+    const otherBoatsCount = itemsInSlot.filter(a => a.center !== req.initiatorCenter && String(a.id) !== String(req.targetId)).length;
+    
+    if (initiatorBoatsNeeded + targetBoatsNeeded + otherBoatsCount > 2) {
+        const maxSafeDonation = 11 - initiatorPax;
+        if (maxSafeDonation <= 0) {
+            showNotification('Acción Bloqueada', 'El barco de destino ya está lleno (11 pax). Solo puedes ceder tu barco entero para que el receptor tenga un segundo barco libre.', true);
+            return;
+        }
+        showDonationFixModal(requestId, maxSafeDonation);
+        return;
+    }
+
     try {
-        if (req.isFull) {
+        if (targetRemainingPax <= 0) {
             if (initiatorExistingBoat) {
-                batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: initiatorExistingBoat.pax + liveTargetItem.pax });
                 batch.update(monthRef, { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
-            } else {
-                batch.update(monthRef, { [`allocations.${req.targetId}.center`]: req.initiatorCenter });
-            }
-        } else {
-            const newTargetPax = liveTargetItem.pax - req.requestedPax;
-            if (newTargetPax <= 0) {
-                if (initiatorExistingBoat) {
-                    batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: initiatorExistingBoat.pax + liveTargetItem.pax });
-                    batch.update(monthRef, { [`allocations.${req.targetId}`]: firebase.firestore.FieldValue.delete() });
-                } else {
-                    batch.update(monthRef, { [`allocations.${req.targetId}.center`]: req.initiatorCenter });
-                }
-            } else {
-                if (!initiatorExistingBoat && itemsInSlot.length >= 2) {
-                    showNotification('Acción Bloqueada', 'El horario ya tiene 2 barcos. Solo puedes aceptar si le cedes el barco completo para no romper el cupo de barcos.', true);
-                    return; 
-                }
-                batch.update(monthRef, { [`allocations.${req.targetId}.pax`]: newTargetPax });
-                
-                if (initiatorExistingBoat) {
-                    batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: initiatorExistingBoat.pax + req.requestedPax });
-                } else {
+                batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: Math.min(11, newInitiatorPax) });
+                if (newInitiatorPax > 11) {
                     const uniqueId = `boat_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-                    const finalSubslot = liveTargetItem.subslot === 1 ? 2 : 1;
-                    const newItem = { date: liveTargetItem.date, time: liveTargetItem.time, site: liveTargetItem.site, center: req.initiatorCenter, pax: req.requestedPax, subslot: finalSubslot };
+                    const finalSubslot = initiatorExistingBoat.subslot === 1 ? 2 : 1;
+                    const newItem = { date: liveTargetItem.date, time: liveTargetItem.time, site: liveTargetItem.site, center: req.initiatorCenter, pax: newInitiatorPax - 11, subslot: finalSubslot };
                     batch.update(monthRef, { [`allocations.${uniqueId}`]: newItem });
                 }
+            } else {
+                batch.update(monthRef, { [`allocations.${req.targetId}.center`]: req.initiatorCenter, [`allocations.${req.targetId}.pax`]: newInitiatorPax });
+            }
+        } else {
+            batch.update(monthRef, { [`allocations.${req.targetId}.pax`]: targetRemainingPax });
+            if (initiatorExistingBoat) {
+                batch.update(monthRef, { [`allocations.${initiatorExistingBoat.id}.pax`]: newInitiatorPax });
+            } else {
+                const uniqueId = `boat_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+                const finalSubslot = liveTargetItem.subslot === 1 ? 2 : 1;
+                const newItem = { date: liveTargetItem.date, time: liveTargetItem.time, site: liveTargetItem.site, center: req.initiatorCenter, pax: requestedPax, subslot: finalSubslot };
+                batch.update(monthRef, { [`allocations.${uniqueId}`]: newItem });
             }
         }
         
@@ -401,7 +411,11 @@ async function acceptDonation(requestId) {
         const initInfo = getCenterInfoSafe(req.initiatorCenter);
         const d = parseDateT00(liveTargetItem.date);
         const reqText = req.isFull ? 'el barco completo' : `${req.requestedPax} plazas`;
-        const msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *DONACIÓN ACEPTADA* - ${targetInfo.emoji} ${targetInfo.name} a ${initInfo.emoji} ${initInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ha cedido ${reqText} en *${liveTargetItem.site} (${liveTargetItem.time})*.`;
+        let msg = `🤖 *AVISO AUTOMÁTICO*\n✅ *DONACIÓN ACEPTADA* - ${targetInfo.emoji} ${targetInfo.name} a ${initInfo.emoji} ${initInfo.name}\nPara el ${d.getDate()} de ${MONTHS_ES[d.getMonth()].toUpperCase()}, ha cedido ${reqText} en *${liveTargetItem.site} (${liveTargetItem.time})*.`;
+        
+        if (req.wasForcedReduced) {
+            msg += `\n⚠️ *(Rebajado forzosamente a ${req.requestedPax} plazas por límite del punto).*`;
+        }
                 
         await sendSilentWebhook(msg);
         logHistory('donation', { date: liveTargetItem.date, targetCenter: req.initiatorCenter, site: liveTargetItem.site, time: liveTargetItem.time, pax: req.isFull ? liveTargetItem.pax : req.requestedPax });
