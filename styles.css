@@ -30,6 +30,7 @@ body {
     -webkit-user-drag: element; 
     user-select: none; 
     -webkit-user-select: none;
+    touch-action: none; 
 }
 
 /* Smooth visual feedback when a boat block is picked up or dropped */
