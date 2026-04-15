@@ -23,8 +23,8 @@ function renderDaily() {
     let maxDailyCap = activeSites.reduce((sum, s) => sum + getDailyCapacity(ds, s), 0) + 20; // +20 from Palomas
     getEl('daily-max-header').textContent = maxDailyCap;
 
-    const gridColsClass = `grid-cols-[76px_28px_repeat(${activeSites.length},1fr)]`;
-    const footerColsClass = `grid-cols-[104px_repeat(${activeSites.length},1fr)]`;
+    const gridColsClass = `min-w-[800px] lg:min-w-0 grid-cols-[76px_28px_repeat(${activeSites.length},1fr)]`;
+    const footerColsClass = `min-w-[800px] lg:min-w-0 grid-cols-[104px_repeat(${activeSites.length},1fr)]`;
 
     let headerHtml = `<div class="grid ${gridColsClass} border-b-2 border-slate-200 bg-slate-50 text-[9px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-10 shadow-sm">
         <div class="p-3 text-slate-500 border-r border-slate-100 flex items-center justify-center">Hora</div>
@@ -611,6 +611,19 @@ function updateNotificationsMenu() {
 
 function toggleUserMenu() { 
     toggleVis('user-dropdown'); 
+}
+
+function toggleMobileCalendar() {
+    const sidebar = document.getElementById('sidebar-calendario');
+    if (sidebar.classList.contains('hidden')) {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.remove('lg:flex');
+        sidebar.classList.add('flex');
+    } else {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('flex');
+        sidebar.classList.add('lg:flex');
+    }
 }
 
 function openChangePasswordModal() {
