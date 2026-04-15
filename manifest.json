@@ -1,0 +1,20 @@
+{
+  "name": "Visor Reserva Interior",
+  "short_name": "Visor",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "apple-touch-icon.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "apple-touch-icon.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
