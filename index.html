@@ -15,7 +15,7 @@
 
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="p-4 md:p-6 text-slate-800 flex flex-col h-screen overflow-hidden">
+<body class="p-2 md:p-6 text-slate-800 flex flex-col min-h-[100dvh] lg:h-screen lg:overflow-hidden bg-slate-50 md:bg-[#f4f7f6]">
 
     <div id="password-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 transform transition-all">
@@ -556,9 +556,9 @@
         <div class="text-[10px] text-slate-400 font-bold italic tracking-widest hidden md:block ml-auto uppercase">PLANIFICACIÓN CONSOLIDADA 2026</div>
     </div>
 
-    <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden relative z-10 transition-all">
+    <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 lg:overflow-hidden relative z-10 transition-all">
         
-        <aside id="sidebar-calendario" class="hidden lg:flex w-full lg:w-72 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex-col shrink-0 overflow-y-auto">
+        <aside id="sidebar-calendario" class="hidden lg:flex w-full lg:w-72 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex-col shrink-0 lg:overflow-y-auto">
             <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
                 <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 Calendario
@@ -570,9 +570,9 @@
             <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
         </aside>
 
-        <div id="main-content-area" class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-slate-200 relative flex flex-col overflow-hidden">
+        <div id="main-content-area" class="flex-1 min-h-0 bg-white md:bg-transparent md:rounded-xl md:shadow-sm md:border md:border-slate-200 relative flex flex-col lg:overflow-hidden">
             
-            <main id="view-diario" class="p-3 md:p-6 flex flex-col h-full overflow-hidden bg-white">
+            <main id="view-diario" class="p-0 md:p-6 flex flex-col lg:h-full lg:overflow-hidden">
                 <div class="mb-3 md:mb-6 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-0">
                     <div>
                         <h2 id="daily-date-header" class="text-base md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
@@ -591,11 +591,13 @@
                     </div>
                 </div>
                 
-                <div id="daily-grid-container" class="flex-1 overflow-auto border border-slate-200 rounded-lg relative text-xs"></div>
-                <div id="daily-footer-container" class="shrink-0"></div>
+                <div class="flex-1 overflow-x-auto overflow-y-visible lg:overflow-auto border border-slate-200 rounded-lg relative bg-white flex flex-col">
+                    <div id="daily-grid-container" class="flex-1 text-xs min-w-max"></div>
+                    <div id="daily-footer-container" class="shrink-0 sticky bottom-0 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] min-w-max bg-white"></div>
+                </div>
             </main>
 
-            <main id="view-mega" class="hidden flex-col h-full overflow-hidden bg-white">
+            <main id="view-mega" class="hidden flex-col h-full lg:overflow-hidden bg-white">
                 <div class="p-3 md:p-6 shrink-0 bg-white border-b border-slate-200 shadow-sm z-30">
                     <h2 id="mega-date-header" class="text-base md:text-3xl font-black italic tracking-tighter text-slate-900 uppercase"></h2>
                 </div>

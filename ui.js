@@ -359,7 +359,11 @@ function switchView(v) {
     
     ['diario', 'semanal', 'mensual', 'estadisticas'].forEach(id => {
         const tab = getEl(`tab-${id}`);
-        if(tab) tab.className = `px-5 py-2.5 flex items-center gap-2 transition-all ${id === v ? 'tab-active' : 'tab-inactive'}`;
+        if(tab) {
+            const isTabActive = id === v;
+            const baseClasses = "px-2 md:px-5 py-1.5 md:py-2.5 flex items-center gap-1 md:gap-2 transition-all whitespace-nowrap";
+            tab.className = `${baseClasses} ${isTabActive ? 'tab-active' : 'tab-inactive'}`;
+        }
     });
 
     const sidebar = getEl('sidebar-calendario');
@@ -378,9 +382,16 @@ function switchView(v) {
     }
 
     if (sidebar) {
-        sidebar.classList.toggle('hidden', v !== 'diario');
-        sidebar.classList.toggle('flex', v === 'diario');
-        sidebar.classList.toggle('lg:flex', v === 'diario');
+        if (v === 'diario') {
+            const isManuallyOpened = sidebar.classList.contains('flex') && !sidebar.classList.contains('lg:flex') && !sidebar.classList.contains('hidden');
+            if(!isManuallyOpened) {
+                sidebar.classList.add('hidden', 'lg:flex');
+                sidebar.classList.remove('flex');
+            }
+        } else {
+            sidebar.classList.add('hidden');
+            sidebar.classList.remove('lg:flex', 'flex');
+        }
     }
     
     if (periodSelectors) periodSelectors.classList.toggle('hidden', v === 'diario' || v === 'estadisticas' || v === 'historial');
