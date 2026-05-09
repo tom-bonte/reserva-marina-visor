@@ -46,6 +46,11 @@ function startFirestoreListener() {
         swapRequests = swapsFromCloud;
         updateNotificationsMenu();
         renderAll(); 
+        
+        const modal = document.getElementById('notifications-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            openNotificationsModal();
+        }
     });
 
     // 4. Listen for system activity logs for the History Feed
@@ -268,8 +273,6 @@ async function acceptSwap(swapId) {
     const req = swapRequests.find(s => s.id === swapId); 
     if (!req) return;
     
-    hideEl('notifications-modal');
-
     // --- REAL-TIME CAPACITY CHECK ---
     // Recalculate capacity limits at the exact moment of execution to prevent double-booking anomalies
     const liveInitItem = allocations.find(a => String(a.id) === String(req.initiatorId));
@@ -344,7 +347,6 @@ async function acceptSwap(swapId) {
 async function acceptDonation(requestId) {
     const req = swapRequests.find(s => s.id === requestId); 
     if (!req) return;
-    hideEl('notifications-modal');
 
     const liveTargetItem = allocations.find(a => String(a.id) === String(req.targetId));
     if (!liveTargetItem) {

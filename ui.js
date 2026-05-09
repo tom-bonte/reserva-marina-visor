@@ -519,13 +519,23 @@ function openHelpModal() { showEl('help-modal'); }
 function openNotificationsModal() {
     const myCode = USER_CENTER_KEYS[currentUserKey];
     const pendingForMe = swapRequests.filter(s => s.targetCenter === myCode);
+
+    if (pendingForMe.length === 0) {
+        hideEl('notifications-modal');
+        return;
+    }
+    
+    // Sort by date (ascending)
+    pendingForMe.sort((a, b) => {
+        const dateA = parseDateT00(a.targetData ? a.targetData.date : a.initiatorData.date);
+        const dateB = parseDateT00(b.targetData ? b.targetData.date : b.initiatorData.date);
+        return dateA - dateB;
+    });
+
     const listEl = getEl('notifications-list'); 
     listEl.innerHTML = '';
     
-    if (pendingForMe.length === 0) {
-        listEl.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-6">No tienes solicitudes pendientes.</p>`;
-    } else {
-        pendingForMe.forEach(req => {
+    pendingForMe.forEach(req => {
             const initName = CENTERS[req.initiatorCenter].name, d = parseDateT00(req.targetData ? req.targetData.date : req.initiatorData.date);
             const dStr = `${d.getDate()} de ${MONTHS_SHORT[d.getMonth()]}`;
             
@@ -565,7 +575,6 @@ function openNotificationsModal() {
                 </div>`;
             }
         });
-    }
     showEl('notifications-modal');
 }
 
