@@ -852,6 +852,14 @@ function handleBoatDoubleClick(e, id) {
     const noteInput = getEl('edit-salida-note');
     if (noteInput) noteInput.value = item.note || '';
 
+    const centerSelector = getEl('edit-salida-center-container');
+    if (centerSelector) {
+        centerSelector.classList.toggle('hidden', currentUserKey !== 'admin');
+        if (currentUserKey === 'admin') {
+            getEl('edit-salida-center').value = item.center;
+        }
+    }
+
     showEl('edit-salida-modal');
 }
 
@@ -871,22 +879,23 @@ async function confirmEditSalida() {
     
     const noteInput = getEl('edit-salida-note');
     const note = noteInput ? noteInput.value.trim().substring(0, 200) : '';
+    const newCenter = currentUserKey === 'admin' ? getEl('edit-salida-center').value : pendingEditSalida.item.center;
     
-    // CASO 1: No ha cambiado absolutamente nada (ni plazas, ni nota)
-    if (pax === pendingEditSalida.item.pax && note === (pendingEditSalida.item.note || '')) {
+    // CASO 1: No ha cambiado absolutamente nada (ni plazas, ni nota, ni centro)
+    if (pax === pendingEditSalida.item.pax && note === (pendingEditSalida.item.note || '') && newCenter === pendingEditSalida.item.center) {
         pendingEditSalida = null; 
         return; 
     }
 
-    // CASO 2: Solo ha cambiado la nota (las plazas siguen igual).
+    // CASO 2: Solo ha cambiado la nota (las plazas y el centro siguen igual).
     // Guardamos silenciosamente, sin WhatsApp y sin Historial.
-    if (pax === pendingEditSalida.item.pax && note !== (pendingEditSalida.item.note || '')) {
-        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax, note);
+    if (pax === pendingEditSalida.item.pax && newCenter === pendingEditSalida.item.center && note !== (pendingEditSalida.item.note || '')) {
+        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax, note, newCenter);
         pendingEditSalida = null;
         return;
     }
 
-    // CASO 3: Han cambiado las plazas (con o sin nota). Sigue el flujo normal.
+    // CASO 3: Han cambiado las plazas, nota o centro. Sigue el flujo normal.
     const centerInfo = getCenterInfoSafe(pendingEditSalida.item.center);
     const dObj = parseDateT00(pendingEditSalida.item.date);
     const actionWord = pax > pendingEditSalida.item.pax ? 'aumentó' : 'redujo';
@@ -898,7 +907,7 @@ async function confirmEditSalida() {
         getEl('confirm-whatsapp-msg').innerText = msg;
         showEl('whatsapp-confirm-modal');
     } else {
-        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax, note);
+        await executeEditSalida(pendingEditSalida.id, pendingEditSalida.item, pax, note, newCenter);
         pendingEditSalida = null;
     }
 }

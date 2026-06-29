@@ -53,13 +53,16 @@ function startFirestoreListener() {
         }
     });
 
-    // 4. Listen for system activity logs for the History Feed
-    unsubscribeHistory = db.collection("history_logs").onSnapshot((snapshot) => {
-        const historyFromCloud = [];
-        snapshot.forEach(doc => { historyFromCloud.push({ id: doc.id, ...doc.data() }); });
-        historyLogs = historyFromCloud;
-        if (activeViewMode === 'historial') renderHistory();
-    });
+    // 4. Listen for system activity logs for the History Feed (limit to 100 most recent logs to optimize reads)
+    unsubscribeHistory = db.collection("history_logs")
+        .orderBy("timestamp", "desc")
+        .limit(100)
+        .onSnapshot((snapshot) => {
+            const historyFromCloud = [];
+            snapshot.forEach(doc => { historyFromCloud.push({ id: doc.id, ...doc.data() }); });
+            historyLogs = historyFromCloud;
+            if (activeViewMode === 'historial') renderHistory();
+        });
 }
 
 /**
@@ -216,9 +219,11 @@ async function executeNewSalida(info, pax, userKeyChoice) {
  * @param {string} id - The unique ID of the reservation.
  * @param {Object} item - The current reservation object payload.
  * @param {number} newPax - The new passenger count.
+ * @param {string} newNote - The new optional note.
+ * @param {string} [newCenterCode] - The optional center code to reassign the boat to.
  * @returns {Promise<void>}
  */
-async function executeEditSalida(id, item, newPax, newNote) {
+async function executeEditSalida(id, item, newPax, newNote, newCenterCode) {
     const monthKey = item.date.substring(0, 7);
     try {
         const updates = {
@@ -227,6 +232,9 @@ async function executeEditSalida(id, item, newPax, newNote) {
         // Only update the note field if it was passed
         if (newNote !== undefined) {
             updates[`allocations.${id}.note`] = newNote;
+        }
+        if (newCenterCode !== undefined) {
+            updates[`allocations.${id}.center`] = newCenterCode;
         }
         await db.collection("reservations_monthly").doc(monthKey).update(updates);
     } catch(error) { showNotification('Error', 'No se pudo editar en la nube.', true); }
