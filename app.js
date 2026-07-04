@@ -761,9 +761,30 @@ function handleSlotDoubleClick(time, site) {
     paxInput.max = allowedMax;
     
     const centerSelector = getEl('new-salida-center-container');
-    if (centerSelector) centerSelector.classList.toggle('hidden', currentUserKey !== 'admin');
+    const paxContainer = getEl('new-salida-pax-container');
+    if (centerSelector) {
+        const isAdmin = currentUserKey === 'admin';
+        centerSelector.classList.toggle('hidden', !isAdmin);
+        if (paxContainer) {
+            if (isAdmin) {
+                paxContainer.className = "mb-4";
+                centerSelector.className = "mb-6";
+            } else {
+                paxContainer.className = "mb-6";
+            }
+        }
+    }
     
     showEl('new-salida-modal');
+
+    if (paxInput) {
+        paxInput.focus();
+        paxInput.select();
+        setTimeout(() => {
+            paxInput.focus();
+            paxInput.select();
+        }, 50);
+    }
 }
 
 function cancelNewSalida() { 
@@ -861,6 +882,15 @@ function handleBoatDoubleClick(e, id) {
     }
 
     showEl('edit-salida-modal');
+
+    if (paxInput) {
+        paxInput.focus();
+        paxInput.select();
+        setTimeout(() => {
+            paxInput.focus();
+            paxInput.select();
+        }, 50);
+    }
 }
 
 function cancelEditSalida() {
@@ -920,6 +950,15 @@ function promptDeleteSalida() {
 function cancelDeleteSalida() {
     hideEl('delete-confirm-modal');
     showEl('edit-salida-modal'); // Re-open the edit modal if they back out of deletion
+    const paxInput = getEl('edit-salida-pax');
+    if (paxInput) {
+        paxInput.focus();
+        paxInput.select();
+        setTimeout(() => {
+            paxInput.focus();
+            paxInput.select();
+        }, 50);
+    }
 }
 
 async function confirmDeleteSalida() {
