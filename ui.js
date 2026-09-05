@@ -726,3 +726,24 @@ window.addEventListener('resize', () => {
         renderDaily();
     }
 });
+
+// Navegación por teclado: flechas izquierda/derecha para día anterior/siguiente
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const activeEl = document.activeElement;
+        const tag = activeEl ? activeEl.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || (activeEl && activeEl.isContentEditable)) {
+            return;
+        }
+
+        const openModal = document.querySelector('[id$="-modal"]:not(.hidden)');
+        if (openModal) return;
+
+        if (typeof activeViewMode !== 'undefined' && (activeViewMode === 'historial' || activeViewMode === 'estadisticas')) {
+            return;
+        }
+
+        e.preventDefault();
+        changeDay(e.key === 'ArrowRight' ? 1 : -1);
+    }
+});
