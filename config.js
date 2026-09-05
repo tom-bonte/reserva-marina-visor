@@ -9,6 +9,15 @@
 /** @constant {string[]} Array of valid dive site names within the marine reserve. */
 const SITES = ['Bajo de Dentro', 'Piles II', 'Piles I', 'Testa', 'Morra'];
 
+/** @constant {Object} Clean and concise versions of dive site names for mobile screens. */
+const SITE_MOBILE_NAMES = {
+    'Bajo de Dentro': 'B. Dentro',
+    'Piles II': 'Piles II',
+    'Piles I': 'Piles I',
+    'Testa': 'Testa',
+    'Morra': 'Morra'
+};
+
 /** @constant {string[]} Array defining the three possible seasonal volume profiles. */
 const SEASONS = ['peak', 'high', 'low'];
 

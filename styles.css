@@ -17,6 +17,10 @@
 body { 
     font-family: 'Inter', sans-serif; 
     background-color: #f4f7f6; 
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
 
 /* =========================================================================
@@ -207,4 +211,51 @@ body {
 .boat-block:hover .custom-tooltip {
     visibility: visible;
     opacity: 1;
+}
+
+/* =========================================================================
+   8. MOBILE RESPONSIVE LAYOUT & STICKY CELLS
+   ========================================================================= */
+
+@media (max-width: 767px) {
+    header.main-header {
+        display: grid !important;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "brand actions"
+            "tabs tabs";
+        row-gap: 8px;
+        column-gap: 6px;
+        padding: 8px !important;
+    }
+    #header-branding { grid-area: brand; min-width: 0; }
+    #header-actions { grid-area: actions; justify-self: end; }
+    #header-tabs { grid-area: tabs; width: 100%; }
+}
+
+/* Sticky styling for horizontal scroll in daily table */
+.daily-sticky-time {
+    position: sticky;
+    left: 0;
+    z-index: 20;
+    background-color: #ffffff;
+}
+
+.daily-sticky-pos {
+    position: sticky;
+    z-index: 20;
+    background-color: #ffffff;
+}
+
+.daily-site-cell {
+    position: sticky;
+    left: 0;
+    z-index: 20;
+    background-color: #ffffff;
+}
+
+.daily-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
 }

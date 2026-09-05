@@ -21,19 +21,29 @@ function renderDaily() {
     getEl('daily-date-header').textContent = `${DAYS_ES[currentDate.getDay()]}, ${currentDate.getDate()} DE ${MONTHS_ES[currentDate.getMonth()]} DE ${currentDate.getFullYear()}`;
     
     let maxDailyCap = activeSites.reduce((sum, s) => sum + getDailyCapacity(ds, s), 0) + 20; // +20 from Palomas
-    getEl('daily-max-header').textContent = maxDailyCap;
+    const maxHeaderEl = getEl('daily-max-header');
+    if (maxHeaderEl) maxHeaderEl.textContent = maxDailyCap;
 
-    const gridColsClass = `min-w-[800px] lg:min-w-0 grid-cols-[76px_28px_repeat(${activeSites.length},1fr)]`;
-    const footerColsClass = `min-w-[800px] lg:min-w-0 grid-cols-[104px_repeat(${activeSites.length},1fr)]`;
+    const isMobile = window.innerWidth < 768;
+    const siteColW = isMobile ? '104px' : '210px';
+    const slotColW = isMobile ? '100px' : '130px';
+    const statusColW = isMobile ? '62px' : '110px';
 
-    let headerHtml = `<div class="grid ${gridColsClass} border-b-2 border-slate-200 bg-slate-50 text-[9px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-10 shadow-sm">
-        <div class="p-3 text-slate-500 border-r border-slate-100 flex items-center justify-center">Hora</div>
-        <div class="p-3 text-slate-400 border-r border-slate-200 flex items-center justify-center" title="Posición">P.</div>`;
+    const gridStyle = `style="display: grid; grid-template-columns: ${siteColW} repeat(${TIMES.length}, ${slotColW}) ${statusColW}; width: fit-content;"`;
+
+    let headerHtml = `<div ${gridStyle} class="border-b-2 border-slate-200 bg-slate-50 text-[8.5px] md:text-[10px] font-bold text-blue-700 text-center uppercase tracking-wider sticky top-0 z-30 shadow-sm">
+        <div class="py-1.5 px-1 md:p-3 text-slate-500 border-r border-slate-200 flex items-center justify-center sticky left-0 bg-slate-100 z-40">
+            <span class="md:hidden">Punto</span>
+            <span class="hidden md:inline">Punto de Buceo</span>
+        </div>`;
     
-    activeSites.forEach(s => {
-        let cleanName = s === 'Bajo de Dentro' ? 'Bajo de Dentro' : s;
-        headerHtml += `<div class="p-3 border-r border-slate-200 flex items-center justify-center gap-1">${cleanName}</div>`;
+    TIMES.forEach(time => {
+        headerHtml += `<div class="py-1.5 px-1 md:p-3 border-r border-slate-200 flex items-center justify-center gap-1">${time}</div>`;
     });
+    headerHtml += `<div class="py-1.5 px-0.5 md:p-3 border-r border-slate-200 flex items-center justify-center text-slate-500">
+        <span class="md:hidden">Ocup.</span>
+        <span class="hidden md:inline">Ocupación</span>
+    </div>`;
     headerHtml += `</div>`;
 
     let gridBodyHtml = '';
@@ -41,26 +51,19 @@ function renderDaily() {
     activeSites.forEach(s => t[s] = 0);
     let totalFilteredPax = 0;
 
-    TIMES.forEach(time => {
-        if (time === '13:30') {
-            gridBodyHtml += `<div class="grid ${gridColsClass} border-b border-slate-200 bg-red-50/60 min-h-[40px]"><div class="flex items-center justify-center border-r border-slate-200 font-black text-red-400 text-[10px] col-span-2">13:30</div><div class="col-span-${activeSites.length} flex items-center justify-center text-red-500 font-black italic text-[10px] tracking-[0.5em] opacity-80 uppercase">Descanso</div></div>`;
-            return;
-        }
+    activeSites.forEach(site => {
+        let rowHtml = '';
 
-        let subRow1 = ''; let subRow2 = '';
+        TIMES.forEach(time => {
+            if (time === '13:30') {
+                rowHtml += `<div class="border-r border-b border-slate-100 p-0.5 flex items-center justify-center bg-red-50/40 min-h-[32px] md:min-h-[40px] text-[8px] md:text-[9px] font-bold text-red-400 uppercase tracking-widest" data-time="${time}" data-site="${site}">
+                    <span class="opacity-70">Descanso</span>
+                </div>`;
+                return;
+            }
 
-        activeSites.forEach(site => {
             const siteItems = allocations.filter(a => a.date === ds && a.time === time && a.site === site);
             const renderedItems = siteItems.filter(item => selectedCenters.includes(item.center));
-            
-            let item1 = renderedItems.find(i => i.subslot === 1), item2 = renderedItems.find(i => i.subslot === 2);
-
-            if (renderedItems.length === 1) { item1 = renderedItems[0]; item2 = null; } 
-            else if (renderedItems.length === 2) {
-                if (!item1 && !item2) { item1 = renderedItems[0]; item2 = renderedItems[1]; } 
-                else if (item1 && !item2) { item2 = renderedItems.find(i => String(i.id) !== String(item1.id)); } 
-                else if (!item1 && item2) { item1 = renderedItems.find(i => String(i.id) !== String(item2.id)); }
-            }
 
             const createBlockHTML = (item) => {
                 t[site] += item.pax; totalFilteredPax += item.pax;
@@ -76,10 +79,9 @@ function renderDaily() {
                 const safeNote = hasNote ? item.note.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
                 
                 const noteIndicator = hasNote 
-                    ? `<span class="absolute -top-1 -right-1 flex h-3 w-3 z-10"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500 border border-white shadow-sm"></span></span>` 
+                    ? `<span class="absolute -top-1 -right-1 flex h-2.5 w-2.5 z-10"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500 border border-white shadow-sm"></span></span>` 
                     : '';
                 
-                // Uses our new native CSS classes instead of Tailwind group-hover
                 const customTooltip = hasNote
                     ? `<div class="custom-tooltip note-tooltip">
                         <div class="note-title">Nota adjunta</div>
@@ -89,41 +91,55 @@ function renderDaily() {
                         ${c.name} - ${item.pax} plazas
                        </div>`;
 
-                return `<div ${dragAttrs} ondblclick="handleBoatDoubleClick(event, '${item.id}')" class="boat-block w-full h-[34px] rounded-[4px] px-2 py-1.5 flex justify-between items-center text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
+                const centerDisplayName = (isMobile && item.center === 'H') ? 'Hormigas' 
+                    : (isMobile && item.center === 'P') ? 'Planeta' 
+                    : (isMobile && item.center === 'X') ? 'XLM' 
+                    : c.name;
+
+                return `<div ${dragAttrs} ondblclick="handleBoatDoubleClick(event, '${item.id}')" class="boat-block w-full h-[26px] md:h-[32px] rounded-[4px] px-1.5 py-0.5 md:px-2 md:py-1 flex justify-between items-center text-[9px] md:text-[10px] font-bold shadow-sm ${c.color} ${c.text} ${ghostClass} ${cursorClass}">
                     ${customTooltip}
                     ${noteIndicator}
-                    <div class="truncate flex items-center gap-1.5 pointer-events-none"><span class="bg-black/20 px-1.5 rounded-sm">${item.center}</span><span>${c.name} ${isPending ? '🔄' : ''}</span></div>
-                    <span class="bg-black/20 px-1.5 py-0.5 rounded-sm pointer-events-none">${item.pax}</span>
+                    <div class="truncate flex items-center gap-1 md:gap-1.5 pointer-events-none min-w-0">
+                        <span class="bg-black/20 px-1 py-0.2 rounded text-[8px] md:text-[9px] font-black hidden md:inline">${item.center}</span>
+                        <span class="truncate font-bold tracking-tight">${centerDisplayName}</span>
+                        ${isPending ? '<span class="text-[8px] md:text-[10px] shrink-0">🔄</span>' : ''}
+                    </div>
+                    <span class="bg-black/25 px-1.5 py-0.5 rounded text-[8.5px] md:text-[9px] font-black pointer-events-none ml-1 shrink-0">${item.pax}</span>
                 </div>`;
             };
 
-            let html1 = item1 ? createBlockHTML(item1) : '', html2 = item2 ? createBlockHTML(item2) : '';
-            subRow1 += `<div class="border-r border-b border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${html1}</div>`;
-            subRow2 += `<div class="border-r border-slate-100 p-0.5 flex flex-col justify-start dropzone bg-white" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${html2}</div>`;
+            let boatsHtml = '';
+            renderedItems.forEach(item => {
+                boatsHtml += createBlockHTML(item);
+            });
+
+            rowHtml += `<div class="border-r border-b border-slate-100 p-0.5 flex flex-col gap-0.5 justify-start dropzone bg-white min-h-[32px] md:min-h-[40px]" data-time="${time}" data-site="${site}" ondblclick="handleSlotDoubleClick('${time}', '${site}')">${boatsHtml}</div>`;
         });
 
-        gridBodyHtml += `<div class="grid ${gridColsClass} border-b border-slate-200">
-            <div class="row-span-2 flex items-center justify-center border-r border-slate-200 font-black italic text-slate-500 text-sm bg-slate-50/20">${time}</div>
-            <div class="flex items-center justify-center border-r border-b border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">1</div>${subRow1}
-            <div class="flex items-center justify-center border-r border-slate-100 text-[8px] font-bold text-slate-400 bg-slate-50/50">2</div>${subRow2}</div>`;
+        const cap = getDailyCapacity(ds, site);
+        const assigned = t[site];
+        const tagBg = assigned > cap ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        const tagIcon = assigned > cap ? '❌' : '✅';
+        const tagHtml = `<span class="inline-flex items-center gap-0.5 border ${tagBg} font-bold px-1 py-0 md:px-2.5 md:py-0.5 rounded-full text-[7.5px] md:text-[9px] shadow-sm whitespace-nowrap">${assigned}/${cap} ${tagIcon}</span>`;
+
+        const displayName = (isMobile && typeof SITE_MOBILE_NAMES !== 'undefined' && SITE_MOBILE_NAMES[site]) ? SITE_MOBILE_NAMES[site] : site;
+
+        gridBodyHtml += `<div ${gridStyle} class="border-b border-slate-100 md:border-slate-200">
+            <div class="daily-site-cell flex flex-row items-center px-1.5 py-0.5 md:pl-4 md:pr-3 md:py-2 border-r border-slate-200 sticky left-0 bg-white z-20">
+                <span class="font-bold text-[10px] md:text-xs text-slate-700 leading-tight line-clamp-2 md:truncate md:max-w-[190px]" title="${site}">${displayName}</span>
+            </div>
+            ${rowHtml}
+            <div class="flex items-center justify-center p-0.5 md:p-1 border-r border-slate-100 bg-slate-50/10">
+                ${tagHtml}
+            </div>
+        </div>`;
     });
     
     getEl('total-pax-header').textContent = totalFilteredPax;
 
-    let footerHtml = `<div class="grid ${footerColsClass} bg-slate-50 border-t-2 border-slate-200 text-xs font-bold text-slate-500 text-center items-center shrink-0">
-        <div class="p-4 flex justify-start border-r border-slate-200 italic pl-6 tracking-widest text-[10px]">OCUPACIÓN:</div>`;
-    
-    activeSites.forEach(s => {
-        const cap = getDailyCapacity(ds, s);
-        const assigned = t[s];
-        const color = assigned > cap ? 'text-red-600' : 'text-green-600';
-        const icon = assigned > cap ? '❌' : '✅';
-        footerHtml += `<div class="p-4 border-r border-slate-200"><div class="flex flex-col items-center"><span class="${color} font-black text-lg leading-none">${assigned}</span><div class="w-8 border-t border-slate-300 my-0.5"></div><span class="text-slate-500 font-bold leading-none">${cap} ${icon}</span></div></div>`;
-    });
-    footerHtml += `</div>`;
-
     getEl('daily-grid-container').innerHTML = headerHtml + `<div id="schedule-grid">${gridBodyHtml}</div>`;
-    getEl('daily-footer-container').innerHTML = footerHtml;
+    const footerContainer = getEl('daily-footer-container');
+    if (footerContainer) footerContainer.innerHTML = '';
 }
 
 function renderMega() {
@@ -698,3 +714,10 @@ async function executeDonationFix(choice) {
     pendingDonationFixRequest = null;
     pendingDonationFixMaxPax = 0;
 }
+
+// Recalcular vista diaria al cambiar de tamaño o rotar el dispositivo
+window.addEventListener('resize', () => {
+    if (typeof activeViewMode !== 'undefined' && activeViewMode === 'diario') {
+        renderDaily();
+    }
+});
